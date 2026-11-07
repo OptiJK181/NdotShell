@@ -4,10 +4,13 @@ import Quickshell.Wayland
 import qs.services
 import qs.modules.common
 
-// The edge hotspot (double-tap the corner): a thin transparent strip down
-// one screen edge. First tap flashes a 2 px accent line (the edge answers);
-// a second tap within 420 ms toggles the matching drawer. Clicks pass
-// through (NoButton); the strip never eats input.
+// The corner hotspot: a thin strip ONLY in the top corner of the screen
+// (not the whole edge — the rest of the edge stays clickable). It exists
+// so the drawers can be opened with a double tap on the corner:
+//   first tap  → the accent line pulses (the edge answers)
+//   second tap (≤ 420 ms) → the drawer toggles
+// The strip is tiny on purpose: outside it, every click reaches your
+// windows like normal.
 PanelWindow {
     id: win
 
@@ -19,8 +22,14 @@ PanelWindow {
     readonly property real uiScale: ShellScale.forScreen(screen)
     readonly property bool atRight: name === "gaming"
 
-    anchors { top: true; bottom: true; right: win.atRight; left: !win.atRight }
-    implicitWidth: Math.round(10 * win.uiScale)
+    anchors { top: true; right: win.atRight; left: !win.atRight }
+    // corner only: 8 px wide, ~200 px tall, starts UNDER the top bar so it
+    // never blocks the bar's own keys (Quickshell anchors have no topMargin:
+    // the pad goes on the children)
+    implicitWidth: Math.round(8 * win.uiScale)
+    implicitHeight: Math.round(210 * win.uiScale)
+    readonly property real topPad: SettingsService.flag("bar.visible")
+        ? BarPositionService.thicknessFor("top") : 0
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Overlay
@@ -35,9 +44,11 @@ PanelWindow {
 
     MouseArea {
         id: ma
-        anchors.fill: parent
+        x: 0
+        y: Math.round(win.topPad)
+        width: parent.width
+        height: parent.height - Math.round(win.topPad)
         hoverEnabled: true
-        acceptedButtons: Qt.NoButton
         cursorShape: Qt.PointingHandCursor
         onClicked: {
             if (win.waitingSecond) {
@@ -59,12 +70,14 @@ PanelWindow {
     }
 
     // The affordance: a 2 px accent line. Idle = a faint 12% hint that the
-    // edge opens something; first tap = it pulses bright; drawer open = it
+    // corner opens something; first tap = it pulses bright; drawer open = it
     // stays lit at 85%.
     Rectangle {
         id: line
-        anchors { top: parent.top; bottom: parent.bottom; right: win.atRight && parent.right; left: !win.atRight && parent.left }
+        x: 0
+        y: Math.round(win.topPad)
         width: 2 * win.uiScale
+        height: parent.height - Math.round(win.topPad)
         color: mt.nbAccent
         opacity: win.active ? 0.85 : (win.waitingSecond ? 1.0 : (ma.containsMouse ? 0.45 : 0.12))
         Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }

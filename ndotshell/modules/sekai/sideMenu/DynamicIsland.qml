@@ -5,12 +5,11 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
-// Dynamic Island — Apple-style, Nothing dress. NOT manual: the pill is
-// hidden until something has something to say, and a hover zone under the
-// bar springs it open any time.
-//   auto-visible (compact) while: recording · pomodoro running · music playing
-//   hidden otherwise — the top-center hover zone (hover zone) opens it
-//   click the zone/pill → pin; Esc or moving away closes
+// Dynamic Island — 100% MANUAL: no aparece hasta que la actives
+// (Super + Shift + D, o `ipc call island toggle`). Se dibuja como tarjeta
+// de tres paneles bajo la barra (RELOJ · MÚSICA · POMODORO/REC), con
+// salida gelatinosa. Esc, la ✕ o el keybind la cierran. El toggle de
+// Ajustes (side.island) apaga también el keybind.
 PanelWindow {
     id: win
 
@@ -19,78 +18,49 @@ PanelWindow {
     readonly property var mt: Theme.of(screen)
     readonly property real uiScale: ShellScale.forScreen(screen)
 
-    // something to say → the pill shows by itself
-    readonly property bool autoVisible: ScreenRecorderService.recording
-        || PomodoroService.running || media.playing
-    // open (expanded) = pinned, or the pointer is on the zone/pill
-    property bool expanded: false
-    property bool pinned: false
-    readonly property bool shown: (expanded || autoVisible)
-        && SettingsService.flag("side.island")
-
     anchors { top: true; left: true; right: true }
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    implicitHeight: Math.round(210 * win.uiScale)
-    visible: win.shown || win.openAnim > 0.001
+    implicitHeight: Math.round(200 * win.uiScale)
+    visible: SideMenuService.islandOn && SideMenuService.islandOpen
 
-    property real openAnim: expanded ? 1 : 0
+    property real openAnim: SideMenuService.islandOpen ? 1 : 0
     Behavior on openAnim {
         NumberAnimation {
-            duration: 560
+            duration: 620
             easing.type: Easing.OutElastic
-            easing.amplitude: 1.35
+            easing.amplitude: 1.3
             easing.period: 0.45
         }
     }
 
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: expanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: SideMenuService.islandOpen
+        ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    mask: Region { item: pill }
+    mask: Region { item: card }
 
     Item {
-        id: pill
+        id: card
 
-        property real compactW: 150
-        property real openW: 620
-        property real compactH: 40
         property real openH: 150
 
         anchors.top: parent.top
-        anchors.topMargin: Math.round((BarPositionService.thicknessFor("top") + 6) * win.uiScale)
+        anchors.topMargin: Math.round((SettingsService.flag("bar.visible")
+            ? BarPositionService.thicknessFor("top") + 6 : 6) * win.uiScale)
         anchors.horizontalCenter: parent.horizontalCenter
-        width: Math.round((compactW + (openW - compactW) * win.openAnim) * win.uiScale)
-        height: Math.round((compactH + (openH - compactH) * win.openAnim) * win.uiScale)
+        width: Math.round(620 * win.uiScale)
+        height: Math.round(openH * win.uiScale * Math.min(1, win.openAnim * 1.2))
+        opacity: win.openAnim
+        scale: win.openAnim
+        transformOrigin: Item.Top
 
-        HoverHandler {
-            id: hov
-            onHoveredChanged: {
-                if (hovered) {
-                    win.expanded = true
-                    leaveTimer.restart()
-                }
-            }
-        }
-
-        Timer {
-            id: leaveTimer
-            interval: 600
-            onTriggered: {
-                if (!hov.hovered && !win.pinned)
-                    win.expanded = false
-            }
-        }
-
-        Keys.onEscapePressed: {
-            win.pinned = false
-            win.expanded = false
-        }
+        Keys.onEscapePressed: SideMenuService.islandOpen = false
 
         // slab
         Rectangle {
             anchors.fill: parent
-            radius: Math.round(height / 2)
+            radius: 20 * win.uiScale
             color: mt.nbSurface
             border.width: 1
             border.color: mt.nbBorder
@@ -105,55 +75,38 @@ PanelWindow {
             }
         }
 
-        // ===== compact face: clock + status dots =====
-        Item {
-            anchors.fill: parent
-            opacity: 1 - win.openAnim
-            visible: opacity > 0.01
+        // ✕ close
+        Rectangle {
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: 10 * win.uiScale
+            width: 26 * win.uiScale
+            height: 26 * win.uiScale
+            radius: 13 * win.uiScale
+            color: xMa.pressed ? mt.nbBorder : mt.nbSurface
+            border.width: 1
+            border.color: mt.nbBorder
 
-            Row {
+            Text {
                 anchors.centerIn: parent
-                spacing: 8 * win.uiScale
+                text: "✕"
+                color: mt.nbInk
+                font.pixelSize: 12 * win.uiScale
+            }
 
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: ScreenRecorderService.recording
-                    width: 8 * win.uiScale
-                    height: 8 * win.uiScale
-                    radius: 4 * win.uiScale
-                    color: mt.nbAccent
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Qt.formatTime(new Date(), SettingsService.flag("time.use24h") ? "HH:mm" : "h:mm ap").toUpperCase()
-                    color: mt.nbInk
-                    font.family: mt.fontDisplay
-                    font.pixelSize: 18 * win.uiScale
-                    font.letterSpacing: 2 * win.uiScale
-
-                    Timer { interval: 1000; running: true; repeat: true
-                            onTriggered: parent.text = Qt.formatTime(new Date(), SettingsService.flag("time.use24h") ? "HH:mm" : "h:mm ap").toUpperCase() }
-                }
-
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: PomodoroService.running
-                    width: 8 * win.uiScale
-                    height: 8 * win.uiScale
-                    radius: 4 * win.uiScale
-                    color: mt.accentCyan
-                }
+            MouseArea {
+                id: xMa
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: SideMenuService.islandOpen = false
             }
         }
 
-        // ===== expanded face =====
         Row {
             anchors.fill: parent
             anchors.margins: 16 * win.uiScale
+            anchors.rightMargin: 40 * win.uiScale
             spacing: 12 * win.uiScale
-            opacity: win.openAnim
-            visible: win.openAnim > 0.01
 
             // RELOJ
             Rectangle {
@@ -217,9 +170,9 @@ PanelWindow {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        elide: Text.ElideRight
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
                         visible: media.playing
                         text: media.artist
                         color: mt.nbInkSub
@@ -233,7 +186,7 @@ PanelWindow {
                         IslandKey { icon: "skip-previous"; onClicked: media.previous() }
                         IslandKey {
                             icon: media.playing ? "pause" : "play"
-                            accent: true
+                            accent: media.playing
                             onClicked: media.togglePlaying()
                         }
                         IslandKey { icon: "skip-next"; onClicked: media.next() }
@@ -241,14 +194,15 @@ PanelWindow {
                 }
             }
 
-            // POMODORO + REC
+            // POMODORO / REC
             Rectangle {
                 width: Math.round((parent.width - 2 * 12 * win.uiScale) * 0.32)
                 height: parent.height
                 radius: 12 * win.uiScale
                 color: mt.nbRaised
                 border.width: 1
-                border.color: PomodoroService.running ? mt.accentCyan : mt.nbBorder
+                border.color: PomodoroService.running ? mt.accentCyan
+                    : ScreenRecorderService.recording ? mt.nbAccent : mt.nbBorder
 
                 Column {
                     anchors.centerIn: parent
@@ -279,38 +233,6 @@ PanelWindow {
                         }
                     }
                 }
-            }
-        }
-    }
-
-    // ===== hover zone: a slim strip under the bar, always mapped while the
-    // island is enabled. Hover springs the island open even when hidden.
-    PanelWindow {
-        id: zone
-        screen: win.screen
-        anchors { top: true; left: true; right: true }
-        exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
-        implicitHeight: Math.round(34 * win.uiScale)
-        visible: SettingsService.flag("side.island") && !win.pinned
-        WlrLayershell.layer: WlrLayer.Overlay
-
-        MouseArea {
-            id: zoneMa
-            anchors.fill: parent
-            anchors.leftMargin: 320 * win.uiScale
-            anchors.rightMargin: 320 * win.uiScale
-            anchors.topMargin: Math.round(BarPositionService.thicknessFor("top") * 0.5)
-            hoverEnabled: true
-            acceptedButtons: Qt.NoButton
-            cursorShape: Qt.PointingHandCursor
-            onContainsMouseChanged: {
-                if (containsMouse) win.expanded = true
-                else leaveTimer.restart()
-            }
-            onClicked: {
-                win.pinned = !win.pinned
-                win.expanded = win.pinned
             }
         }
     }

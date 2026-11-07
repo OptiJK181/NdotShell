@@ -23,6 +23,31 @@ Singleton {
     // A drawer pinned by its keybind/IPC: stays open however the pointer moves.
     property string pinned: ""
 
+    // ===== Dynamic Island: 100% manual =====
+    // side.island (Ajustes) habilita la función; islandOpen es el estado
+    // visible (keybind Super + Shift + D, o ipc call island toggle).
+    property bool islandOpen: false
+
+    function toggleIsland() {
+        if (!SettingsService.flag("side.island"))
+            return
+        root.islandOpen = !root.islandOpen
+    }
+
+    IpcHandler {
+        target: "island"
+
+        function toggle(): void { root.toggleIsland() }
+        function show(): void {
+            if (SettingsService.flag("side.island")) root.islandOpen = true
+        }
+        function hide(): void { root.islandOpen = false }
+        function status(): string {
+            if (!SettingsService.flag("side.island")) return "disabled"
+            return root.islandOpen ? "open" : "hidden"
+        }
+    }
+
     // Hover bookkeeping (driven by the drawer windows).
     property bool hotspotHovered: false
     property bool cardHovered: false
