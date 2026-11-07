@@ -65,13 +65,22 @@ have_git() { command -v git >/dev/null 2>&1; }
 # Give slow networks a limit, if `timeout` exists.
 limit() { n=$1; shift; if command -v timeout >/dev/null 2>&1; then timeout "$n" "$@"; else "$@"; fi; }
 
-# --- 1. a git checkout ------------------------------------------------------
-root=""
-if have_git; then
-    top=$(git -C "$here" rev-parse --show-toplevel 2>/dev/null) && top=$(cd "$top" 2>/dev/null && pwd -P)
-    if [ -n "$top" ]; then
-        if [ "$top" = "$herep" ]; then root=$top
-        elif [ "$top/ndotshell" = "$herep" ] && [ -f "$top/install.sh" ]; then root=$top; fi
+# --- 1. check for managed install (.source file) FIRST ----------------------
+# If .source exists beside shell.qml, this is a managed install (from install.sh).
+# Use managed mode even if inside a git tree (e.g., symlink to dev folder).
+marker="$here/.source"
+if [ -f "$marker" ]; then
+    root=""
+    is_git() { false; }
+else
+    # --- 1. a git checkout ------------------------------------------------------
+    root=""
+    if have_git; then
+        top=$(git -C "$here" rev-parse --show-toplevel 2>/dev/null) && top=$(cd "$top" 2>/dev/null && pwd -P)
+        if [ -n "$top" ]; then
+            if [ "$top" = "$herep" ]; then root=$top
+            elif [ "$top/ndotshell" = "$herep" ] && [ -f "$top/install.sh" ]; then root=$top; fi
+        fi
     fi
 fi
 is_git() { [ -n "$root" ]; }
