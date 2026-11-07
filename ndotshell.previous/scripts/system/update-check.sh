@@ -53,7 +53,13 @@
 # install.sh (bash <(curl -fsSL .../get.sh)).
 
 here=$(cd "$(dirname "$0")/../.." && pwd)
+# Use logical path (with symlinks) for managed installs, physical path for git checkouts
 herep=$(cd "$here" && pwd -P)
+# But if .source exists, we're a managed install: use logical path to preserve symlinks
+marker="$here/.source"
+if [ -f "$marker" ]; then
+    herep=$(cd "$here" && pwd)  # logical path (preserves symlinks)
+fi
 ver=$(head -n 1 "$here/VERSION" 2>/dev/null | tr -d ' \r')
 [ -n "$ver" ] || ver=unknown
 

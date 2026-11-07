@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 // Dynamic wallpaper: changes based on time of day
 // Supports: morning, day, evening, night folders or single images with time ranges
@@ -19,9 +20,10 @@ Singleton {
     property int nightStart: 22         // 22:00
     property int transitionDuration: 30 // minutes for crossfade
 
-    readonly property string configPath: FileSystem.configDir + "/ndotshell/dynamic-wallpaper.json"
+    property string configPath: ""
 
     Component.onCompleted: {
+        root.configPath = FileSystem.configDir + "/ndotshell/dynamic-wallpaper.json"
         root.load()
         root.update()
         // Check every minute

@@ -23,7 +23,8 @@ Singleton {
     property string configPath: ""
 
     Component.onCompleted: {
-        root.configPath = FileSystem.configDir + "/ndotshell/dynamic-wallpaper.json"
+        // Construct path without FileSystem (import is blackholed)
+        root.configPath = String(Qt.resolvedUrl("../..")).replace("file://", "") + "/.config/ndotshell/dynamic-wallpaper.json";
         root.load()
         root.update()
         // Check every minute
