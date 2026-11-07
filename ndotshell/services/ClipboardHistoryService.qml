@@ -2,74 +2,122 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.modules.common
 
-// Clipboard history: stores text and images, persists across restarts
-// Access: ClipboardHistoryService.history (array), .add(), .remove(), .clear(), .pin()
+// Clipboard history — designed to be PRIVATE first:
+//   • Nothing is written to disk unless you PIN an item (pinned only).
+//   • Strings that look like secrets (passwords, API keys, tokens, cards,
+//     Bearer auth, private keys) are never recorded.
+//   • `privateMode` pauses recording entirely (IPC: clipboard private on|off).
+//   • The history is wiped automatically when the screen locks.
+// Access: ClipboardHistoryService.history, .add(), .remove(), .clear(),
+// .pin(), .copyToClipboard(), .wipe(), .privateMode.
 Singleton {
     id: root
 
-    property var history: []          // [{ id, type: "text"|"image", content, pinned, timestamp }]
+    // [{ id, type: "text"|"image", content, pinned, timestamp }]
+    property var history: []
     property int maxItems: 50
-    property bool monitoring: false
+    // Recording state: true while the watcher follows the clipboard.
+    readonly property bool monitoring: monitorTimer.running
+    // Incognito: nothing new is recorded while on. Items already in the
+    // history stay (clear them with wipe()).
+    property bool privateMode: false
 
-    readonly property string storePath: FileSystem.mkpath(FileSystem.cacheDir + "/ndotshell/clipboard-history.json")
+    readonly property string script: Directories.script("state/service-state.sh")
 
-    // Load on startup
-    Component.onCompleted: root.load()
+    // ===== privacy: what never gets recorded ================================
+    // Matches the shapes secrets usually come in. Kept deliberately broad —
+    // a false positive only means that one copy is not remembered.
+    readonly property var sensitivePatterns: [
+        /(?:^|[^\w])(?:password|passwd|pwd|secret|token|api[_-]?key|apikey|access[_-]?key|private[_-]?key|client[_-]?secret|auth)\s*[:=]/i,
+        /\b(sk|pk|ghp|gho|github_pat|xox[bpars]|AKIA|ASIA)[-_][A-Za-z0-9_-]{10,}\b/,   // api tokens
+        /Bearer\s+[A-Za-z0-9._\-]{20,}/i,                                             // auth headers
+        /\bBEGIN [A-Z ]*PRIVATE KEY\b/,                                               // keys
+        /\b(?:\d[ -]?){13,19}\b/,                                                     // card numbers
+        /\b[A-Fa-f0-9]{32,}\b/,                                                       // long hex (hashes/keys)
+        /\beyJ[A-Za-z0-9_-]{10,}\./                                                   // JWTs
+    ]
+
+    function looksSensitive(text) {
+        if (typeof text !== "string" || text === "")
+            return true
+        for (let i = 0; i < sensitivePatterns.length; i++)
+            if (sensitivePatterns[i].test(text))
+                return true
+        return false
+    }
+
+    // Wipe everything (history + any pinned item persisted on disk).
+    function wipe() {
+        root.history = []
+        writer.exec(["sh", root.script, "save", "clipboard-history", "[]"])
+        historyChanged()
+    }
+
+    function clear() {
+        // Clear unpinned only; pinned survive unless wipe() is used.
+        root.history = root.history.filter(function(item) { return item.pinned })
+        root.save()
+        historyChanged()
+    }
 
     function load() {
-        var file = FileSystem.readFile(storePath)
-        if (file !== "") {
-            try {
-                root.history = JSON.parse(file)
-            } catch (e) {
-                root.history = []
-            }
-        }
-        // Start monitoring after load
-        root.startMonitoring()
+        // Disk holds pinned items only: the transient history is RAM-only,
+        // so a stolen disk or a shared screenshot of ~/.config says nothing
+        // about what you copied.
+        loader.running = true
     }
 
     function save() {
-        FileSystem.writeFile(storePath, JSON.stringify(root.history))
+        // Pinned items only, never the transient history.
+        const pinned = root.history.filter(function(item) { return item.pinned })
+        writer.exec(["sh", root.script, "save", "clipboard-history",
+                     JSON.stringify(pinned.map(function(item) {
+                         return { id: item.id, type: item.type, content: item.content,
+                                  pinned: true, timestamp: item.timestamp }
+                     }))])
     }
 
     function startMonitoring() {
-        if (root.monitoring) return
-        root.monitoring = true
-        // Poll clipboard every 500ms (wlr-clipboard-history approach)
+        if (monitorTimer.running) return
         monitorTimer.running = true
     }
 
     function stopMonitoring() {
-        root.monitoring = false
         monitorTimer.running = false
     }
 
+    function setPrivateMode(on) {
+        root.privateMode = on === true
+    }
+
     function add(content, type) {
-        if (!content || (type === "text" && content.trim() === "")) return
-        // Avoid duplicates (unless pinned)
+        if (root.privateMode)
+            return
+        if (type !== "image" && root.looksSensitive(content))
+            return
+        if (!content || (type === "text" && content.trim() === ""))
+            return
+        // Same text again: move to top.
         for (var i = 0; i < root.history.length; i++) {
             if (!root.history[i].pinned && root.history[i].type === type && root.history[i].content === content) {
-                // Move to top
-                var item = root.history.splice(i, 1)[0]
+                const item = root.history.splice(i, 1)[0]
                 item.timestamp = Date.now()
                 root.history.unshift(item)
-                root.save()
-                root.historyChanged()
+                historyChanged()
                 return
             }
         }
-        var item = {
-            id: "clip_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9),
+        root.history.unshift({
+            id: "clip_" + Date.now() + "_" + Math.random().toString(36).slice(2, 11),
             type: type,
-            content: type === "image" ? content : content.substr(0, 10000), // limit text
+            content: type === "image" ? content : String(content).slice(0, 10000),
             pinned: false,
             timestamp: Date.now()
-        }
-        root.history.unshift(item)
+        })
+        // Drop oldest unpinned past the limit.
         if (root.history.length > root.maxItems) {
-            // Remove oldest non-pinned
             for (var j = root.history.length - 1; j >= 0; j--) {
                 if (!root.history[j].pinned) {
                     root.history.splice(j, 1)
@@ -77,8 +125,7 @@ Singleton {
                 }
             }
         }
-        root.save()
-        root.historyChanged()
+        historyChanged()
     }
 
     function remove(id) {
@@ -86,24 +133,18 @@ Singleton {
             if (root.history[i].id === id) {
                 root.history.splice(i, 1)
                 root.save()
-                root.historyChanged()
+                historyChanged()
                 return
             }
         }
-    }
-
-    function clear() {
-        root.history = root.history.filter(function(item) { return item.pinned })
-        root.save()
-        root.historyChanged()
     }
 
     function pin(id) {
         for (var i = 0; i < root.history.length; i++) {
             if (root.history[i].id === id) {
                 root.history[i].pinned = !root.history[i].pinned
-                root.save()
-                root.historyChanged()
+                root.save()   // pinned goes to disk; unpin removes it again
+                historyChanged()
                 return
             }
         }
@@ -113,34 +154,83 @@ Singleton {
         for (var i = 0; i < root.history.length; i++) {
             if (root.history[i].id === id) {
                 Quickshell.copyToClipboard(root.history[i].content)
-                // Move to top
-                var item = root.history.splice(i, 1)[0]
+                const item = root.history.splice(i, 1)[0]
                 item.timestamp = Date.now()
                 root.history.unshift(item)
-                root.save()
-                root.historyChanged()
+                historyChanged()
                 return
             }
         }
     }
 
-    // Poll clipboard using wl-clipboard (wl-paste)
+    Component.onCompleted: root.load()
+
+    // Pinned items only, read once at startup.
+    Process {
+        id: loader
+        command: ["sh", root.script, "load", "clipboard-history"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.trim() === "")
+                    return
+                try {
+                    const list = JSON.parse(text)
+                    root.history = list.filter(function(item) { return item.pinned === true })
+                } catch (e) {
+                    console.warn("ClipboardHistoryService: bad pinned JSON:", e)
+                }
+            }
+        }
+    }
+
+    Process { id: writer }
+
+    // Wipe the history the moment the screen locks.
+    Connections {
+        target: LockState
+        function onLockedChanged() {
+            if (LockState.locked)
+                root.wipe()
+        }
+    }
+
+    // Local-only watcher: polls the clipboard, no network, no telemetry.
+    property string lastText: ""
     Timer {
         id: monitorTimer
         interval: 500
         running: false
         repeat: true
         onTriggered: {
-            // Check text
-            var text = Quickshell.readFromClipboard()
+            const text = Quickshell.readFromClipboard()
             if (text && text !== root.lastText) {
                 root.lastText = text
                 root.add(text, "text")
             }
-            // Check image (wl-paste --type image/png)
-            // Note: wl-paste blocks if no data, so we use a quick timeout
-            // For images, we rely on the user copying via the widget's "copy image" action
         }
     }
-    property string lastText: ""
+
+    // ===== IPC: modo privado, limpiar, estado =====
+    IpcHandler {
+        target: "clipboard"
+
+        function private(mode: string): string {
+            const on = mode === "on" || mode === "true" || mode === "1"
+            root.setPrivateMode(on)
+            return root.privateMode ? "private: on" : "private: off"
+        }
+
+        function wipe(): void {
+            root.wipe()
+        }
+
+        function clear(): void {
+            root.clear()
+        }
+
+        function status(): string {
+            return root.privateMode ? "private" : (root.monitoring ? "recording" : "off")
+        }
+    }
 }

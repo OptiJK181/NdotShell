@@ -23,7 +23,7 @@ Singleton {
 
     Component.onCompleted: {
         // Construct path without FileSystem
-        var homeDir = Qt.resolvedUrl("").replace("file://", "").replace(/\/[^\/]*$/, "");
+        var homeDir = String(Qt.resolvedUrl("../..")).replace("file://", "");
         root.statsPath = homeDir + "/.cache/ndotshell/pomodoro-stats.json";
         root.loadStats()
         root.reset()

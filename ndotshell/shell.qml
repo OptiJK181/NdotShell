@@ -36,6 +36,15 @@ ShellRoot {
     // update finishes, UpdateService does one hard reload from the new files.
     settings.watchFiles: !UpdateService.updating
 
+    // Instantiate the singletons whose side effects (IPC targets, startup
+    // timers, state files) must exist from the very first frame, even before
+    // a widget or page references them. A bare reference is enough.
+    property bool _servicesLoaded: UpdateService.script !== ""
+        && ClipboardHistoryService.script !== ""
+        && PomodoroService.script !== ""
+        && ScreenRecorderService.wfRecorder !== ""
+        && DynamicWallpaperService.mode !== ""
+
     // The Wayland background itself — one per screen, owning
     // WlrLayer.Background directly (see WallpaperLayer.qml's header
     // comment for why it destroy()s texture slots instead of reusing

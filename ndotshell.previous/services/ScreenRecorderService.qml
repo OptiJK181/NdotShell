@@ -18,7 +18,7 @@ Singleton {
 
     Component.onCompleted: {
         // Construct path without FileSystem (import is blackholed)
-        var homeDir = Qt.resolvedUrl("").replace("file://", "").replace(/\/[^\/]*$/, "");
+        var homeDir = String(Qt.resolvedUrl("../..")).replace("file://", "");
         root.saveDir = homeDir + "/download/ScreenRecordings";
     }
 
