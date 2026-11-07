@@ -59,6 +59,20 @@ bash (curl -fsSL https://raw.githubusercontent.com/OptiJK181/NdotShell/main/get.
 
 <div align="center">
 
+### ‍🌐 SOCIALS
+
+<br/>
+
+<a href="https://guns.lol/andr3wzz"><img src="https://img.shields.io/badge/GUNS.LOL-ANDR3WZZ-D71921?style=flat-square&labelColor=0B0B0B" /></a>
+<img src="https://img.shields.io/badge/DISCORD-alvarez.spider-5865F2?style=flat-square&labelColor=0B0B0B" />
+<a href="https://guns.lol/andr3wzz"><img src="https://img.shields.io/badge/TWST-⚡-F5F5F5?style=flat-square&labelColor=0B0B0B" /></a>
+
+<br/>
+
+> *La salud mental del hombre no es importante.*
+
+<br/>
+
 ### ‍🛠️ STACK
 
 <br/>

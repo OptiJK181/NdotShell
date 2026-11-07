@@ -4,10 +4,10 @@ import Quickshell.Wayland
 import qs.services
 import qs.modules.common
 
-// The always-on edge hotspot (Caelestia-style): a thin transparent strip
-// down one screen edge. Hover it and the matching drawer slides out; the
-// strip also lights up with a 2 px accent line so the edge says "I open
-// something". Clicks pass through (NoButton); a tap still opens.
+// The edge hotspot (double-tap the corner): a thin transparent strip down
+// one screen edge. First tap flashes a 2 px accent line (the edge answers);
+// a second tap within 420 ms toggles the matching drawer. Clicks pass
+// through (NoButton); the strip never eats input.
 PanelWindow {
     id: win
 
@@ -20,16 +20,18 @@ PanelWindow {
     readonly property bool atRight: name === "gaming"
 
     anchors { top: true; bottom: true; right: win.atRight; left: !win.atRight }
-    implicitWidth: Math.round(8 * win.uiScale)
+    implicitWidth: Math.round(10 * win.uiScale)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Overlay
 
     readonly property bool active: SideMenuService.open === name
-    readonly property bool armed: ma.containsMouse && !active
 
     visible: SettingsService.flag(name === "gaming" ? "side.gaming" : "side.work")
         && SettingsService.flag("side.hotspots")
+
+    // first tap: the edge pulses and waits; second tap: drawer toggles
+    property bool waitingSecond: false
 
     MouseArea {
         id: ma
@@ -37,20 +39,41 @@ PanelWindow {
         hoverEnabled: true
         acceptedButtons: Qt.NoButton
         cursorShape: Qt.PointingHandCursor
-        onContainsMouseChanged: {
-            if (containsMouse) SideMenuService.hoverEnter(win.name)
-            else SideMenuService.hoverLeave()
+        onClicked: {
+            if (win.waitingSecond) {
+                win.waitingSecond = false
+                secondTap.stop()
+                SideMenuService.toggle(win.name)
+            } else {
+                win.waitingSecond = true
+                secondTap.restart()
+                pulseAnim.restart()
+            }
         }
-        onClicked: SideMenuService.toggle(win.name)
     }
 
-    // The affordance: a 2 px accent line that fades in when the pointer
-    // touches the edge (and out once the drawer is open).
+    Timer {
+        id: secondTap
+        interval: 420
+        onTriggered: win.waitingSecond = false
+    }
+
+    // The affordance: a 2 px accent line. Idle = a faint 12% hint that the
+    // edge opens something; first tap = it pulses bright; drawer open = it
+    // stays lit at 85%.
     Rectangle {
+        id: line
         anchors { top: parent.top; bottom: parent.bottom; right: win.atRight && parent.right; left: !win.atRight && parent.left }
         width: 2 * win.uiScale
         color: mt.nbAccent
-        opacity: win.armed ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 180 } }
+        opacity: win.active ? 0.85 : (win.waitingSecond ? 1.0 : (ma.containsMouse ? 0.45 : 0.12))
+        Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+
+        SequentialAnimation {
+            id: pulseAnim
+            NumberAnimation { target: line; property: "opacity"; to: 1.0; duration: 90 }
+            NumberAnimation { target: line; property: "opacity"; to: 0.35; duration: 110 }
+            NumberAnimation { target: line; property: "opacity"; to: 1.0; duration: 90 }
+        }
     }
 }

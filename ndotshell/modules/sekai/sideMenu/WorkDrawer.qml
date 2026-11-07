@@ -26,7 +26,15 @@ PanelWindow {
 
     property real slide: SideMenuService.open === "work"
         && SettingsService.flag("side.work") ? 1 : 0
-    Behavior on slide { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+    // liquid gelatinous: elastic overshoot on the slide itself
+    Behavior on slide {
+        NumberAnimation {
+            duration: 760
+            easing.type: Easing.OutElastic
+            easing.amplitude: 1.35
+            easing.period: 0.42
+        }
+    }
 
     visible: win.slide > 0.001
     WlrLayershell.layer: WlrLayer.Top
@@ -42,8 +50,25 @@ PanelWindow {
         y: 0
         width: Math.round(win.cardW * win.uiScale)
         height: win.height
+        transformOrigin: Item.Left
 
         HoverHandler { id: cardHover }
+
+        // gelatinous squash & stretch: the card wobbles once per open/close
+        SequentialAnimation {
+            id: jelly
+            NumberAnimation { target: card; property: "scale"; to: 1.045; duration: 130; easing.type: Easing.OutQuad }
+            NumberAnimation { target: card; property: "scale"; to: 0.972; duration: 170; easing.type: Easing.InOutQuad }
+            NumberAnimation { target: card; property: "scale"; to: 1.014; duration: 130; easing.type: Easing.OutQuad }
+            NumberAnimation { target: card; property: "scale"; to: 1.0; duration: 150; easing.type: Easing.OutQuad }
+        }
+        Connections {
+            target: SideMenuService
+            function onOpenChanged() {
+                if (SideMenuService.open === "work")
+                    jelly.restart()
+            }
+        }
         Binding { target: SideMenuService; property: "cardHovered"; value: cardHover.hovered }
 
         focus: SideMenuService.open === "work"

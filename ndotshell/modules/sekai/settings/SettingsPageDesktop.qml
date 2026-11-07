@@ -397,10 +397,20 @@ SettingsPage {
             icon: "moon-stars"
             label: "Dynamic Island"
             detail: SettingsService.flag("side.island")
-                ? "Píldora superior: reloj Ndot, música y Pomodoro al pasar el puntero"
+                ? "Se asoma sola con rec / pomodoro / música; hover en el centro la abre"
                 : "OFF"
             checked: SettingsService.flag("side.island")
             onToggled: SettingsService.toggle("side.island")
+        }
+
+        SettingToggle {
+            icon: "dock_to_bottom"
+            label: "Barra superior"
+            detail: SettingsService.flag("bar.visible")
+                ? "La barra clásica arriba · quítala si solo quieres la isla"
+                : "OFF · la Dynamic Island manda"
+            checked: SettingsService.flag("bar.visible")
+            onToggled: SettingsService.toggle("bar.visible")
         }
     }
 

@@ -5,11 +5,12 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
-// Dynamic Island — Apple-style top-center pill, Nothing dress:
-//   compact: Ndot 55 clock + a red rec dot / cyan pomodoro dot
-//   hover (or click to pin): springs open into a wide card with three
-//   mini-panels — RELOJ (big numerals), MÚSICA (title + controls),
-//   POMODORO (timer + play/skip). Esc or click-away closes.
+// Dynamic Island — Apple-style, Nothing dress. NOT manual: the pill is
+// hidden until something has something to say, and a hover zone under the
+// bar springs it open any time.
+//   auto-visible (compact) while: recording · pomodoro running · music playing
+//   hidden otherwise — the top-center hover zone (hover zone) opens it
+//   click the zone/pill → pin; Esc or moving away closes
 PanelWindow {
     id: win
 
@@ -18,16 +19,30 @@ PanelWindow {
     readonly property var mt: Theme.of(screen)
     readonly property real uiScale: ShellScale.forScreen(screen)
 
+    // something to say → the pill shows by itself
+    readonly property bool autoVisible: ScreenRecorderService.recording
+        || PomodoroService.running || media.playing
+    // open (expanded) = pinned, or the pointer is on the zone/pill
+    property bool expanded: false
+    property bool pinned: false
+    readonly property bool shown: (expanded || autoVisible)
+        && SettingsService.flag("side.island")
+
     anchors { top: true; left: true; right: true }
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    implicitHeight: Math.round(200 * win.uiScale)
-    visible: SettingsService.flag("side.island") || openAnim > 0.001
+    implicitHeight: Math.round(210 * win.uiScale)
+    visible: win.shown || win.openAnim > 0.001
 
-    // compact(0) → expanded(1)
     property real openAnim: expanded ? 1 : 0
-    property bool expanded: false
-    Behavior on openAnim { NumberAnimation { duration: 320; easing.type: Easing.OutBack } }
+    Behavior on openAnim {
+        NumberAnimation {
+            duration: 560
+            easing.type: Easing.OutElastic
+            easing.amplitude: 1.35
+            easing.period: 0.45
+        }
+    }
 
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: expanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
@@ -51,18 +66,28 @@ PanelWindow {
         HoverHandler {
             id: hov
             onHoveredChanged: {
-                if (hovered) win.expanded = true
-                else leaveTimer.restart()
+                if (hovered) {
+                    win.expanded = true
+                    leaveTimer.restart()
+                }
             }
         }
+
         Timer {
             id: leaveTimer
-            interval: 500
-            onTriggered: if (!hov.hovered && !pill.islandPin) win.expanded = false
+            interval: 600
+            onTriggered: {
+                if (!hov.hovered && !win.pinned)
+                    win.expanded = false
+            }
         }
-        property bool islandPin: false
 
-        // ===== slab =====
+        Keys.onEscapePressed: {
+            win.pinned = false
+            win.expanded = false
+        }
+
+        // slab
         Rectangle {
             anchors.fill: parent
             radius: Math.round(height / 2)
@@ -70,7 +95,6 @@ PanelWindow {
             border.width: 1
             border.color: mt.nbBorder
 
-            // rec dot glow while recording
             Rectangle {
                 visible: ScreenRecorderService.recording
                 anchors.fill: parent
@@ -107,6 +131,9 @@ PanelWindow {
                     font.family: mt.fontDisplay
                     font.pixelSize: 18 * win.uiScale
                     font.letterSpacing: 2 * win.uiScale
+
+                    Timer { interval: 1000; running: true; repeat: true
+                            onTriggered: parent.text = Qt.formatTime(new Date(), SettingsService.flag("time.use24h") ? "HH:mm" : "h:mm ap").toUpperCase() }
                 }
 
                 Rectangle {
@@ -230,7 +257,7 @@ PanelWindow {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: ScreenRecorderService.recording
-                            ? "REC " + fmtRec(ScreenRecorderService.duration)
+                            ? "REC " + win.fmtRec(ScreenRecorderService.duration)
                             : PomodoroService.format()
                         color: ScreenRecorderService.recording ? mt.nbAccent : mt.nbInk
                         font.family: mt.fontDisplay
@@ -254,8 +281,38 @@ PanelWindow {
                 }
             }
         }
+    }
 
-        Keys.onEscapePressed: { islandPin = false; win.expanded = false }
+    // ===== hover zone: a slim strip under the bar, always mapped while the
+    // island is enabled. Hover springs the island open even when hidden.
+    PanelWindow {
+        id: zone
+        screen: win.screen
+        anchors { top: true; left: true; right: true }
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        implicitHeight: Math.round(34 * win.uiScale)
+        visible: SettingsService.flag("side.island") && !win.pinned
+        WlrLayershell.layer: WlrLayer.Overlay
+
+        MouseArea {
+            id: zoneMa
+            anchors.fill: parent
+            anchors.leftMargin: 320 * win.uiScale
+            anchors.rightMargin: 320 * win.uiScale
+            anchors.topMargin: Math.round(BarPositionService.thicknessFor("top") * 0.5)
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+            cursorShape: Qt.PointingHandCursor
+            onContainsMouseChanged: {
+                if (containsMouse) win.expanded = true
+                else leaveTimer.restart()
+            }
+            onClicked: {
+                win.pinned = !win.pinned
+                win.expanded = win.pinned
+            }
+        }
     }
 
     MediaSource { id: media }
