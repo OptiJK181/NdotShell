@@ -92,6 +92,11 @@ Singleton {
         root.privateMode = on === true
     }
 
+    function togglePrivate() {
+        root.privateMode = !root.privateMode
+        return root.privateMode
+    }
+
     function add(content, type) {
         if (root.privateMode)
             return
@@ -215,9 +220,17 @@ Singleton {
     IpcHandler {
         target: "clipboard"
 
+        // Toggle private mode AND show the OSD (the Super + P animation).
+        function toggle(): string {
+            const on = root.togglePrivate()
+            OSDSource.showPrivate(on)
+            return on ? "private: on" : "private: off"
+        }
+
         function private(mode: string): string {
             const on = mode === "on" || mode === "true" || mode === "1"
             root.setPrivateMode(on)
+            OSDSource.showPrivate(on)
             return root.privateMode ? "private: on" : "private: off"
         }
 

@@ -24,6 +24,9 @@ Singleton {
 
     property int totalCyclesAllTime: 0
     property int totalWorkTimeAllTime: 0
+    // Readable from outside (WorkDrawer's play/pause icon): the Timer's
+    // `running` bit, mirrored here because ids are not accessible outside.
+    property bool running: false
 
     readonly property string script: Directories.script("state/service-state.sh")
     readonly property bool loaded: loader.loaded
@@ -89,6 +92,7 @@ Singleton {
         root.state = State.Work
         root.timeLeft = root.workDuration
         timer.running = true
+        root.running = true
     }
 
     function startBreak() {
@@ -96,16 +100,21 @@ Singleton {
         root.state = isLong ? State.LongBreak : State.Break
         root.timeLeft = isLong ? root.longBreakDuration : root.breakDuration
         timer.running = true
+        root.running = true
     }
 
     function toggle() {
-        if (root.state === State.Idle) root.startWork()
-        else if (timer.running) timer.running = false
-        else timer.running = true
+        if (root.state === State.Idle) {
+            root.startWork()
+            return
+        }
+        timer.running = !timer.running
+        root.running = timer.running
     }
 
     function reset() {
         timer.running = false
+        root.running = false
         root.state = State.Idle
         root.timeLeft = root.workDuration
     }

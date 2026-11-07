@@ -23,6 +23,7 @@ import qs.modules.sekai.palette
 import qs.modules.sekai.polkit
 import qs.modules.sekai.quickPanel
 import qs.modules.sekai.regionSelector
+import qs.modules.sekai.sideMenu
 import qs.modules.sekai.visualizer
 import qs.modules.sekai.welcome
 
@@ -572,6 +573,25 @@ ShellRoot {
             quickPanel: panel
             picker: wallpaperEntry
         }
+    }
+
+    // ===== Side drawers (modules/sekai/sideMenu) =====
+    // Two purpose-built edge panels, one open at a time (SideMenuService):
+    //   gaming — Super + Shift + G, right edge: game mode, recorder, keep awake, stats
+    //   work   — Super + Shift + W, left edge: pomodoro, focus, clipboard privacy
+    // One window per monitor (the drawer shows on the monitor you ask from).
+    Variants {
+        id: gamingDrawers
+        model: Quickshell.screens
+        GamingDrawer {
+            qsSource: quickState
+        }
+    }
+
+    Variants {
+        id: workDrawers
+        model: Quickshell.screens
+        WorkDrawer {}
     }
 
     // The screen lock (Lockscreen.qml): one WlSessionLock for the whole

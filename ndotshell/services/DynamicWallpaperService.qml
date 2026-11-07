@@ -2,9 +2,12 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.modules.common
 
-// Dynamic wallpaper: changes based on time of day
-// Supports: morning, day, evening, night folders or single images with time ranges
+// Dynamic wallpaper: one image per period of the day (morning / day /
+// evening / night), swapped on a timer with a smooth transition. Config
+// persists via scripts/state/service-state.sh (shell I/O — the
+// Quickshell.Io FileSystem singleton is not reachable from here).
 Singleton {
     id: root
 
@@ -20,39 +23,21 @@ Singleton {
     property int nightStart: 22         // 22:00
     property int transitionDuration: 30 // minutes for crossfade
 
-    property string configPath: ""
+    readonly property string script: Directories.script("state/service-state.sh")
+    property bool loaded: false
 
     Component.onCompleted: {
-        // Construct path without FileSystem (import is blackholed)
-        root.configPath = String(Qt.resolvedUrl("../..")).replace("file://", "") + "/.config/ndotshell/dynamic-wallpaper.json";
-        root.load()
-        root.update()
-        // Check every minute
+        loader.running = true
+        // Check every minute (cheap: an in-process hour compare per tick).
         checkTimer.running = true
     }
 
     function load() {
-        var file = FileSystem.readFile(root.configPath)
-        if (file !== "") {
-            try {
-                var data = JSON.parse(file)
-                root.enabled = data.enabled || false
-                root.mode = data.mode || "time"
-                root.morningPath = data.morningPath || ""
-                root.dayPath = data.dayPath || ""
-                root.eveningPath = data.eveningPath || ""
-                root.nightPath = data.nightPath || ""
-                root.morningStart = data.morningStart || 6
-                root.dayStart = data.dayStart || 10
-                root.eveningStart = data.eveningStart || 18
-                root.nightStart = data.nightStart || 22
-                root.transitionDuration = data.transitionDuration || 30
-            } catch (e) {}
-        }
+        loader.running = true
     }
 
     function save() {
-        var data = {
+        const data = {
             enabled: root.enabled,
             mode: root.mode,
             morningPath: root.morningPath,
@@ -65,8 +50,40 @@ Singleton {
             nightStart: root.nightStart,
             transitionDuration: root.transitionDuration
         }
-        FileSystem.writeFile(root.configPath, JSON.stringify(data))
+        writer.exec(["sh", root.script, "save", "dynamic-wallpaper", JSON.stringify(data)])
     }
+
+    Process {
+        id: loader
+        command: ["sh", root.script, "load", "dynamic-wallpaper"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.loaded = true
+                if (text.trim() === "")
+                    return
+                try {
+                    const data = JSON.parse(text)
+                    root.enabled = data.enabled === true
+                    root.mode = data.mode || "time"
+                    root.morningPath = data.morningPath || ""
+                    root.dayPath = data.dayPath || ""
+                    root.eveningPath = data.eveningPath || ""
+                    root.nightPath = data.nightPath || ""
+                    root.morningStart = data.morningStart || 6
+                    root.dayStart = data.dayStart || 10
+                    root.eveningStart = data.eveningStart || 18
+                    root.nightStart = data.nightStart || 22
+                    root.transitionDuration = data.transitionDuration || 30
+                    root.update()
+                } catch (e) {
+                    console.warn("DynamicWallpaperService: bad config JSON:", e)
+                }
+            }
+        }
+    }
+
+    Process { id: writer }
 
     function setImage(period, path) {
         switch (period) {
@@ -96,9 +113,9 @@ Singleton {
         if (root.enabled) root.update()
     }
 
-    // Determine current period based on hour
+    // Current period from the wall clock.
     function currentPeriod() {
-        var hour = new Date().getHours()
+        const hour = new Date().getHours()
         if (hour >= root.nightStart || hour < root.morningStart) return "night"
         if (hour < root.dayStart) return "morning"
         if (hour < root.eveningStart) return "day"
@@ -106,8 +123,7 @@ Singleton {
     }
 
     function currentImage() {
-        var period = root.currentPeriod()
-        switch (period) {
+        switch (root.currentPeriod()) {
         case "morning": return root.morningPath
         case "day": return root.dayPath
         case "evening": return root.eveningPath
@@ -116,26 +132,24 @@ Singleton {
         return ""
     }
 
+    // Apply the period's image through WallpaperService (same singleton module).
     function update() {
         if (!root.enabled) return
-        var img = root.currentImage()
-        if (img !== "") {
-            // Use the wallpaper service to set it
-            WallpaperService.setWallpaper(img, "dynamic")
-        }
+        const img = root.currentImage()
+        if (img === "") return
+        WallpaperService.setWallpaper(img)
     }
 
-    // Manual mode: user picks from gallery
     function setManual(path) {
         root.mode = "manual"
-        WallpaperService.setWallpaper(path, "dynamic")
         root.save()
+        root.update()
     }
 
     Timer {
         id: checkTimer
-        interval: 60000 // every minute
-        running: true
+        interval: 60000
+        running: false
         repeat: true
         onTriggered: root.update()
     }

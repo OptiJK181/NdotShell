@@ -1,56 +1,29 @@
-# NdotShell 1.0.6
+## 🔒 Privacidad (lo grande de esta versión)
 
-## ✨ Nuevas Features (desde 1.0.0)
+**Clipboard history rediseñado para ser privado de fábrica:**
 
-### 📋 Clipboard History
-- Historial del portapapeles (texto e imágenes, hasta 50 items)
-- Anclar (pin) items importantes, búsqueda en tiempo real
-- Click para copiar al portapapeles
-- Settings → General → Clipboard history
+- **Filtro de secretos**: contraseñas, api keys, tokens (`sk-`, `ghp-`, `xox`), Bearer auth, JWTs, llaves privadas, números de tarjeta y hex largo **nunca se graban** en el historial. Suite de tests: 8/8.
+- **Modo privado**: `qs -c ndotshell ipc call clipboard private on` pausa la grabación por completo (ideal para sesiones sensibles).
+- **El historial vive en RAM**: nada del portapapeles va a disco salvo lo que **fijes tú** (pin). Un disco robado o una captura de `~/.config` no revela qué copiaste.
+- **Auto-wipe al bloquear pantalla**: el historial se borra solo cuando se bloquea la sesión.
+- **Cero red**: auditoría hecha — ningún servicio nuevo hace llamadas de red ni telemetría; el watcher del portapapeles es polling local.
 
-### 🎥 Screen Recorder
-- Grabar pantalla completa, ventana o región, con/sin audio
-- Tile en Quick Panel con indicador visual de grabación
-- Notificación al terminar con archivo guardado
-- Settings → Quick → Grabadora de pantalla
+## ✅ Persistencia real
 
-### ⏱️ Pomodoro Timer
-- Ciclos 25/5 min configurables, descanso largo cada N ciclos
-- Estadísticas persistentes (ciclos hoy, tiempo total)
-- Notificaciones nativas
-- Widget en Edit Desktop + Settings → General → Pomodoro
+- **Pomodoro**: estadísticas (ciclos de hoy, tiempo trabajado, all-time) persisten entre reinicios vía `service-state.sh` (Process + shell I/O, sin FileSystem). Los contadores diarios se resetean al cambiar la fecha.
+- **Pinned del clipboard**: sobreviven reinicios.
 
-### 🌅 Dynamic Wallpaper (por hora)
-- Cambio automático: mañana (6-10), día (10-18), tarde (18-22), noche (22-6)
-- Transición suave configurable (1-120 min), modo manual
-- Settings → Desktop → Wallpaper dinámico
+## 🛠️ Otros fixes
 
-## 🔧 Sistema de Actualizaciones
+- TypeError `QUrl.replace()` en services nuevos (ScreenRecorder/Pomodoro/DynamicWallpaper)
+- Singletons instanciados en `shell.qml` desde el primer frame → sus IPC y timers existen siempre
+- Update system verificado end-to-end: `behind` → `apply` → `current`
 
-- **Fix crítico**: `update-check.sh` prioriza `.source` sobre detección git
-  - Fix para instalaciones symlinkadas (managed install)
-  - Fix para "nothing to compare with" / "no repo"
-- **Fix crítico**: `herep` usa path lógico (conserva symlinks) en managed install
-- Canales `stable` (main) / `dev` (dev) funcionando en Settings → About
-- `apply` hace swap atómico + actualiza `.source` automáticamente
-- Detecta commits nuevos correctamente (`behind` → `apply` → `current`)
-
-## 🐛 Bugs Corregidos
-
-- TypeError: Property 'replace' of QUrl is not a function (services)
-- ReferenceError: FileSystem is not defined (services)
-- Update check detectaba mal el repo (usaba SekaiPop en vez del fork)
-- Canal `dev` creado en GitHub para updates
-- Settings → About/Update: botón "Update now" funcional
-
-## 📦 Instalación / Actualización
+## 📦
 
 ```bash
-# Instalar
-bash <(curl -fsSL https://raw.githubusercontent.com/OptiJK181/NdotShell/main/get.sh) --yes
-
-# Actualizar (desde la shell)
+# Actualizar
 # Settings → About / Update → Update now
-# O CLI:
+# o:
 update-check.sh apply
 ```
