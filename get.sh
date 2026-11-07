@@ -26,7 +26,7 @@ set -euo pipefail
 # repo URL (the one get.sh itself is served from, e.g.
 # https://github.com/<you>/NdotShell.git). Until then NDOTSHELL_REPO must be
 # passed, or installs from this default will fail because the repo does not exist.
-REPO=${NDOTSHELL_REPO:-https://github.com/Blapples/NdotShell.git}
+REPO=${NDOTSHELL_REPO:-https://github.com/OptiJK181/NdotShell.git}
 REF=${NDOTSHELL_REF:-main}
 KEEP=${NDOTSHELL_DIR:-}
 
