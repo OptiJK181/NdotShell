@@ -1,49 +1,51 @@
-## 🫧 1.3.0 — Isla automática, doble-tap gelatinoso y tab TAREAS en Edit Desktop
+## 🏝️ 1.3.1 — Isla 100% manual + esquinas clicables
 
-### 🏝️ Dynamic Island: ya no es manual, ahora tiene criterio
+### 🐛 El bug que reportaste: no podías interactuar con la barra
 
-- **Oculta por defecto** — la píldora ya no vive ahí molestando sobre
-  tus ventanas (lo de tu captura).
-- **Se asoma sola** (compacta) solo cuando tiene algo que decir:
-  🔴 grabando · 🔵 Pomodoro corriendo · ▶ música sonando
-- **Hover en el centro superior** (franja de 34 px bajo la barra) la
-  abre expandida desde cualquier estado; **clic la fija**, Esc o
-  alejarse la cierra.
-- Apertura con **OutElastic** — gelatina pura.
+Culpable: la **zona hover de la isla** era una franja invisible sobre la
+barra que se comía todos sus clics. Eliminada. Y los hotspots de los
+drawers cubrían **el borde completo** — ahora son solo la **esquina**
+(8 × 210 px) y **empiezan debajo de la barra**: toda la barra y el resto
+del borde vuelven a ser tuyos.
 
-### �atha Drawer Laterales: doble toque + gelatina
+### 🏝️ Dynamic Island: 100% manual, como pediste
 
-- **Ya no se abren por hover** — ahora es **doble toque en la esquina**
-  del borde: el primer toque hace **pulsar la línea de acento** (el
-  borde responde), el segundo (≤420 ms) despliega.
-- La franja del borde tiene 4 estados de opacidad: reposo 12 % · hover
-  45 % · pulso 100 % · drawer abierto 85 %.
-- **Movimiento líquido gelatinoso**: slide con OutElastic + squash &
-  stretch del panel (scale 1.045 → 0.972 → 1.014 → 1.0) desde el borde —
-  se siente como gelatina, no como un panel de Windows 95.
+- **No aparece hasta que la activas**: `Super + Shift + D` o
+  `ipc call island toggle`
+- Se abre como **tarjeta de tres paneles** con salida gelatinosa
+  (OutElastic): **RELOJ** (Ndot 55 + fecha) · **MÚSICA** (título,
+  artista, prev/play/next) · **POMODORO/REC** (timer + play · videocam)
+- ✕ o **Esc** la cierran · el toggle de Ajustes (side.island) apaga
+  también el keybind
+- Con la barra oculta, la isla sube a su lugar
 
-### 🖥️ Edit Desktop → nueva pestaña **TAREAS**
+### 🖐️ Drawers: doble toque en la esquina (recordatorio)
 
-Completo lo pendiente: dentro de Edit Desktop hay una pestaña nueva con
-llaves **GAMING · FOCUS · HOTSPOTS · ISLAND** (mismo patrón DOCK), junto
-a BAR/DOCK/VIEWS/THEME/PRESETS. Ajustes → Barras de tareas sigue
-existiendo y ambos siempre coinciden.
+Primer toque → **pulso** de la línea de acento; segundo toque (≤420 ms)
+→ el panel se despliega con el wobble gelatinoso (OutElastic + squash &
+stretch desde el borde).
 
-### ➕ Barras de tareas: + "Barra superior"
+### 🖥️ Edit Desktop → pestaña **TAREAS**
 
-El apartado ahora también tiene el toggle de **bar.visible** — sí, la
-barra se puede quitar; si solo quieres la isla, apágala ahí.
+LLAVES **GAMING · FOCUS · HOTSPOTS · ISLAND** — el control completo de
+las barras de tareas vive en Edit Desktop y en Ajustes, y siempre
+coinciden.
 
-## 🐛 Fixes
+## ⌨️ Chuleta actualizada
 
-- Island: `Keys.onEscapePressed` duplicado (Property value set multiple
-  times)
-- Island: `pill.pinned` → `win.pinned` (la propiedad vivía en win)
-- Island: llave sin cerrar del pill (Expected token `}`)
+| Atajo | Acción |
+|---|---|
+| **doble toque esquina derecha** | Panel Gaming |
+| **doble toque esquina izquierda** | Panel Focus |
+| `Super + Shift + G` / `W` | Fijar panel |
+| `Super + P` | Modo privado + OSD |
+| `Super + Shift + D` | **Dynamic Island** |
+| `Esc` | Cerrar lo que esté abierto |
 
-## ✅ Verificación de release
+## ✅ Verificación
 
-- **0 errores** en el log · isla confirmada oculta en reposo (análisis
-  de píxel)
-- Tests: settings 182 defaults · welcome · update-check · update-notify ·
-  phone-wallpaper · click-away · power-press — **todo verde**
+- **0 errores** en el log · isla: hidden → open → hidden por IPC,
+  render de tres paneles confirmado en captura
+- Tests: settings 182 defaults · welcome · update-check — verdes
+- Estabilidad: settings ↔ update (watchFiles pausado al aplicar),
+  GameMode ↔ notificaciones de updates, canal ↔ .source — sin peleas
