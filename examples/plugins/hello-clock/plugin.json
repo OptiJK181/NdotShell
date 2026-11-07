@@ -1,0 +1,19 @@
+{
+    "id": "hello-clock",
+    "name": "Hello Clock",
+    "version": "1.0.0",
+    "api": 1,
+    "description": "The smallest useful plugin: a greeting and the time, in the shell's theme.",
+    "icon": "waving_hand",
+    "settings": {
+        "greeting": "Hello",
+        "use24h": true
+    },
+    "settingsInfo": {
+        "greeting": { "label": "Greeting", "description": "Shown before your name, when it knows it." },
+        "use24h": { "label": "24-hour clock", "description": "Off shows AM and PM." }
+    },
+    "secrets": {
+        "name": { "env": "HELLO_CLOCK_NAME", "file": "~/.config/hello-clock/name" }
+    }
+}

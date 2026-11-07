@@ -1,0 +1,3 @@
+Fork of https://github.com/Blapples/SekaiPop (GPL-3.0), renamed to NdotShell.
+Upstream merges are manual: python3 maintain/reapply-rename.py afterwards.
+See docs/NDOT.md.
