@@ -13,8 +13,14 @@ Singleton {
     property string status: "idle"   // idle, recording, encoding, error
     property int duration: 0        // seconds while recording
 
-    readonly property string saveDir: FileSystem.mkpath(FileSystem.downloadDir + "/ScreenRecordings")
+    property string saveDir: ""
     readonly property string wfRecorder: "wf-recorder"
+
+    Component.onCompleted: {
+        // Construct path without FileSystem (import is blackholed)
+        var homeDir = Qt.resolvedUrl("").replace("file://", "").replace(/\/[^\/]*$/, "");
+        root.saveDir = homeDir + "/download/ScreenRecordings";
+    }
 
     // Start recording
     // mode: "screen" (full), "window" (select), "region" (slurp)
