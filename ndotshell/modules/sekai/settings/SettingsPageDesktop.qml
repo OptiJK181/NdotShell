@@ -163,6 +163,131 @@ SettingsPage {
             onMoved: v => SettingsService.set("wallpaper.randomMinutes", v)
         }
 
+        // Dynamic Wallpaper (time-based)
+        SectionCard {
+            title: "Wallpaper dinámico (por hora)"
+
+            SettingToggle {
+                icon: "wb_sunny"
+                label: "Activar wallpaper dinámico"
+                detail: DynamicWallpaperService.enabled ? "Activo: " + DynamicWallpaperService.currentPeriod() : "OFF"
+                checked: DynamicWallpaperService.enabled
+                onToggled: DynamicWallpaperService.toggle()
+            }
+
+            SettingToggle {
+                visible: DynamicWallpaperService.enabled
+                icon: "wb_sunny"
+                label: "Usar modo horario (auto)"
+                detail: DynamicWallpaperService.mode === "time" ? "Cambia solo según la hora" : "Manual: el usuario elige"
+                checked: DynamicWallpaperService.mode === "time"
+                onToggled: {
+                    DynamicWallpaperService.mode = DynamicWallpaperService.mode === "time" ? "manual" : "time"
+                    DynamicWallpaperService.save()
+                }
+            }
+
+            SettingAction {
+                visible: DynamicWallpaperService.enabled && DynamicWallpaperService.mode === "time"
+                icon: "wb_twilight"
+                label: "Imagen mañana (6-10)"
+                detail: DynamicWallpaperService.morningPath || "No elegida"
+                onActivated: PanelImages.pick("dynamic_morning")
+            }
+
+            SettingAction {
+                visible: DynamicWallpaperService.enabled && DynamicWallpaperService.mode === "time"
+                icon: "wb_sunny"
+                label: "Imagen día (10-18)"
+                detail: DynamicWallpaperService.dayPath || "No elegida"
+                onActivated: PanelImages.pick("dynamic_day")
+            }
+
+            SettingAction {
+                visible: DynamicWallpaperService.enabled && DynamicWallpaperService.mode === "time"
+                icon: "wb_twilight"
+                label: "Imagen tarde (18-22)"
+                detail: DynamicWallpaperService.eveningPath || "No elegida"
+                onActivated: PanelImages.pick("dynamic_evening")
+            }
+
+            SettingAction {
+                visible: DynamicWallpaperService.enabled && DynamicWallpaperService.mode === "time"
+                icon: "nightlight"
+                label: "Imagen noche (22-6)"
+                detail: DynamicWallpaperService.nightPath || "No elegida"
+                onActivated: PanelImages.pick("dynamic_night")
+            }
+
+            SettingStepper {
+                visible: DynamicWallpaperService.enabled && DynamicWallpaperService.mode === "time"
+                width: page.halfWidth
+                icon: "schedule"
+                label: "Inicio mañana"
+                from: 0
+                to: 23
+                step: 1
+                value: DynamicWallpaperService.morningStart
+                onMoved: v => DynamicWallpaperService.setTime("morning", v)
+            }
+
+            SettingStepper {
+                visible: DynamicWallpaperService.enabled && DynamicWallpaperService.mode === "time"
+                width: page.halfWidth
+                icon: "schedule"
+                label: "Inicio día"
+                from: 0
+                to: 23
+                step: 1
+                value: DynamicWallpaperService.dayStart
+                onMoved: v => DynamicWallpaperService.setTime("day", v)
+            }
+
+            SettingStepper {
+                visible: DynamicWallpaperService.enabled && DynamicWallpaperService.mode === "time"
+                width: page.halfWidth
+                icon: "schedule"
+                label: "Inicio tarde"
+                from: 0
+                to: 23
+                step: 1
+                value: DynamicWallpaperService.eveningStart
+                onMoved: v => DynamicWallpaperService.setTime("evening", v)
+            }
+
+            SettingStepper {
+                visible: DynamicWallpaperService.enabled && DynamicWallpaperService.mode === "time"
+                width: page.halfWidth
+                icon: "schedule"
+                label: "Inicio noche"
+                from: 0
+                to: 23
+                step: 1
+                value: DynamicWallpaperService.nightStart
+                onMoved: v => DynamicWallpaperService.setTime("night", v)
+            }
+
+            SettingSlider {
+                visible: DynamicWallpaperService.enabled
+                width: page.halfWidth
+                icon: "timelapse"
+                label: "Transición suave"
+                from: 1
+                to: 120
+                step: 1
+                suffix: " min"
+                value: DynamicWallpaperService.transitionDuration
+                onMoved: v => DynamicWallpaperService.transitionDuration = v
+            }
+
+            SettingAction {
+                visible: DynamicWallpaperService.enabled && DynamicWallpaperService.mode === "manual"
+                icon: "image"
+                label: "Elegir wallpaper manual"
+                onActivated: PanelImages.pick("dynamic_manual")
+            }
+        }
+
         SettingToggle {
             icon: "movie"
             label: "Play video wallpapers"

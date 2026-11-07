@@ -71,6 +71,39 @@ SettingsPage {
             checked: SettingsService.flag("quick.phoneShadow")
             onToggled: SettingsService.toggle("quick.phoneShadow")
         }
+
+        SettingAction {
+            icon: "videocam"
+            label: "Grabadora de pantalla"
+            detail: ScreenRecorderService.recording ? "Grabando " + ScreenRecorderService.duration + "s" : "Lista"
+            onActivated: {
+                if (ScreenRecorderService.recording)
+                    ScreenRecorderService.stop()
+                else
+                    ScreenRecorderService.startScreen()
+            }
+        }
+
+        SettingAction {
+            visible: !ScreenRecorderService.recording
+            icon: "crop_landscape"
+            label: "Grabar ventana"
+            onActivated: ScreenRecorderService.startWindow()
+        }
+
+        SettingAction {
+            visible: !ScreenRecorderService.recording
+            icon: "crop_free"
+            label: "Grabar región"
+            onActivated: ScreenRecorderService.startRegion()
+        }
+
+        SettingAction {
+            visible: !ScreenRecorderService.recording
+            icon: "mic_off"
+            label: "Grabar sin audio"
+            onActivated: ScreenRecorderService.startScreenNoAudio()
+        }
     }
 
     SectionCard {

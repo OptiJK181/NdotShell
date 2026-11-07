@@ -277,7 +277,25 @@ SettingsPage {
             label: "Clipboard history"
             detail: SettingsService.flag("launcher.clipboard") ? "Recording" : "OFF"
             checked: SettingsService.flag("launcher.clipboard")
-            onToggled: SettingsService.toggle("launcher.clipboard")
+            onToggled: {
+                SettingsService.toggle("launcher.clipboard")
+                if (SettingsService.flag("launcher.clipboard"))
+                    ClipboardHistoryService.startMonitoring()
+                else
+                    ClipboardHistoryService.stopMonitoring()
+            }
+        }
+
+        SettingAction {
+            visible: SettingsService.flag("launcher.clipboard")
+            icon: "history"
+            label: "Ver historial del portapapeles"
+            detail: "Abre el widget con el historial"
+            onActivated: {
+                if (page.host) page.host.closeRequested()
+                // Open clipboard widget in Edit Desktop or as overlay
+                Qt.callLater(() => { /* widget opens in Edit Desktop */ })
+            }
         }
 
         SettingChoice {
@@ -476,6 +494,91 @@ SettingsPage {
                 { id: "hibernate", label: "Hibernate", icon: "save" }
             ]
             onPicked: id => SettingsService.set("idle.sleepAction", id)
+        }
+    }
+
+    SectionCard {
+        title: "Pomodoro"
+
+        SettingToggle {
+            icon: "schedule"
+            label: "Pomodoro timer"
+            detail: PomodoroService.state === PomodoroService.Idle ? "OFF" : (PomodoroService.state === PomodoroService.Work ? "Trabajando" : "Descanso")
+            checked: PomodoroService.state !== PomodoroService.Idle
+            onToggled: {
+                if (PomodoroService.state === PomodoroService.Idle)
+                    PomodoroService.startWork()
+                else
+                    PomodoroService.toggle()
+            }
+        }
+
+        SettingStepper {
+            width: page.halfWidth
+            icon: "work"
+            label: "Trabajo"
+            from: 5
+            to: 60
+            step: 5
+            suffix: " min"
+            value: PomodoroService.workDuration / 60
+            onMoved: v => PomodoroService.workDuration = v * 60
+        }
+
+        SettingStepper {
+            width: page.halfWidth
+            icon: "coffee"
+            label: "Descanso"
+            from: 1
+            to: 30
+            step: 1
+            suffix: " min"
+            value: PomodoroService.breakDuration / 60
+            onMoved: v => PomodoroService.breakDuration = v * 60
+        }
+
+        SettingStepper {
+            width: page.halfWidth
+            icon: "hourglass_bottom"
+            label: "Descanso largo"
+            from: 5
+            to: 60
+            step: 5
+            suffix: " min"
+            value: PomodoroService.longBreakDuration / 60
+            onMoved: v => PomodoroService.longBreakDuration = v * 60
+        }
+
+        SettingStepper {
+            width: page.halfWidth
+            icon: "repeat"
+            label: "Ciclos antes de descanso largo"
+            from: 2
+            to: 8
+            step: 1
+            value: PomodoroService.cyclesBeforeLongBreak
+            onMoved: v => PomodoroService.cyclesBeforeLongBreak = v
+        }
+
+        SettingToggle {
+            icon: "play_arrow"
+            label: "Auto-iniciar descanso"
+            checked: PomodoroService.autoStartBreaks
+            onToggled: PomodoroService.autoStartBreaks = !PomodoroService.autoStartBreaks
+        }
+
+        SettingToggle {
+            icon: "play_arrow"
+            label: "Auto-iniciar trabajo tras descanso"
+            checked: PomodoroService.autoStartWork
+            onToggled: PomodoroService.autoStartWork = !PomodoroService.autoStartWork
+        }
+
+        SettingAction {
+            icon: "check_circle"
+            label: "Ciclos completados hoy"
+            detail: PomodoroService.completedCycles + " ciclos · " + Math.floor(PomodoroService.totalWorkTime / 60) + " min trabajo"
+            onActivated: PomodoroService.reset()
         }
     }
 
