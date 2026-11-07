@@ -1,51 +1,53 @@
-## ✨ 1.1.0 — Drawers pulidos, 0 errores, listo release
+## 🏝️ 1.2.0 — Dynamic Island + menús estilo Sekai + Barras de tareas
 
-### 🐛 Errores arreglados (auditoría completa del log)
+### 🐛 El error de tu captura, arreglado
 
-- **16 iconos faltantes** (nombres Material que no existen en el set Solar):
-  `local_cafe`, `wb_sunny`, `wb_twilight`, `nightlight`, `branch`, `work`,
-  `hourglass_bottom`, `center_focus_strong`, `visibility`, `visibility_off`,
-  `delete_sweep`, `fingerprint`, `lock_clock`, `verified`, `system_update`,
-  `storefront`, `toolbar`, `campaign`, `gpp_maybe`, `comments_disabled`,
-  `notifications` — todos mapeados en `IconMap.js` a archivos Solar reales.
-  Fix de un solo punto: también cura los usos upstream de esos nombres.
-- **`FocusService.toggle` no era llamable** desde QML (vive dentro del
-  IpcHandler): el drawer now toggles vía `SettingsService.toggle`.
-- **Hotspot roto**: `containsMouse` referenciado desde el scope de la
-  ventana (era la razón por la que "no se ejecutaba bien" el hover).
-- **Press-scale roto** en los tiles (id de MouseArea inexistente).
+El **"Listo" montaba sobre el borde** de la tarjeta Pomodoro: tarjeta
+agrandada (186), contenido centrado con márgenes propios y el borde
+acento ahora solo mientras **corre** (no en idle).
 
-### 🖐️ Interacción Caelestia, ahora correcta
+### 🏝️ Dynamic Island (Apple-style, vestido Nothing)
 
-- **Hotspots siempre vivos**: ventanas separadas de 8 px (capa Overlay,
-  pass-through total) en el borde derecho (Gaming) e izquierdo (Focus).
-  Tocas el borde → el panel se despliega; te alejas → se recoge (450 ms
-  de gracia). Un toque también abre (táctil).
-- La franja **se ilumina con una línea de acento de 2 px** cuando el
-  puntero toca el borde: el borde dice "abro algo".
-- Los paneles se desmapean al cerrarse (**costo idle cero**) — y el bug
-  del huevo y la gallina (hotspot dentro de la ventana del drawer) es
-  historia.
+Píldora top-center bajo la barra:
+- **Compacta**: reloj Ndot 55 + punto rojo (grabando) + punto cian
+  (Pomodoro corriendo)
+- **Hover** → se abre con **OutBack spring** en tres mini-paneles:
+  - **RELOJ** — numerale grande + fecha
+  - **MÚSICA** — título/artista + prev ▷ play ⏭ next
+  - **POMODORO / REC** — timer (o timer de grabación en rojo) + play · videocam
+- Esc o alejar el puntero cierra · toggles en Ajustes
 
-### 🎨 Apariencia (lenguaje Nothing)
+### ✨ Selección estilo Sekai (tu referencia)
 
-- **Línea de acento de 2 px** del canal a lo largo del borde de pantalla
-  de cada drawer abierto
-- Cabecera: título Ndot 55 + kicker con tracking ("MODO RENDIMIENTO" /
-  "OFIMÁTICA"), chip **FIJADO** (adiós emoji 📌), hairline bajo la
-  cabecera
-- Tiles rediseñados: **placas de icono de 40 px** con tinte de acento al
-  activarse, **press-scale 0.97**, radio mayor, ritmo más apretado
+`DrawerMenuItem`: texto grande itálico en Ndot 55; al hover/selección
+**una cuña blanca inclinada se desliza** por detrás y la palabra **se
+levanta y se pinta del acento del canal** — exactamente la animación de
+la captura (SHUTDOWN rojo sobre cuña blanca), en colores Nothing.
 
-## ⌨️ Atajos
+**Gaming**: GAME MODE · GRABAR PANTALLA (con timer vivo en la palabra) ·
+GRABAR VENTANA · GRABAR REGIÓN · CAPTURA · AVISOS · KEEP AWAKE + SISTEMA.
+
+**Focus**: POMODORO (tarjeta) · FOCUS MODE · MODO PRIVADO · BORRAR
+HISTORIAL · NOTAS · TO-DO · CALENDARIO.
+
+### ⚙️ Nuevo apartado "Barras de tareas" (Ajustes → Escritorio)
+
+Toggles para: Panel Gaming, Panel Focus, **abrir tocando el borde**
+(hotspots) y **Dynamic Island** — todo persistente (`side.*`).
+
+## ✅ Verificación de release
+
+- **0 errores** en el log (ReferenceError/TypeError/non-existent
+  property/Failed to load/Cannot open — todo limpio)
+- Tests: settings (**182 defaults**), welcome, update-check, update-notify — verdes
+- Capturas verificadas: isla compacta renderiza (píldora + reloj Ndot),
+  Focus drawer con cuñas de selección, hairline de acento
+
+## ⌨️ Chuleta
 
 | Atajo | Acción |
 |---|---|
-| tocar borde derecho | Panel Gaming |
-| tocar borde izquierdo | Panel Focus |
-| `Super + Shift + G` / `W` | Fijar/soltar panel |
+| tocar borde derecho / izquierdo | Gaming / Focus |
+| `Super + Shift + G` / `W` | Fijar panel |
 | `Super + P` | Modo privado + OSD |
-| `Esc` | Cerrar panel |
-
-**0 errores en el log. Tests: settings (178), welcome, update-check,
-update-notify, phone-wallpaper — todos en verde.**
+| hover píldora superior | Dynamic Island expandida |
