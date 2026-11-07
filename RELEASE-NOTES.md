@@ -1,29 +1,45 @@
-## 🔒 Privacidad (lo grande de esta versión)
+## 🎮 Side drawers 100% destinados: Gaming + Focus (ofimática)
 
-**Clipboard history rediseñado para ser privado de fábrica:**
+Dos paneles laterales con slide-in, estilo Nothing (slab negro, 1 px rim,
+Ndot 55), un panel abierto a la vez, click fuera o Esc para cerrar.
 
-- **Filtro de secretos**: contraseñas, api keys, tokens (`sk-`, `ghp-`, `xox`), Bearer auth, JWTs, llaves privadas, números de tarjeta y hex largo **nunca se graban** en el historial. Suite de tests: 8/8.
-- **Modo privado**: `qs -c ndotshell ipc call clipboard private on` pausa la grabación por completo (ideal para sesiones sensibles).
-- **El historial vive en RAM**: nada del portapapeles va a disco salvo lo que **fijes tú** (pin). Un disco robado o una captura de `~/.config` no revela qué copiaste.
-- **Auto-wipe al bloquear pantalla**: el historial se borra solo cuando se bloquea la sesión.
-- **Cero red**: auditoría hecha — ningún servicio nuevo hace llamadas de red ni telemetría; el watcher del portapapeles es polling local.
+### Panel GAMING — borde derecho — `Super + Shift + G`
+- **Game Mode** (rendimiento arriba, avisos fuera) — un tap
+- **Grabadora** con timer en vivo (toca para grabar / detener)
+- **Avisos** on/off (DND para jugar)
+- **Keep Awake** (la pantalla no se apaga en partida larga)
+- **Medidores CPU/RAM** en vivo (solo muestrean con el panel abierto)
 
-## ✅ Persistencia real
+### Panel FOCUS (ofimática) — borde izquierdo — `Super + Shift + W`
+- **Pomodoro** con timer Ndot 55: play/pausa, saltar, reset, ciclos y
+  minutos de hoy (persisten entre reinicios)
+- **Focus Mode** (los widgets se apartan mientras trabajas)
+- **Portapapeles privado**: toggle del modo privado + borrar historial
 
-- **Pomodoro**: estadísticas (ciclos de hoy, tiempo trabajado, all-time) persisten entre reinicios vía `service-state.sh` (Process + shell I/O, sin FileSystem). Los contadores diarios se resetean al cambiar la fecha.
-- **Pinned del clipboard**: sobreviven reinicios.
+## 🔒 Modo privado con animación — `Super + P`
 
-## 🛠️ Otros fixes
+- **OSD nuevo**: pill con icono visibility_off/visibility y texto
+  "Modo privado"; la barra del gauge es el estado (llena = ON).
+- La animación sale al togglear desde **cualquier** sitio: keybind,
+  tile del drawer, o `ipc call clipboard toggle`.
+- Recuerda: los secretos (passwords, tokens, tarjetas, JWTs…) **nunca**
+  entran al historial, el modo privado pausa todo, y el historial se
+  borra solo al bloquear la pantalla.
 
-- TypeError `QUrl.replace()` en services nuevos (ScreenRecorder/Pomodoro/DynamicWallpaper)
-- Singletons instanciados en `shell.qml` desde el primer frame → sus IPC y timers existen siempre
-- Update system verificado end-to-end: `behind` → `apply` → `current`
+## 🛠️ Fixes
 
-## 📦
+- `id is not unique` en DynamicWallpaperService
+- `IpcHandler is not a type` (import Quickshell.Io faltante)
+- `Directories is not defined` en DynamicWallpaperService
+- PomodoroService.running espejado (el id del Timer no era visible fuera)
+- Dynamic wallpaper aplica vía WallpaperService directamente
 
-```bash
-# Actualizar
-# Settings → About / Update → Update now
-# o:
-update-check.sh apply
-```
+## ⌨️ Resumen de atajos nuevos
+
+| Atajo | Acción |
+|---|---|
+| `Super + P` | Modo privado (portapapeles) + animación OSD |
+| `Super + Shift + G` | Panel Gaming |
+| `Super + Shift + W` | Panel Focus (ofimática) |
+
+Todos reasignables en Settings → Hyprland → Keybinds.
