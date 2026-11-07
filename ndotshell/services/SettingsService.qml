@@ -36,7 +36,8 @@ Singleton {
         "side.gaming": true,            // the Gaming drawer (right edge) + its hotspot
         "side.work": true,              // the Focus drawer (left edge) + its hotspot
         "side.hotspots": true,          // hover-the-edge opens; off = keybind/IPC only
-        "side.island": true,            // the Dynamic Island (top-center pill)
+        "side.island": true,            // the Dynamic Island (right-side menu)
+        "side.music": true,             // the Music dock (bottom-right corner)
         // ===== Bar =====
         "bar.visible": true,
         "bar.hideMode": "off",          // off | auto (slides off its edge until the pointer touches that edge; reserves no space)

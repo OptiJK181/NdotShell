@@ -587,6 +587,7 @@ ShellRoot {
         model: Quickshell.screens
         Hotspot {
             name: "gaming"
+            zone: "corner"
             visible: SettingsService.flag("side.gaming") && SettingsService.flag("side.hotspots")
         }
     }
@@ -596,7 +597,26 @@ ShellRoot {
         model: Quickshell.screens
         Hotspot {
             name: "work"
+            zone: "corner"
             visible: SettingsService.flag("side.work") && SettingsService.flag("side.hotspots")
+        }
+    }
+
+    Variants {
+        id: islandHotspots
+        model: Quickshell.screens
+        Hotspot {
+            name: "island"
+            zone: "mid"
+        }
+    }
+
+    Variants {
+        id: musicHotspots
+        model: Quickshell.screens
+        Hotspot {
+            name: "music"
+            zone: "bottom"
         }
     }
 
@@ -619,6 +639,13 @@ ShellRoot {
         id: islands
         model: Quickshell.screens
         DynamicIsland {}
+    }
+
+    // Music dock — esquina inferior derecha, doble toque (side.music).
+    Variants {
+        id: musicDocks
+        model: Quickshell.screens
+        MusicDock {}
     }
 
     // The screen lock (Lockscreen.qml): one WlSessionLock for the whole

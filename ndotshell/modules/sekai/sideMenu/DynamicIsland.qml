@@ -5,11 +5,13 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
-// Dynamic Island — 100% MANUAL: no aparece hasta que la actives
-// (Super + Shift + D, o `ipc call island toggle`). Se dibuja como tarjeta
-// de tres paneles bajo la barra (RELOJ · MÚSICA · POMODORO/REC), con
-// salida gelatinosa. Esc, la ✕ o el keybind la cierran. El toggle de
-// Ajustes (side.island) apaga también el keybind.
+// Dynamic Island — menú interactivo vertical en el lateral derecho: del
+// medio del borde hasta la esquina inferior derecha. 100% manual (Super +
+// Shift + D o ipc call island toggle). En su cabeza, un agujero negro
+// girando (núcleo negro, disco de acento y satélite en órbita); debajo,
+// las llaves del menú: REC · POMODORO · MÚSICA · PRIVADO · CAPTURA ·
+// GAMING · FOCUS. Esc lo cierra; el toggle de Ajustes (side.island) lo
+// apaga entero.
 PanelWindow {
     id: win
 
@@ -18,19 +20,22 @@ PanelWindow {
     readonly property var mt: Theme.of(screen)
     readonly property real uiScale: ShellScale.forScreen(screen)
 
-    anchors { top: true; left: true; right: true }
+    anchors { top: true; bottom: true; right: true }
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    implicitHeight: Math.round(200 * win.uiScale)
-    visible: SideMenuService.islandOn && SideMenuService.islandOpen
+    implicitWidth: Math.round(cardW * win.uiScale)
+    visible: SettingsService.flag("side.island")
+        && (SideMenuService.islandOpen || win.openAnim > 0.001)
+
+    readonly property real cardW: 76
 
     property real openAnim: SideMenuService.islandOpen ? 1 : 0
     Behavior on openAnim {
         NumberAnimation {
-            duration: 620
+            duration: 640
             easing.type: Easing.OutElastic
-            easing.amplitude: 1.3
-            easing.period: 0.45
+            easing.amplitude: 1.25
+            easing.period: 0.5
         }
     }
 
@@ -43,194 +48,176 @@ PanelWindow {
     Item {
         id: card
 
-        property real openH: 150
+        // del medio del lateral (40%) hasta cerca de la esquina inferior (94%)
+        x: Math.round(win.width - win.cardW * win.uiScale * win.openAnim
+                      - (1 - win.openAnim) * 4 * win.uiScale)
+        y: Math.round(parent.height * 0.40)
+        width: Math.round(win.cardW * win.uiScale)
+        height: Math.round(parent.height * 0.54)
 
-        anchors.top: parent.top
-        anchors.topMargin: Math.round((SettingsService.flag("bar.visible")
-            ? BarPositionService.thicknessFor("top") + 6 : 6) * win.uiScale)
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: Math.round(620 * win.uiScale)
-        height: Math.round(openH * win.uiScale * Math.min(1, win.openAnim * 1.2))
-        opacity: win.openAnim
-        scale: win.openAnim
-        transformOrigin: Item.Top
+        HoverHandler { id: cardHover }
 
         Keys.onEscapePressed: SideMenuService.islandOpen = false
 
         // slab
         Rectangle {
             anchors.fill: parent
-            radius: 20 * win.uiScale
+            radius: 26 * win.uiScale
             color: mt.nbSurface
             border.width: 1
             border.color: mt.nbBorder
-
-            Rectangle {
-                visible: ScreenRecorderService.recording
-                anchors.fill: parent
-                radius: parent.radius
-                color: "transparent"
-                border.width: 1
-                border.color: mt.nbAccent
-            }
         }
 
-        // ✕ close
+        // accent hairline on the screen edge
         Rectangle {
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: 10 * win.uiScale
-            width: 26 * win.uiScale
-            height: 26 * win.uiScale
-            radius: 13 * win.uiScale
-            color: xMa.pressed ? mt.nbBorder : mt.nbSurface
-            border.width: 1
-            border.color: mt.nbBorder
-
-            Text {
-                anchors.centerIn: parent
-                text: "✕"
-                color: mt.nbInk
-                font.pixelSize: 12 * win.uiScale
-            }
-
-            MouseArea {
-                id: xMa
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: SideMenuService.islandOpen = false
-            }
+            anchors.bottom: parent.bottom
+            width: 2 * win.uiScale
+            color: mt.nbAccent
+            opacity: win.openAnim
         }
 
-        Row {
+        Column {
             anchors.fill: parent
-            anchors.margins: 16 * win.uiScale
-            anchors.rightMargin: 40 * win.uiScale
-            spacing: 12 * win.uiScale
+            anchors.topMargin: 18 * win.uiScale
+            anchors.bottomMargin: 16 * win.uiScale
+            anchors.leftMargin: 12 * win.uiScale
+            anchors.rightMargin: 12 * win.uiScale
+            spacing: 10 * win.uiScale
 
-            // RELOJ
-            Rectangle {
-                width: Math.round((parent.width - 2 * 12 * win.uiScale) * 0.32)
-                height: parent.height
-                radius: 12 * win.uiScale
-                color: mt.nbRaised
-                border.width: 1
-                border.color: mt.nbBorder
+            // ===== agujero negro =====
+            Item {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 56 * win.uiScale
+                height: 56 * win.uiScale
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 2 * win.uiScale
+                // disco de acento girando (arco 270°)
+                Item {
+                    anchors.fill: parent
 
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        property var d: new Date()
-                        text: Qt.formatTime(d, SettingsService.flag("time.use24h") ? "HH:mm" : "h:mm")
-                        color: mt.nbInk
-                        font.family: mt.fontDisplay
-                        font.pixelSize: 30 * win.uiScale
-
-                        Timer { interval: 1000; running: true; repeat: true
-                                onTriggered: parent.d = new Date() }
+                    Canvas {
+                        anchors.fill: parent
+                        onPaint: {
+                            const ctx = getContext("2d")
+                            ctx.clearRect(0, 0, width, height)
+                            ctx.beginPath()
+                            ctx.arc(width / 2, height / 2,
+                                Math.min(width, height) / 2 - 4 * win.uiScale,
+                                0, Math.PI * 1.55)
+                            ctx.strokeStyle = Qt.rgba(mt.nbAccent.r, mt.nbAccent.g, mt.nbAccent.b, 0.95)
+                            ctx.lineWidth = 3 * win.uiScale
+                            ctx.lineCap = "round"
+                            ctx.stroke()
+                        }
                     }
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: Qt.formatDate(new Date(), "ddd d MMM").toUpperCase()
-                        color: mt.nbInkSub
-                        font.family: mt.fontDisplay
-                        font.pixelSize: 9 * win.uiScale
-                        font.letterSpacing: 2 * win.uiScale
+                    RotationAnimation on rotation {
+                        from: 0
+                        to: 360
+                        duration: 3200
+                        loops: Animation.Infinite
                     }
                 }
-            }
 
-            // MÚSICA
-            Rectangle {
-                width: Math.round((parent.width - 2 * 12 * win.uiScale) * 0.36)
-                height: parent.height
-                radius: 12 * win.uiScale
-                color: mt.nbRaised
-                border.width: 1
-                border.color: mt.nbBorder
+                // satélite en órbita contraria
+                Item {
+                    anchors.fill: parent
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 6 * win.uiScale
-                    width: parent.width - 16 * win.uiScale
-
-                    Text {
-                        width: parent.width
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideRight
-                        text: media.playing ? media.title : qsTr("Nothing playing")
+                    Rectangle {
+                        x: parent.width / 2 - 3 * win.uiScale
+                        y: -2 * win.uiScale
+                        width: 6 * win.uiScale
+                        height: 6 * win.uiScale
+                        radius: 3 * win.uiScale
                         color: mt.nbInk
-                        font.family: mt.fontDisplay
-                        font.pixelSize: 13 * win.uiScale
                     }
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: parent.width
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideRight
-                        visible: media.playing
-                        text: media.artist
-                        color: mt.nbInkSub
-                        font.pixelSize: 10 * win.uiScale
-                    }
-
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 14 * win.uiScale
-
-                        IslandKey { icon: "skip-previous"; onClicked: media.previous() }
-                        IslandKey {
-                            icon: media.playing ? "pause" : "play"
-                            accent: media.playing
-                            onClicked: media.togglePlaying()
-                        }
-                        IslandKey { icon: "skip-next"; onClicked: media.next() }
+                    RotationAnimation on rotation {
+                        from: 360
+                        to: 0
+                        duration: 2100
+                        loops: Animation.Infinite
                     }
                 }
+
+                // núcleo
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 26 * win.uiScale
+                    height: 26 * win.uiScale
+                    radius: 13 * win.uiScale
+                    color: "#000000"
+                    border.width: 1
+                    border.color: mt.nbInkSub
+                }
+
+                property real angle: 0
+                property real angle2: 0
             }
 
-            // POMODORO / REC
-            Rectangle {
-                width: Math.round((parent.width - 2 * 12 * win.uiScale) * 0.32)
-                height: parent.height
-                radius: 12 * win.uiScale
-                color: mt.nbRaised
-                border.width: 1
-                border.color: PomodoroService.running ? mt.accentCyan
-                    : ScreenRecorderService.recording ? mt.nbAccent : mt.nbBorder
+            Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 6 * win.uiScale
+            // ===== llaves del menú =====
+            Column {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 10 * win.uiScale
 
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: ScreenRecorderService.recording
-                            ? "REC " + win.fmtRec(ScreenRecorderService.duration)
-                            : PomodoroService.format()
-                        color: ScreenRecorderService.recording ? mt.nbAccent : mt.nbInk
-                        font.family: mt.fontDisplay
-                        font.pixelSize: 22 * win.uiScale
+                IslandKey {
+                    icon: ScreenRecorderService.recording ? "stop" : "videocam"
+                    accent: ScreenRecorderService.recording
+                    onClicked: ScreenRecorderService.toggle()
+                }
+
+                IslandKey {
+                    icon: PomodoroService.running ? "pause" : "play"
+                    accent: PomodoroService.running
+                    onClicked: PomodoroService.toggle()
+                }
+
+                IslandKey {
+                    icon: media.playing ? "pause" : "play"
+                    accent: media.playing
+                    onClicked: media.togglePlaying()
+                }
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 24 * win.uiScale
+                    height: 1
+                    color: mt.nbBorder
+                }
+
+                IslandKey {
+                    icon: ClipboardHistoryService.privateMode ? "eye-closed" : "eye"
+                    accent: ClipboardHistoryService.privateMode
+                    onClicked: {
+                        const on = ClipboardHistoryService.togglePrivate()
+                        OSDSource.showPrivate(on)
                     }
+                }
 
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 10 * win.uiScale
+                IslandKey {
+                    icon: "crop"
+                    onClicked: {
+                        SideMenuService.islandOpen = false
+                        RegionService.showLater("copy")
+                    }
+                }
 
-                        IslandKey {
-                            icon: PomodoroService.running ? "pause" : "play"
-                            onClicked: PomodoroService.toggle()
-                        }
-                        IslandKey {
-                            icon: "videocam"
-                            accent: ScreenRecorderService.recording
-                            onClicked: ScreenRecorderService.toggle()
-                        }
+                IslandKey {
+                    icon: "sports_esports"
+                    accent: SideMenuService.open === "gaming"
+                    onClicked: {
+                        SideMenuService.islandOpen = false
+                        SideMenuService.toggle("gaming")
+                    }
+                }
+
+                IslandKey {
+                    icon: "center_focus_strong"
+                    accent: SideMenuService.open === "work"
+                    onClicked: {
+                        SideMenuService.islandOpen = false
+                        SideMenuService.toggle("work")
                     }
                 }
             }
@@ -239,28 +226,24 @@ PanelWindow {
 
     MediaSource { id: media }
 
-    function fmtRec(sec) {
-        const m = Math.floor(sec / 60)
-        const s = sec % 60
-        return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s
-    }
-
     component IslandKey: Rectangle {
         property string icon: ""
         property bool accent: false
         signal clicked()
 
-        width: 34 * win.uiScale
-        height: 34 * win.uiScale
-        radius: 17 * win.uiScale
-        color: keyMa.pressed ? mt.nbBorder : (accent ? mt.nbAccent : mt.nbSurface)
+        width: 42 * win.uiScale
+        height: 42 * win.uiScale
+        radius: 21 * win.uiScale
+        color: keyMa.pressed ? mt.nbBorder : (accent ? mt.nbAccent : mt.nbRaised)
         border.width: 1
         border.color: accent ? mt.nbAccent : mt.nbBorder
+        scale: keyMa.pressed ? 0.92 : 1
+        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
 
         MaterialIcon {
             anchors.centerIn: parent
             name: parent.icon
-            size: 16 * win.uiScale
+            size: 18 * win.uiScale
             color: parent.accent ? "#ffffff" : mt.nbInk
         }
 

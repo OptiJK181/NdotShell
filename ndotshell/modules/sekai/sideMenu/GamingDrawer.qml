@@ -25,6 +25,9 @@ PanelWindow {
     color: "transparent"
 
     readonly property real cardW: 330
+    // conexión con la barra: el slab nace justo bajo la barra
+    readonly property real topPad: SettingsService.flag("bar.visible")
+        ? BarPositionService.thicknessFor("top") : 0
 
     property real slide: SideMenuService.open === "gaming"
         && SettingsService.flag("side.gaming") ? 1 : 0
@@ -45,13 +48,23 @@ PanelWindow {
 
     mask: Region { item: card }
 
+    // driver de stagger
+    Item {
+        id: driver
+        property real t: SideMenuService.open === "gaming" ? 1 : 0
+        Behavior on t { NumberAnimation { duration: 640; easing.type: Easing.OutCubic } }
+        function prog(i) {
+            return Math.max(0, Math.min(1, (t - (0.10 + i * 0.085)) / 0.30))
+        }
+    }
+
     Item {
         id: card
 
         x: Math.round(win.width - win.cardW * win.uiScale * win.slide)
-        y: 0
+        y: Math.round(win.topPad)
         width: Math.round(win.cardW * win.uiScale)
-        height: win.height
+        height: Math.round(parent.height - win.topPad)
         transformOrigin: Item.Right
 
         HoverHandler { id: cardHover }
@@ -155,6 +168,8 @@ PanelWindow {
 
             // ===== the menu =====
             DrawerMenuItem {
+                appear: driver.prog(0)
+                fromRight: true
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -166,6 +181,8 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(1)
+                fromRight: true
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -179,6 +196,8 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(2)
+                fromRight: true
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -190,6 +209,8 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(3)
+                fromRight: true
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -201,6 +222,8 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(4)
+                fromRight: true
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -215,6 +238,8 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(5)
+                fromRight: true
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -226,6 +251,8 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(6)
+                fromRight: true
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -238,12 +265,13 @@ PanelWindow {
 
             Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
 
-            // ===== live stats =====
+            // ===== live stats + ventilador =====
             Column {
                 width: parent.width
                 spacing: 9 * win.uiScale
 
                 Text {
+                    opacity: driver.prog(7)
                     text: qsTr("SISTEMA")
                     color: mt.nbInkSub
                     font.family: mt.fontDisplay
@@ -251,16 +279,36 @@ PanelWindow {
                     font.letterSpacing: 4 * win.uiScale
                 }
 
-                GamingMeter {
+                Row {
                     width: parent.width
-                    label: qsTr("CPU")
-                    value: stats.cpuPercent
-                }
+                    spacing: 12 * win.uiScale
 
-                GamingMeter {
-                    width: parent.width
-                    label: qsTr("RAM")
-                    value: stats.memPercent
+                    GamingFan {
+                        width: 64 * win.uiScale
+                        height: 64 * win.uiScale
+                        cpu: stats.cpuPercent
+                        opacity: driver.prog(8)
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 64 * win.uiScale - 12 * win.uiScale
+                        spacing: 9 * win.uiScale
+
+                        GamingMeter {
+                            width: parent.width
+                            label: qsTr("CPU")
+                            opacity: driver.prog(8)
+                            value: stats.cpuPercent
+                        }
+
+                        GamingMeter {
+                            width: parent.width
+                            label: qsTr("RAM")
+                            opacity: driver.prog(9)
+                            value: stats.memPercent
+                        }
+                    }
                 }
             }
 
@@ -283,6 +331,72 @@ PanelWindow {
         const m = Math.floor(sec / 60)
         const s = sec % 60
         return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s
+    }
+
+    // mini ventilador: gira más rápido cuanto más caliente va la CPU
+    component GamingFan: Rectangle {
+        id: fan
+        property real cpu: 0
+        property real angle: 0
+
+        radius: width / 2
+        color: mt.nbRaised
+        border.width: 1
+        border.color: mt.nbBorder
+
+        Timer {
+            interval: Math.max(16, 58 - fan.cpu * 0.42)
+            running: fan.opacity > 0.05
+            repeat: true
+            onTriggered: fan.angle = (fan.angle + 7) % 360
+        }
+
+        Item {
+            anchors.centerIn: parent
+            width: parent.width - 10 * win.uiScale
+            height: parent.height - 10 * win.uiScale
+            rotation: fan.angle
+
+            Repeater {
+                model: 3
+
+                Rectangle {
+                    required property int index
+                    width: 16 * win.uiScale
+                    height: parent.height / 2 - 3 * win.uiScale
+                    radius: width / 2
+                    color: fan.cpu > 85 ? mt.nbAccent : mt.nbInkSub
+                    opacity: 0.9
+                    x: (parent.width - width) / 2
+                    y: 3 * win.uiScale
+                    transform: Rotation {
+                        origin.x: width / 2
+                        origin.y: height
+                        angle: index * 120
+                    }
+                }
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 13 * win.uiScale
+                height: 13 * win.uiScale
+                radius: 7 * win.uiScale
+                color: mt.nbSurface
+                border.width: 1
+                border.color: mt.nbBorder
+            }
+        }
+
+        Text {
+            anchors.top: parent.bottom
+            anchors.topMargin: 4 * win.uiScale
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: Math.round(600 + fan.cpu * 42) + ""
+            color: mt.nbInkSub
+            font.family: mt.fontDisplay
+            font.pixelSize: 10 * win.uiScale
+        }
     }
 
     component GamingMeter: Column {

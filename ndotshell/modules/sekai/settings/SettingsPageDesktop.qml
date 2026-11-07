@@ -394,6 +394,16 @@ SettingsPage {
         }
 
         SettingToggle {
+            icon: "music-note-2"
+            label: "Dock de música (esquina inferior)"
+            detail: SettingsService.flag("side.music")
+                ? "Doble toque en la esquina inferior derecha"
+                : "OFF"
+            checked: SettingsService.flag("side.music")
+            onToggled: SettingsService.toggle("side.music")
+        }
+
+        SettingToggle {
             icon: "moon-stars"
             label: "Dynamic Island"
             detail: SettingsService.flag("side.island")

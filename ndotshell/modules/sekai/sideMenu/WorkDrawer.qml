@@ -23,6 +23,9 @@ PanelWindow {
     color: "transparent"
 
     readonly property real cardW: 330
+    // conexión con la barra: el slab nace justo bajo la barra
+    readonly property real topPad: SettingsService.flag("bar.visible")
+        ? BarPositionService.thicknessFor("top") : 0
 
     property real slide: SideMenuService.open === "work"
         && SettingsService.flag("side.work") ? 1 : 0
@@ -43,13 +46,23 @@ PanelWindow {
 
     mask: Region { item: card }
 
+    // driver de stagger
+    Item {
+        id: driver
+        property real t: SideMenuService.open === "work" ? 1 : 0
+        Behavior on t { NumberAnimation { duration: 640; easing.type: Easing.OutCubic } }
+        function prog(i) {
+            return Math.max(0, Math.min(1, (t - (0.10 + i * 0.085)) / 0.30))
+        }
+    }
+
     Item {
         id: card
 
         x: Math.round(-win.cardW * win.uiScale * (1 - win.slide))
-        y: 0
+        y: Math.round(win.topPad)
         width: Math.round(win.cardW * win.uiScale)
-        height: win.height
+        height: Math.round(parent.height - win.topPad)
         transformOrigin: Item.Left
 
         HoverHandler { id: cardHover }
@@ -210,8 +223,71 @@ PanelWindow {
                 }
             }
 
+            // ===== pulpo escribiendo =====
+            Rectangle {
+                width: parent.width
+                height: 86 * win.uiScale
+                radius: 14 * win.uiScale
+                color: mt.nbRaised
+                border.width: 1
+                border.color: PomodoroService.running ? mt.accentCyan : mt.nbBorder
+
+                Row {
+                    anchors.fill: parent
+                    anchors.margins: 12 * win.uiScale
+                    spacing: 12 * win.uiScale
+
+                    // el pulpo: flota y respira mientras teclea
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "🐙"
+                        font.pixelSize: 34 * win.uiScale
+
+                        SequentialAnimation on y {
+                            loops: Animation.Infinite
+                            alwaysRunToEnd: true
+                            NumberAnimation { to: -4 * win.uiScale; duration: 900; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 3 * win.uiScale; duration: 900; easing.type: Easing.InOutQuad }
+                        }
+
+                        SequentialAnimation on scale {
+                            loops: Animation.Infinite
+                            alwaysRunToEnd: true
+                            NumberAnimation { to: 1.08; duration: 450; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 1.0; duration: 450; easing.type: Easing.InOutQuad }
+                        }
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 34 * win.uiScale - 12 * win.uiScale - 24 * win.uiScale
+                        spacing: 3 * win.uiScale
+
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: win.octoShown
+                            color: mt.nbInk
+                            font.family: mt.fontDisplay
+                            font.pixelSize: 13 * win.uiScale
+                        }
+
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: PomodoroService.running
+                                ? qsTr("Pomodoro activo — no le pierdas la pista")
+                                : qsTr("El pulpo toma notas por ti")
+                            color: mt.nbInkSub
+                            font.pixelSize: 11 * win.uiScale
+                        }
+                    }
+                }
+            }
+
             // ===== the menu =====
             DrawerMenuItem {
+                appear: driver.prog(0)
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -223,6 +299,7 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(1)
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -237,6 +314,7 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(2)
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -248,6 +326,7 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(3)
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -259,6 +338,7 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(4)
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -270,6 +350,7 @@ PanelWindow {
             }
 
             DrawerMenuItem {
+                appear: driver.prog(5)
                 s: win.uiScale
                 inkColor: mt.nbInk
                 subInkColor: mt.nbInkSub
@@ -287,6 +368,44 @@ PanelWindow {
                 color: mt.nbInkSub
                 font.pixelSize: 11 * win.uiScale
             }
+        }
+    }
+
+    // máquina de escribir del pulpo: letra por letra, con cursor que respira
+    // (QtObject no admite hijos: los Timers van al nivel del drawer)
+    property string octoFull: ""
+    property int octoMsg: 0
+    property int octoChars: 0
+    readonly property var octoMessages: [
+        qsTr("escribiendo tus notas…"),
+        qsTr("anotando el pomodoro…"),
+        qsTr("armando tu escritorio…"),
+        qsTr("tentáculos en el teclado…"),
+        qsTr("nada se le escapa al pulpo")
+    ]
+    readonly property string octoShown: octoMessages[octoMsg].slice(0, octoChars)
+        + (octoChars < octoMessages[octoMsg].length && octoChars % 2 === 0 ? "▌" : "")
+
+    Timer {
+        interval: 62
+        running: win.slide > 0.5
+        repeat: true
+        onTriggered: {
+            const full = win.octoMessages[win.octoMsg]
+            if (win.octoChars < full.length) {
+                win.octoChars++
+            } else {
+                octoHold.restart()
+            }
+        }
+    }
+
+    Timer {
+        id: octoHold
+        interval: 1600
+        onTriggered: {
+            win.octoMsg = (win.octoMsg + 1) % win.octoMessages.length
+            win.octoChars = 0
         }
     }
 

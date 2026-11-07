@@ -164,6 +164,7 @@ var ACTIONS = [
     { id: "drawergaming", group: "Shell", name: "Panel Gaming", call: "sidemenu gaming", bare: true },
     { id: "drawerwork", group: "Shell", name: "Panel Focus (ofimática)", call: "sidemenu work", bare: true },
     { id: "island", group: "Shell", name: "Dynamic Island", call: "island toggle", bare: true },
+    { id: "musicdock", group: "Shell", name: "Dock de música", call: "musicdock toggle", bare: true },
     { id: "snip", group: "Utilities", name: "Screen snip", call: "region screenshot",
       cmd: QS + "region screenshot || grim -g \"$(slurp)\" - | wl-copy" },
     { id: "snipfile", group: "Utilities", name: "Screen snip >> file", call: "region save" },

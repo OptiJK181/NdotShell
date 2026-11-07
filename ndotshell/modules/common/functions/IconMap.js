@@ -408,7 +408,8 @@ const map = {
     gpp_maybe: "danger-triangle",
     comments_disabled: "dialog",
     notifications: "bell",
-    notifications_off: "bell-off"
+    notifications_off: "bell-off",
+    edit_off: "pen-2"
 }
 
 function candidates(name, filled, style) {

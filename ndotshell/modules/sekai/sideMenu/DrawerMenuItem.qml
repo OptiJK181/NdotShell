@@ -25,10 +25,18 @@ Item {
 
     signal activated()
 
+    // aparición escalonada: 0 = fuera, 1 = en sitio (lo maneja el drawer)
+    property real appear: 1
+    // true = el panel entra desde la derecha (gaming), false desde la izquierda
+    property bool fromRight: false
+
     readonly property bool lit: root.selected || ma.containsMouse
 
     width: parent ? parent.width : 0
     height: 42 * root.s
+    opacity: appear
+    transform: Translate { x: (1 - appear) * root.s * (root.fromRight ? 30 : -30) }
+    Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
     // ===== the skewed wedge =====
     Rectangle {

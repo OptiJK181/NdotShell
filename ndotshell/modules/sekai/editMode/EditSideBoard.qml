@@ -28,7 +28,8 @@ Item {
         { id: "side.gaming", key: "GAMING", icon: "sports_esports" },
         { id: "side.work", key: "FOCUS", icon: "center_focus_strong" },
         { id: "side.hotspots", key: "HOTSPOTS", icon: "crop" },
-        { id: "side.island", key: "ISLAND", icon: "moon-stars" }
+        { id: "side.island", key: "ISLAND", icon: "moon-stars" },
+        { id: "side.music", key: "MÚSICA", icon: "music-note-2" }
     ]
 
     readonly property int onCount: entries.filter(e => SettingsService.flag(e.id)).length

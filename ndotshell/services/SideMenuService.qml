@@ -34,6 +34,15 @@ Singleton {
         root.islandOpen = !root.islandOpen
     }
 
+    // ===== Music dock: doble toque en la esquina inferior derecha =====
+    property bool musicOpen: false
+
+    function toggleMusic() {
+        if (!SettingsService.flag("side.music"))
+            return
+        root.musicOpen = !root.musicOpen
+    }
+
     IpcHandler {
         target: "island"
 
@@ -45,6 +54,20 @@ Singleton {
         function status(): string {
             if (!SettingsService.flag("side.island")) return "disabled"
             return root.islandOpen ? "open" : "hidden"
+        }
+    }
+
+    IpcHandler {
+        target: "musicdock"
+
+        function toggle(): void { root.toggleMusic() }
+        function show(): void {
+            if (SettingsService.flag("side.music")) root.musicOpen = true
+        }
+        function hide(): void { root.musicOpen = false }
+        function status(): string {
+            if (!SettingsService.flag("side.music")) return "disabled"
+            return root.musicOpen ? "open" : "hidden"
         }
     }
 
