@@ -1,28 +1,69 @@
-# NdotShell 1.0.0
+# NdotShell 1.0.3
 
-Quickshell desktop para Hyprland, fork renombrado de SekaiPop. Diseño Nothing
-permanente: bar/dock cápsula, seis canales de acento (Ndot Red por defecto,
-Mono, Amber, Lime, Blue, Violet), teléfono holograma 2.5D, welcome tour
-mejorado y canales de actualización propios (estable = main, dev = dev).
+## ✨ Nuevas Features
 
-## Instalación automática
+### 📋 Clipboard History
+- Historial del portapapeles (texto e imágenes, hasta 50 items)
+- Anclar (pin) items importantes
+- Búsqueda en tiempo real
+- Click para copiar al portapapeles
+- Integración en Settings → General → Clipboard history
+
+### 🎥 Screen Recorder
+- Grabar pantalla completa, ventana seleccionada o región
+- Con/sin audio del sistema
+- Tile en Quick Panel con indicador visual de grabación
+- Notificación al terminar con archivo guardado
+- Settings → Quick → Grabadora de pantalla
+
+### ⏱️ Pomodoro Timer
+- Ciclos 25/5 min configurables
+- Descanso largo cada N ciclos
+- Estadísticas persistentes (ciclos hoy, tiempo total)
+- Auto-inicio de descansos/trabajo opcional
+- Notificaciones nativas
+- Widget en Edit Desktop + Settings → General → Pomodoro
+
+### 🌅 Dynamic Wallpaper (Wallpaper por hora)
+- Cambio automático: mañana (6-10), día (10-18), tarde (18-22), noche (22-6)
+- Transición suave configurable (1-120 min)
+- Modo manual: el usuario elige una imagen
+- Settings → Desktop → Wallpaper dinámico
+
+---
+
+## 🔧 Mejoras al Sistema de Actualizaciones
+
+- **Fix crítico**: `update-check.sh` ahora prioriza `.source` sobre detección git
+  - Fix para instalaciones symlinkadas (managed install)
+  - Fix para "nothing to compare with" / "no tiene repo"
+- Prioridad de remoto: `$NDOTSHELL_REPO` → `.source` → `~/.config/ndotshell/update-repo` → remote `fork` → `origin` (solo si no es SekaiPop)
+- Canales `stable` (main) / `dev` (dev) funcionando en Settings → About
+- `apply` hace swap atómico + actualiza `VERSION` y `.source` automáticamente
+
+---
+
+## 🐛 Bugs Corregidos
+
+- Settings → About/Update: botón "Update now" funcional
+- Prioridad `.source` sobre detección git (fix para symlinks)
+- Canal `dev` creado en GitHub
+- Tags y releases automatizados
+
+---
+
+## 📦 Instalación / Actualización
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/[TU-USUARIO]/NdotShell/main/get.sh)
+# Instalar
+bash <(curl -fsSL https://raw.githubusercontent.com/OptiJK181/NdotShell/main/get.sh) --yes
+
+# Actualizar (desde la shell)
+# Settings → About / Update → Update now
+# O CLI:
+update-check.sh apply
 ```
 
-O clona y ejecuta `./install.sh`.
+---
 
-## ¿Qué cambia respecto a SekaiPop?
-
-- Renombrado completo: `qs -c ndotshell`, `~/.config/ndotshell`,
-  `~/.cache/ndotshell`, `~/.local/state/ndotshell`, `qs-autostart`.
-- Nothing skin en bar y dock (estilo cápsula, 1 px rim, sin sombras).
-- Teléfono con render holograma 2.5D: pantalla nítida y opaca, extrusión con
-  filamento de acento, pared lateral translúcida, alambre trasero y halo.
-- Welcome tour: letra Ndot/Shell, marca de punto, paleta papel/tinta, rejilla
-  de fondo, barrido de scanlines y glitch del héroe al cambiar de diapositiva.
-- `update-check.sh channel [stable|dev]`; `info`, `check`, `log` y `apply`
-  leen del repo del fork (nunca de SekaiPop).
-- Autostart vía `qs-autostart` tras reinicio.
-- GPL-3.0, versión 1.0.0.
+**Commit**: `5da1fe3` | **Canal**: `dev` / `stable` (main)
