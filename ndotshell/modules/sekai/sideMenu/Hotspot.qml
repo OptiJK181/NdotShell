@@ -28,6 +28,9 @@ PanelWindow {
     readonly property bool active: SideMenuService.open === name
     readonly property bool armed: ma.containsMouse && !active
 
+    visible: SettingsService.flag(name === "gaming" ? "side.gaming" : "side.work")
+        && SettingsService.flag("side.hotspots")
+
     MouseArea {
         id: ma
         anchors.fill: parent

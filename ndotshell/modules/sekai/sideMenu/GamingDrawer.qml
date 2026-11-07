@@ -4,12 +4,12 @@ import Quickshell.Wayland
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.sekai.sideMenu
 
-// Gaming drawer — Caelestia-style: a thin hotspot strip runs down the RIGHT
-// edge; hover it and the panel slides out; move away and it slides back.
-// A keybind (Super + Shift + G) or `ipc call sidemenu gaming` pins it open.
-// 100% gaming: Game Mode, recorder with live timer, notifications off,
-// Keep Awake, CPU/RAM meters.
+// Gaming drawer — Caelestia hotspot on the right edge; Sekai power-menu
+// typography inside (skewed wedge + italic accent word on select).
+// 100% gaming: Game Mode, recorder (screen / window / region), screenshot,
+// notifications, Keep Awake, CPU/RAM meters.
 PanelWindow {
     id: win
 
@@ -20,33 +20,26 @@ PanelWindow {
     readonly property real uiScale: ShellScale.forScreen(screen)
 
     anchors { top: true; bottom: true; right: true }
-    // The window is only the card width; invisible (unmapped) while fully
-    // closed, so idle cost is zero. The always-on hotspot (Hotspot.qml,
-    // instantiated in shell.qml) owns the edge.
     implicitWidth: Math.round(cardW * win.uiScale)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
-    readonly property real cardW: 320
+    readonly property real cardW: 330
 
-    // 0 = hidden, 1 = fully out.
-    property real slide: SideMenuService.open === "gaming" ? 1 : 0
+    property real slide: SideMenuService.open === "gaming"
+        && SettingsService.flag("side.gaming") ? 1 : 0
     Behavior on slide { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
 
-    visible: SideMenuService.open === "gaming" || win.slide > 0.001
+    visible: win.slide > 0.001
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: SideMenuService.open === "gaming"
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    // Only the card takes input; the hotspot (Hotspot.qml in shell.qml)
-    // owns the edge.
     mask: Region { item: card }
 
-    // ===== the card =====
     Item {
         id: card
 
-        // From fully hidden (behind the screen's right edge) to fully out.
         x: Math.round(win.width - win.cardW * win.uiScale * win.slide)
         y: 0
         width: Math.round(win.cardW * win.uiScale)
@@ -58,7 +51,7 @@ PanelWindow {
         focus: SideMenuService.open === "gaming"
         Keys.onEscapePressed: SideMenuService.hide()
 
-        // ===== slab =====
+        // slab
         Rectangle {
             anchors.fill: parent
             color: mt.nbSurface
@@ -66,9 +59,7 @@ PanelWindow {
             border.color: mt.nbBorder
         }
 
-        // Accent hairline on the screen edge (Nothing's one-accent rule):
-        // a 2 px channel-accent line the length of the drawer, on the side
-        // that touches the screen content.
+        // accent hairline on the screen edge
         Rectangle {
             anchors.right: parent.right
             anchors.top: parent.top
@@ -84,12 +75,12 @@ PanelWindow {
             anchors.rightMargin: 22 * win.uiScale
             anchors.topMargin: 24 * win.uiScale
             anchors.bottomMargin: 18 * win.uiScale
-            spacing: 12 * win.uiScale
+            spacing: 10 * win.uiScale
 
             // ===== header =====
             Item {
                 width: parent.width
-                height: 44 * win.uiScale
+                height: 46 * win.uiScale
 
                 Column {
                     anchors.left: parent.left
@@ -113,7 +104,6 @@ PanelWindow {
                     }
                 }
 
-                // pin chip
                 Rectangle {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
@@ -136,128 +126,103 @@ PanelWindow {
                 }
             }
 
-            // hairline divider under the header
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: mt.nbBorder
+            Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
+
+            // ===== the menu =====
+            DrawerMenuItem {
+                s: win.uiScale
+                inkColor: mt.nbInk
+                subInkColor: mt.nbInkSub
+                accentColor: mt.nbAccent
+                displayFont: mt.fontDisplay
+                text: qsTr("GAME MODE")
+                selected: GameModeService.enabled
+                onActivated: GameModeService.toggle()
             }
 
-            // ===== Game Mode =====
-            GamingTile {
-                width: parent.width
-                icon: "sports_esports"
-                title: qsTr("Game Mode")
-                sub: GameModeService.enabled
-                    ? qsTr("Rendimiento arriba, avisos fuera")
-                    : qsTr("Activa el modo rendimiento")
-                on: GameModeService.enabled
-                busy: GameModeService.busy
-                onToggled: GameModeService.toggle()
+            DrawerMenuItem {
+                s: win.uiScale
+                inkColor: mt.nbInk
+                subInkColor: mt.nbInkSub
+                accentColor: mt.nbAccent
+                displayFont: mt.fontDisplay
+                text: ScreenRecorderService.recording
+                    ? qsTr("GRABANDO %1").arg(win.fmt(ScreenRecorderService.duration))
+                    : qsTr("GRABAR PANTALLA")
+                selected: ScreenRecorderService.recording
+                onActivated: ScreenRecorderService.toggle()
             }
 
-            // ===== Recorder =====
-            Rectangle {
-                width: parent.width
-                height: 76 * win.uiScale
-                radius: 12 * win.uiScale
-                color: mt.nbRaised
-                border.width: 1
-                border.color: ScreenRecorderService.recording ? mt.nbAccent : mt.nbBorder
+            DrawerMenuItem {
+                s: win.uiScale
+                inkColor: mt.nbInk
+                subInkColor: mt.nbInkSub
+                accentColor: mt.nbAccent
+                displayFont: mt.fontDisplay
+                action: true
+                text: qsTr("GRABAR VENTANA")
+                onActivated: ScreenRecorderService.startWindow()
+            }
 
-                Row {
-                    anchors.fill: parent
-                    anchors.margins: 12 * win.uiScale
-                    spacing: 12 * win.uiScale
+            DrawerMenuItem {
+                s: win.uiScale
+                inkColor: mt.nbInk
+                subInkColor: mt.nbInkSub
+                accentColor: mt.nbAccent
+                displayFont: mt.fontDisplay
+                action: true
+                text: qsTr("GRABAR REGIÓN")
+                onActivated: ScreenRecorderService.startRegion()
+            }
 
-                    Rectangle {
-                        width: 52 * win.uiScale
-                        height: 52 * win.uiScale
-                        radius: 26 * win.uiScale
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: ScreenRecorderService.recording ? mt.nbAccent : mt.nbSurface
-                        border.width: 1
-                        border.color: mt.nbBorder
-
-                        SequentialAnimation on opacity {
-                            running: ScreenRecorderService.recording
-                            loops: Animation.Infinite
-                            NumberAnimation { to: 0.45; duration: 700 }
-                            NumberAnimation { to: 1; duration: 700 }
-                        }
-
-                        MaterialIcon {
-                            anchors.centerIn: parent
-                            name: ScreenRecorderService.recording ? "stop" : "videocam"
-                            size: 24 * win.uiScale
-                            color: ScreenRecorderService.recording ? "#ffffff" : mt.nbInk
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: ScreenRecorderService.toggle()
-                        }
-                    }
-
-                    Column {
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 2 * win.uiScale
-                        Text {
-                            text: ScreenRecorderService.recording
-                                ? win.fmt(ScreenRecorderService.duration)
-                                : qsTr("Grabadora")
-                            color: ScreenRecorderService.recording ? mt.nbAccent : mt.nbInk
-                            font.family: mt.fontDisplay
-                            font.pixelSize: ScreenRecorderService.recording
-                                ? 26 * win.uiScale : 17 * win.uiScale
-                        }
-                        Text {
-                            text: ScreenRecorderService.recording
-                                ? qsTr("Grabando pantalla")
-                                : qsTr("Toca para grabar · entra al juego")
-                            color: mt.nbInkSub
-                            font.pixelSize: 12 * win.uiScale
-                        }
-                    }
+            DrawerMenuItem {
+                s: win.uiScale
+                inkColor: mt.nbInk
+                subInkColor: mt.nbInkSub
+                accentColor: mt.nbAccent
+                displayFont: mt.fontDisplay
+                action: true
+                text: qsTr("CAPTURA")
+                onActivated: {
+                    SideMenuService.hide()
+                    RegionService.showLater("copy")
                 }
             }
 
-            // ===== Notifications =====
-            GamingTile {
-                width: parent.width
-                icon: win.qsSource && win.qsSource.notificationsOn
-                    ? "notifications_active" : "notifications_off"
-                title: qsTr("Avisos")
-                sub: win.qsSource && win.qsSource.notificationsOn
-                    ? qsTr("Llegan normalmente")
-                    : qsTr("Silenciados: no molestan")
-                on: win.qsSource ? !win.qsSource.notificationsOn : false
-                onToggled: if (win.qsSource) win.qsSource.toggleNotifications()
+            DrawerMenuItem {
+                s: win.uiScale
+                inkColor: mt.nbInk
+                subInkColor: mt.nbInkSub
+                accentColor: mt.nbAccent
+                displayFont: mt.fontDisplay
+                text: qsTr("AVISOS")
+                selected: win.qsSource ? !win.qsSource.notificationsOn : false
+                onActivated: if (win.qsSource) win.qsSource.toggleNotifications()
             }
 
-            // ===== Keep Awake =====
-            GamingTile {
-                width: parent.width
-                icon: "local_cafe"
-                title: qsTr("Keep Awake")
-                sub: win.qsSource && win.qsSource.keepAwakeOn
-                    ? qsTr("La pantalla no se apaga")
-                    : qsTr("Apagado de pantalla normal")
-                on: win.qsSource ? win.qsSource.keepAwakeOn : false
-                onToggled: if (win.qsSource) win.qsSource.toggleKeepAwake()
+            DrawerMenuItem {
+                s: win.uiScale
+                inkColor: mt.nbInk
+                subInkColor: mt.nbInkSub
+                accentColor: mt.nbAccent
+                displayFont: mt.fontDisplay
+                text: qsTr("KEEP AWAKE")
+                selected: win.qsSource ? win.qsSource.keepAwakeOn : false
+                onActivated: if (win.qsSource) win.qsSource.toggleKeepAwake()
             }
+
+            Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
 
             // ===== live stats =====
             Column {
                 width: parent.width
-                spacing: 8 * win.uiScale
+                spacing: 9 * win.uiScale
 
                 Text {
                     text: qsTr("SISTEMA")
                     color: mt.nbInkSub
                     font.family: mt.fontDisplay
-                    font.pixelSize: 12 * win.uiScale
+                    font.pixelSize: 11 * win.uiScale
                     font.letterSpacing: 4 * win.uiScale
                 }
 
@@ -279,12 +244,11 @@ PanelWindow {
                 wrapMode: Text.WordWrap
                 text: qsTr("Toca el borde derecho para abrir · Esc cierra")
                 color: mt.nbInkSub
-                font.pixelSize: 12 * win.uiScale
+                font.pixelSize: 11 * win.uiScale
             }
         }
     }
 
-    // CPU/RAM poller: only samples while the drawer is on screen.
     ResourceSource {
         id: stats
         wanted: win.slide > 0.5
@@ -294,95 +258,6 @@ PanelWindow {
         const m = Math.floor(sec / 60)
         const s = sec % 60
         return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s
-    }
-
-    component GamingTile: Rectangle {
-        id: tile
-        property string icon: ""
-        property string title: ""
-        property string sub: ""
-        property bool on: false
-        property bool busy: false
-        signal toggled()
-
-        height: 66 * win.uiScale
-        radius: 14 * win.uiScale
-        color: tile.on ? Qt.alpha(mt.nbAccent, 0.10) : mt.nbRaised
-        border.width: 1
-        border.color: tile.on ? mt.nbAccent : mt.nbBorder
-        scale: tileMa.pressed ? 0.97 : 1
-        Behavior on scale { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
-
-        Row {
-            anchors.fill: parent
-            anchors.margins: 13 * win.uiScale
-            spacing: 13 * win.uiScale
-
-            // icon plate
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 40 * win.uiScale
-                height: 40 * win.uiScale
-                radius: 12 * win.uiScale
-                color: tile.on ? Qt.alpha(mt.nbAccent, 0.16) : mt.nbSurface
-                border.width: 1
-                border.color: tile.on ? Qt.alpha(mt.nbAccent, 0.5) : mt.nbBorder
-
-                MaterialIcon {
-                    anchors.centerIn: parent
-                    name: tile.icon
-                    size: 20 * win.uiScale
-                    color: tile.on ? mt.nbAccent : mt.nbInk
-                }
-            }
-
-            Column {
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 40 * win.uiScale - 13 * win.uiScale - 44 * win.uiScale - 13 * win.uiScale
-                spacing: 2
-                Text {
-                    text: tile.title
-                    color: mt.nbInk
-                    font.pixelSize: 15 * win.uiScale
-                    font.weight: Font.DemiBold
-                }
-                Text {
-                    width: parent.width
-                    elide: Text.ElideRight
-                    text: tile.sub
-                    color: mt.nbInkSub
-                    font.pixelSize: 12 * win.uiScale
-                }
-            }
-
-            // switch
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 44 * win.uiScale
-                height: 24 * win.uiScale
-                radius: 12 * win.uiScale
-                color: tile.on ? mt.nbAccent : mt.nbSurface
-                border.width: 1
-                border.color: tile.on ? mt.nbAccent : mt.nbBorder
-
-                Rectangle {
-                    x: tile.on ? parent.width - width - 2 * win.uiScale : 2 * win.uiScale
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18 * win.uiScale
-                    height: 18 * win.uiScale
-                    radius: 9 * win.uiScale
-                    color: tile.on ? "#ffffff" : mt.nbInkSub
-                    Behavior on x { NumberAnimation { duration: 140 } }
-                }
-            }
-        }
-
-        MouseArea {
-            id: tileMa
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: tile.toggled()
-        }
     }
 
     component GamingMeter: Column {

@@ -579,18 +579,25 @@ ShellRoot {
     // Two purpose-built edge panels, one open at a time (SideMenuService):
     //   gaming — right edge, hover the 8 px strip: game mode, recorder, stats
     //   work   — left edge, hover the 8 px strip: pomodoro, focus, clipboard
-    // The hotspots are always-on 8 px strips (Hotspot.qml) that light a 2 px
-    // accent line when touched; the drawer windows only map while open.
+    // Hotspots are always-on 8 px strips (Hotspot.qml) that light a 2 px
+    // accent line when touched; drawers only map while open. Everything
+    // gates from Settings → Desktop → Barras de tareas (side.*).
     Variants {
         id: gamingHotspots
         model: Quickshell.screens
-        Hotspot { name: "gaming" }
+        Hotspot {
+            name: "gaming"
+            visible: SettingsService.flag("side.gaming") && SettingsService.flag("side.hotspots")
+        }
     }
 
     Variants {
         id: workHotspots
         model: Quickshell.screens
-        Hotspot { name: "work" }
+        Hotspot {
+            name: "work"
+            visible: SettingsService.flag("side.work") && SettingsService.flag("side.hotspots")
+        }
     }
 
     Variants {
@@ -605,6 +612,13 @@ ShellRoot {
         id: workDrawers
         model: Quickshell.screens
         WorkDrawer {}
+    }
+
+    // Dynamic Island — Apple-style pill, Nothing dress (side.island).
+    Variants {
+        id: islands
+        model: Quickshell.screens
+        DynamicIsland {}
     }
 
     // The screen lock (Lockscreen.qml): one WlSessionLock for the whole

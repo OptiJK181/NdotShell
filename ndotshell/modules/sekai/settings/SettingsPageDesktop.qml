@@ -361,6 +361,50 @@ SettingsPage {
     }
 
     SectionCard {
+        title: "Barras de tareas"
+
+        SettingToggle {
+            icon: "sports_esports"
+            label: "Panel Gaming (borde derecho)"
+            detail: SettingsService.flag("side.gaming")
+                ? "Game Mode, grabadora y CPU/RAM al tocar el borde"
+                : "OFF · vuelve con el toggle o el keybind"
+            checked: SettingsService.flag("side.gaming")
+            onToggled: SettingsService.toggle("side.gaming")
+        }
+
+        SettingToggle {
+            icon: "center_focus_strong"
+            label: "Panel Focus (borde izquierdo)"
+            detail: SettingsService.flag("side.work")
+                ? "Pomodoro, Focus Mode y privacidad al tocar el borde"
+                : "OFF · vuelve con el toggle o el keybind"
+            checked: SettingsService.flag("side.work")
+            onToggled: SettingsService.toggle("side.work")
+        }
+
+        SettingToggle {
+            icon: "crop"
+            label: "Abrir tocando el borde"
+            detail: SettingsService.flag("side.hotspots")
+                ? "Las franjas de 8 px de cada borde abren al pasar el puntero"
+                : "OFF · solo keybind (Super + Shift + G / W) o IPC"
+            checked: SettingsService.flag("side.hotspots")
+            onToggled: SettingsService.toggle("side.hotspots")
+        }
+
+        SettingToggle {
+            icon: "moon-stars"
+            label: "Dynamic Island"
+            detail: SettingsService.flag("side.island")
+                ? "Píldora superior: reloj Ndot, música y Pomodoro al pasar el puntero"
+                : "OFF"
+            checked: SettingsService.flag("side.island")
+            onToggled: SettingsService.toggle("side.island")
+        }
+    }
+
+    SectionCard {
         title: "Widgets"
 
         SettingChoice {
