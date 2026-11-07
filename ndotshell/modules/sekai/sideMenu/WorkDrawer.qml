@@ -18,44 +18,27 @@ PanelWindow {
     readonly property real uiScale: ShellScale.forScreen(screen)
 
     anchors { top: true; bottom: true; left: true }
-    implicitWidth: Math.round((cardW + hotW) * win.uiScale)
+    // Card only: the always-on hotspot (Hotspot.qml in shell.qml) owns the edge.
+    implicitWidth: Math.round(cardW * win.uiScale)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
     readonly property real cardW: 320
-    readonly property real hotW: 8
 
     property real slide: SideMenuService.open === "work" ? 1 : 0
     Behavior on slide { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
 
     visible: SideMenuService.open === "work" || win.slide > 0.001
-        || hotspot.containsMouse
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: SideMenuService.open === "work"
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     mask: Region { item: card }
 
-    // ===== edge hotspot (left) =====
-    MouseArea {
-        id: hotspot
-        x: 0
-        y: 0
-        width: Math.ceil(win.hotW * win.uiScale)
-        height: win.height
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton
-        cursorShape: Qt.PointingHandCursor
-        onContainsMouseChanged: {
-            if (containsMouse) SideMenuService.hoverEnter("work")
-            else SideMenuService.hoverLeave()
-        }
-        onClicked: SideMenuService.toggle("work")
-    }
-
     Item {
         id: card
 
+        // From fully hidden (behind the screen's left edge) to fully out.
         x: Math.round(-win.cardW * win.uiScale * (1 - win.slide))
         y: 0
         width: Math.round(win.cardW * win.uiScale)
@@ -74,33 +57,78 @@ PanelWindow {
             border.color: mt.nbBorder
         }
 
+        // Accent hairline on the screen edge (the side touching content).
+        Rectangle {
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: 2 * win.uiScale
+            color: mt.nbAccent
+            opacity: win.slide
+        }
+
         Column {
             anchors.fill: parent
-            anchors.margins: 20 * win.uiScale
-            spacing: 14 * win.uiScale
+            anchors.leftMargin: 22 * win.uiScale
+            anchors.rightMargin: 22 * win.uiScale
+            anchors.topMargin: 24 * win.uiScale
+            anchors.bottomMargin: 18 * win.uiScale
+            spacing: 12 * win.uiScale
 
             // ===== header =====
             Item {
                 width: parent.width
-                height: 40 * win.uiScale
+                height: 44 * win.uiScale
 
-                Text {
+                Column {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    text: qsTr("FOCUS")
-                    color: mt.nbInk
-                    font.family: mt.fontDisplay
-                    font.pixelSize: 24 * win.uiScale
-                    font.letterSpacing: 6 * win.uiScale
+                    spacing: 0
+
+                    Text {
+                        text: qsTr("FOCUS")
+                        color: mt.nbInk
+                        font.family: mt.fontDisplay
+                        font.pixelSize: 26 * win.uiScale
+                        font.letterSpacing: 7 * win.uiScale
+                    }
+
+                    Text {
+                        text: qsTr("OFIMÁTICA")
+                        color: mt.nbInkSub
+                        font.family: mt.fontDisplay
+                        font.pixelSize: 9 * win.uiScale
+                        font.letterSpacing: 3 * win.uiScale
+                    }
                 }
 
-                Text {
+                Rectangle {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    text: SideMenuService.pinned === "work" ? "📌" : ""
-                    color: mt.nbInkSub
-                    font.pixelSize: 13 * win.uiScale
+                    visible: SideMenuService.pinned === "work"
+                    width: pinText.implicitWidth + 16 * win.uiScale
+                    height: 22 * win.uiScale
+                    radius: 11 * win.uiScale
+                    color: "transparent"
+                    border.width: 1
+                    border.color: mt.nbBorder
+                    Text {
+                        id: pinText
+                        anchors.centerIn: parent
+                        text: qsTr("FIJADO")
+                        color: mt.nbInkSub
+                        font.family: mt.fontDisplay
+                        font.pixelSize: 9 * win.uiScale
+                        font.letterSpacing: 2 * win.uiScale
+                    }
                 }
+            }
+
+            // hairline divider under the header
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: mt.nbBorder
             }
 
             // ===== Pomodoro =====
@@ -173,7 +201,7 @@ PanelWindow {
                     ? qsTr("Los widgets se apartan mientras trabajas")
                     : qsTr("Widgets siempre visibles")
                 on: FocusService.enabled
-                onToggled: FocusService.toggle()
+                onToggled: SettingsService.toggle("focus.enabled")
             }
 
             // ===== Clipboard privacy =====
@@ -257,28 +285,40 @@ PanelWindow {
         property bool on: false
         signal toggled()
 
-        height: 60 * win.uiScale
-        radius: 12 * win.uiScale
-        color: tile.on ? Qt.alpha(mt.nbAccent, 0.12) : mt.nbRaised
+        height: 62 * win.uiScale
+        radius: 14 * win.uiScale
+        color: tile.on ? Qt.alpha(mt.nbAccent, 0.10) : mt.nbRaised
         border.width: 1
         border.color: tile.on ? mt.nbAccent : mt.nbBorder
+        scale: tileMa.pressed ? 0.97 : 1
+        Behavior on scale { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
 
         Row {
             anchors.fill: parent
             anchors.margins: 12 * win.uiScale
-            spacing: 12 * win.uiScale
+            spacing: 13 * win.uiScale
 
-            MaterialIcon {
+            Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
-                name: tile.icon
-                size: 22 * win.uiScale
-                color: tile.on ? mt.nbAccent : mt.nbInk
+                width: 40 * win.uiScale
+                height: 40 * win.uiScale
+                radius: 12 * win.uiScale
+                color: tile.on ? Qt.alpha(mt.nbAccent, 0.16) : mt.nbSurface
+                border.width: 1
+                border.color: tile.on ? Qt.alpha(mt.nbAccent, 0.5) : mt.nbBorder
+
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    name: tile.icon
+                    size: 20 * win.uiScale
+                    color: tile.on ? mt.nbAccent : mt.nbInk
+                }
             }
 
             Column {
                 anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 22 * win.uiScale - 12 * win.uiScale - 48 * win.uiScale
-                spacing: 1
+                width: parent.width - 40 * win.uiScale - 13 * win.uiScale - 44 * win.uiScale - 13 * win.uiScale
+                spacing: 2
                 Text {
                     text: tile.title
                     color: mt.nbInk
@@ -316,6 +356,7 @@ PanelWindow {
         }
 
         MouseArea {
+            id: tileMa
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             onClicked: tile.toggled()

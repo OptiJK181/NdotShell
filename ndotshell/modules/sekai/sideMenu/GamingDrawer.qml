@@ -20,51 +20,33 @@ PanelWindow {
     readonly property real uiScale: ShellScale.forScreen(screen)
 
     anchors { top: true; bottom: true; right: true }
-    // The window is only the strip + the card width; invisible (unmapped)
-    // while fully closed, so idle cost is zero.
-    implicitWidth: Math.round((cardW + hotW) * win.uiScale)
+    // The window is only the card width; invisible (unmapped) while fully
+    // closed, so idle cost is zero. The always-on hotspot (Hotspot.qml,
+    // instantiated in shell.qml) owns the edge.
+    implicitWidth: Math.round(cardW * win.uiScale)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
     readonly property real cardW: 320
-    readonly property real hotW: 8
 
     // 0 = hidden, 1 = fully out.
     property real slide: SideMenuService.open === "gaming" ? 1 : 0
     Behavior on slide { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
 
     visible: SideMenuService.open === "gaming" || win.slide > 0.001
-        || hotspot.containsMouse
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: SideMenuService.open === "gaming"
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    // Only the card (and the hotspot strip) take input.
+    // Only the card takes input; the hotspot (Hotspot.qml in shell.qml)
+    // owns the edge.
     mask: Region { item: card }
-
-    // ===== edge hotspot: hover the last pixels of the screen =====
-    MouseArea {
-        id: hotspot
-        x: Math.round(win.width - win.hotW * win.uiScale)
-        y: 0
-        width: Math.ceil(win.hotW * win.uiScale)
-        height: win.height
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton
-        cursorShape: Qt.PointingHandCursor
-        onContainsMouseChanged: {
-            if (containsMouse) SideMenuService.hoverEnter("gaming")
-            else SideMenuService.hoverLeave()
-        }
-        // A tap on the edge also opens (touchscreens / trackpad taps).
-        onClicked: SideMenuService.toggle("gaming")
-    }
 
     // ===== the card =====
     Item {
         id: card
 
-        // From fully hidden (right edge + the hotspot strip) to fully out.
+        // From fully hidden (behind the screen's right edge) to fully out.
         x: Math.round(win.width - win.cardW * win.uiScale * win.slide)
         y: 0
         width: Math.round(win.cardW * win.uiScale)
@@ -84,33 +66,81 @@ PanelWindow {
             border.color: mt.nbBorder
         }
 
+        // Accent hairline on the screen edge (Nothing's one-accent rule):
+        // a 2 px channel-accent line the length of the drawer, on the side
+        // that touches the screen content.
+        Rectangle {
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: 2 * win.uiScale
+            color: mt.nbAccent
+            opacity: win.slide
+        }
+
         Column {
             anchors.fill: parent
-            anchors.margins: 20 * win.uiScale
-            spacing: 14 * win.uiScale
+            anchors.leftMargin: 22 * win.uiScale
+            anchors.rightMargin: 22 * win.uiScale
+            anchors.topMargin: 24 * win.uiScale
+            anchors.bottomMargin: 18 * win.uiScale
+            spacing: 12 * win.uiScale
 
             // ===== header =====
             Item {
                 width: parent.width
-                height: 40 * win.uiScale
+                height: 44 * win.uiScale
 
-                Text {
+                Column {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    text: qsTr("GAMING")
-                    color: mt.nbInk
-                    font.family: mt.fontDisplay
-                    font.pixelSize: 24 * win.uiScale
-                    font.letterSpacing: 6 * win.uiScale
+                    spacing: 0
+
+                    Text {
+                        text: qsTr("GAMING")
+                        color: mt.nbInk
+                        font.family: mt.fontDisplay
+                        font.pixelSize: 26 * win.uiScale
+                        font.letterSpacing: 7 * win.uiScale
+                    }
+
+                    Text {
+                        text: qsTr("MODO RENDIMIENTO")
+                        color: mt.nbInkSub
+                        font.family: mt.fontDisplay
+                        font.pixelSize: 9 * win.uiScale
+                        font.letterSpacing: 3 * win.uiScale
+                    }
                 }
 
-                Text {
+                // pin chip
+                Rectangle {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    text: SideMenuService.pinned === "gaming" ? "📌" : ""
-                    color: mt.nbInkSub
-                    font.pixelSize: 13 * win.uiScale
+                    visible: SideMenuService.pinned === "gaming"
+                    width: pinText.implicitWidth + 16 * win.uiScale
+                    height: 22 * win.uiScale
+                    radius: 11 * win.uiScale
+                    color: "transparent"
+                    border.width: 1
+                    border.color: mt.nbBorder
+                    Text {
+                        id: pinText
+                        anchors.centerIn: parent
+                        text: qsTr("FIJADO")
+                        color: mt.nbInkSub
+                        font.family: mt.fontDisplay
+                        font.pixelSize: 9 * win.uiScale
+                        font.letterSpacing: 2 * win.uiScale
+                    }
                 }
+            }
+
+            // hairline divider under the header
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: mt.nbBorder
             }
 
             // ===== Game Mode =====
@@ -275,28 +305,41 @@ PanelWindow {
         property bool busy: false
         signal toggled()
 
-        height: 64 * win.uiScale
-        radius: 12 * win.uiScale
-        color: tile.on ? Qt.alpha(mt.nbAccent, 0.12) : mt.nbRaised
+        height: 66 * win.uiScale
+        radius: 14 * win.uiScale
+        color: tile.on ? Qt.alpha(mt.nbAccent, 0.10) : mt.nbRaised
         border.width: 1
         border.color: tile.on ? mt.nbAccent : mt.nbBorder
+        scale: tileMa.pressed ? 0.97 : 1
+        Behavior on scale { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
 
         Row {
             anchors.fill: parent
-            anchors.margins: 12 * win.uiScale
-            spacing: 12 * win.uiScale
+            anchors.margins: 13 * win.uiScale
+            spacing: 13 * win.uiScale
 
-            MaterialIcon {
+            // icon plate
+            Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
-                name: tile.icon
-                size: 22 * win.uiScale
-                color: tile.on ? mt.nbAccent : mt.nbInk
+                width: 40 * win.uiScale
+                height: 40 * win.uiScale
+                radius: 12 * win.uiScale
+                color: tile.on ? Qt.alpha(mt.nbAccent, 0.16) : mt.nbSurface
+                border.width: 1
+                border.color: tile.on ? Qt.alpha(mt.nbAccent, 0.5) : mt.nbBorder
+
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    name: tile.icon
+                    size: 20 * win.uiScale
+                    color: tile.on ? mt.nbAccent : mt.nbInk
+                }
             }
 
             Column {
                 anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 22 * win.uiScale - 12 * win.uiScale - 48 * win.uiScale
-                spacing: 1
+                width: parent.width - 40 * win.uiScale - 13 * win.uiScale - 44 * win.uiScale - 13 * win.uiScale
+                spacing: 2
                 Text {
                     text: tile.title
                     color: mt.nbInk
@@ -312,6 +355,7 @@ PanelWindow {
                 }
             }
 
+            // switch
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 44 * win.uiScale
@@ -334,6 +378,7 @@ PanelWindow {
         }
 
         MouseArea {
+            id: tileMa
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             onClicked: tile.toggled()

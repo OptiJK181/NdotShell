@@ -577,9 +577,22 @@ ShellRoot {
 
     // ===== Side drawers (modules/sekai/sideMenu) =====
     // Two purpose-built edge panels, one open at a time (SideMenuService):
-    //   gaming — Super + Shift + G, right edge: game mode, recorder, keep awake, stats
-    //   work   — Super + Shift + W, left edge: pomodoro, focus, clipboard privacy
-    // One window per monitor (the drawer shows on the monitor you ask from).
+    //   gaming — right edge, hover the 8 px strip: game mode, recorder, stats
+    //   work   — left edge, hover the 8 px strip: pomodoro, focus, clipboard
+    // The hotspots are always-on 8 px strips (Hotspot.qml) that light a 2 px
+    // accent line when touched; the drawer windows only map while open.
+    Variants {
+        id: gamingHotspots
+        model: Quickshell.screens
+        Hotspot { name: "gaming" }
+    }
+
+    Variants {
+        id: workHotspots
+        model: Quickshell.screens
+        Hotspot { name: "work" }
+    }
+
     Variants {
         id: gamingDrawers
         model: Quickshell.screens
