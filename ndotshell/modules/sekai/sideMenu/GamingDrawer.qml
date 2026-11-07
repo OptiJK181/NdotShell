@@ -5,64 +5,76 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
-// Gaming drawer — slides in from the RIGHT edge. 100% gaming:
-// Game Mode (hyprland perf + notifications off), Recorder with live timer,
-// Keep Awake, and CPU/RAM meters so you can see what a game is doing.
+// Gaming drawer — Caelestia-style: a thin hotspot strip runs down the RIGHT
+// edge; hover it and the panel slides out; move away and it slides back.
+// A keybind (Super + Shift + G) or `ipc call sidemenu gaming` pins it open.
+// 100% gaming: Game Mode, recorder with live timer, notifications off,
+// Keep Awake, CPU/RAM meters.
 PanelWindow {
     id: win
 
     required property var modelData
     screen: modelData.screen
-    // The shell-wide QuickSource (passed from shell.qml): Keep Awake and
-    // the notification toggle live there, per monitor.
     property var qsSource
     readonly property var mt: Theme.of(screen)
     readonly property real uiScale: ShellScale.forScreen(screen)
 
     anchors { top: true; bottom: true; right: true }
-    implicitWidth: Math.round(320 * win.uiScale)
-    // Full height but the window is thin; only the visible card takes input.
+    // The window is only the strip + the card width; invisible (unmapped)
+    // while fully closed, so idle cost is zero.
+    implicitWidth: Math.round((cardW + hotW) * win.uiScale)
     exclusionMode: ExclusionMode.Ignore
+    color: "transparent"
+
+    readonly property real cardW: 320
+    readonly property real hotW: 8
+
+    // 0 = hidden, 1 = fully out.
+    property real slide: SideMenuService.open === "gaming" ? 1 : 0
+    Behavior on slide { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
 
     visible: SideMenuService.open === "gaming" || win.slide > 0.001
-    color: "transparent"
+        || hotspot.containsMouse
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: SideMenuService.open === "gaming"
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    // 0 = hidden, 1 = fully out.
-    property real slide: SideMenuService.open === "gaming" ? 1 : 0
-    Behavior on slide { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
-
-    // Own CPU/RAM poller: only samples while the drawer is visible.
-    ResourceSource {
-        id: stats
-        wanted: win.slide > 0.5
-    }
-
+    // Only the card (and the hotspot strip) take input.
     mask: Region { item: card }
 
-    // Click-away catcher: a full-screen transparent window under the drawer.
-    PanelWindow {
-        id: catcher
-        screen: win.screen
-        anchors { top: true; bottom: true; left: true; right: true }
-        visible: win.slide > 0.999
-        color: "transparent"
-        WlrLayershell.layer: WlrLayer.Top
-        MouseArea {
-            anchors.fill: parent
-            onClicked: SideMenuService.hide()
+    // ===== edge hotspot: hover the last pixels of the screen =====
+    MouseArea {
+        id: hotspot
+        x: Math.round(win.width - win.hotW * win.uiScale)
+        y: 0
+        width: Math.ceil(win.hotW * win.uiScale)
+        height: win.height
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton
+        cursorShape: Qt.PointingHandCursor
+        onContainsMouseChanged: {
+            if (containsMouse) SideMenuService.hoverEnter("gaming")
+            else SideMenuService.hoverLeave()
         }
+        // A tap on the edge also opens (touchscreens / trackpad taps).
+        onClicked: SideMenuService.toggle("gaming")
     }
 
+    // ===== the card =====
     Item {
         id: card
 
-        x: Math.round(win.width * win.slide)
+        // From fully hidden (right edge + the hotspot strip) to fully out.
+        x: Math.round(win.width - win.cardW * win.uiScale * win.slide)
         y: 0
-        width: win.width
+        width: Math.round(win.cardW * win.uiScale)
         height: win.height
+
+        HoverHandler { id: cardHover }
+        Binding { target: SideMenuService; property: "cardHovered"; value: cardHover.hovered }
+
+        focus: SideMenuService.open === "gaming"
+        Keys.onEscapePressed: SideMenuService.hide()
 
         // ===== slab =====
         Rectangle {
@@ -73,8 +85,6 @@ PanelWindow {
         }
 
         Column {
-            id: col
-
             anchors.fill: parent
             anchors.margins: 20 * win.uiScale
             spacing: 14 * win.uiScale
@@ -94,28 +104,12 @@ PanelWindow {
                     font.letterSpacing: 6 * win.uiScale
                 }
 
-                // Close
-                Rectangle {
+                Text {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 34 * win.uiScale
-                    height: 34 * win.uiScale
-                    radius: 17 * win.uiScale
-                    color: closeMa.pressed ? mt.nbRaised : mt.nbSurface
-                    border.width: 1
-                    border.color: mt.nbBorder
-                    Text {
-                        anchors.centerIn: parent
-                        text: "✕"
-                        color: mt.nbInk
-                        font.pixelSize: 14 * win.uiScale
-                    }
-                    MouseArea {
-                        id: closeMa
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: SideMenuService.hide()
-                    }
+                    text: SideMenuService.pinned === "gaming" ? "📌" : ""
+                    color: mt.nbInkSub
+                    font.pixelSize: 13 * win.uiScale
                 }
             }
 
@@ -139,14 +133,13 @@ PanelWindow {
                 radius: 12 * win.uiScale
                 color: mt.nbRaised
                 border.width: 1
-                border.color: ScreenRecorderService.recording ? mt.accentCyan : mt.nbBorder
+                border.color: ScreenRecorderService.recording ? mt.nbAccent : mt.nbBorder
 
                 Row {
                     anchors.fill: parent
                     anchors.margins: 12 * win.uiScale
                     spacing: 12 * win.uiScale
 
-                    // Record/stop button
                     Rectangle {
                         width: 52 * win.uiScale
                         height: 52 * win.uiScale
@@ -182,7 +175,7 @@ PanelWindow {
                         spacing: 2 * win.uiScale
                         Text {
                             text: ScreenRecorderService.recording
-                                ? root.fmt(ScreenRecorderService.duration)
+                                ? win.fmt(ScreenRecorderService.duration)
                                 : qsTr("Grabadora")
                             color: ScreenRecorderService.recording ? mt.nbAccent : mt.nbInk
                             font.family: mt.fontDisplay
@@ -200,6 +193,19 @@ PanelWindow {
                 }
             }
 
+            // ===== Notifications =====
+            GamingTile {
+                width: parent.width
+                icon: win.qsSource && win.qsSource.notificationsOn
+                    ? "notifications_active" : "notifications_off"
+                title: qsTr("Avisos")
+                sub: win.qsSource && win.qsSource.notificationsOn
+                    ? qsTr("Llegan normalmente")
+                    : qsTr("Silenciados: no molestan")
+                on: win.qsSource ? !win.qsSource.notificationsOn : false
+                onToggled: if (win.qsSource) win.qsSource.toggleNotifications()
+            }
+
             // ===== Keep Awake =====
             GamingTile {
                 width: parent.width
@@ -210,18 +216,6 @@ PanelWindow {
                     : qsTr("Apagado de pantalla normal")
                 on: win.qsSource ? win.qsSource.keepAwakeOn : false
                 onToggled: if (win.qsSource) win.qsSource.toggleKeepAwake()
-            }
-
-            // ===== Notifications (DND for gaming) =====
-            GamingTile {
-                width: parent.width
-                icon: win.qsSource && win.qsSource.notificationsOn ? "notifications_active" : "notifications_off"
-                title: qsTr("Avisos")
-                sub: win.qsSource && win.qsSource.notificationsOn
-                    ? qsTr("Llegan normally")
-                    : qsTr("Silenciados: no molestan")
-                on: win.qsSource ? !win.qsSource.notificationsOn : false
-                onToggled: if (win.qsSource) win.qsSource.toggleNotifications()
             }
 
             // ===== live stats =====
@@ -250,17 +244,20 @@ PanelWindow {
                 }
             }
 
-            Item { width: 1; height: 1 }   // spacer
-
-            // ===== hint =====
             Text {
                 width: parent.width
                 wrapMode: Text.WordWrap
-                text: qsTr("Esc o clic fuera cierra. Super + G alterna este panel.")
+                text: qsTr("Toca el borde derecho para abrir · Esc cierra")
                 color: mt.nbInkSub
                 font.pixelSize: 12 * win.uiScale
             }
         }
+    }
+
+    // CPU/RAM poller: only samples while the drawer is on screen.
+    ResourceSource {
+        id: stats
+        wanted: win.slide > 0.5
     }
 
     function fmt(sec) {
@@ -315,7 +312,6 @@ PanelWindow {
                 }
             }
 
-            // switch
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 44 * win.uiScale

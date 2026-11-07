@@ -5,9 +5,10 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
-// Work drawer — slides in from the LEFT edge. 100% ofimática/productividad:
-// Pomodoro timer, Focus Mode, and clipboard privacy (private mode + wipe),
-// so nothing sensitive stays around when you share the screen.
+// Work drawer (ofimática) — Caelestia-style: hover the LEFT edge and the
+// panel slides out; move away and it slides back. Super + Shift + W pins it.
+// 100% productividad: Pomodoro, Focus Mode, y privacidad del portapapeles
+// (modo privado + wipe) para cuando compartes pantalla.
 PanelWindow {
     id: win
 
@@ -17,40 +18,54 @@ PanelWindow {
     readonly property real uiScale: ShellScale.forScreen(screen)
 
     anchors { top: true; bottom: true; left: true }
-    implicitWidth: Math.round(320 * win.uiScale)
+    implicitWidth: Math.round((cardW + hotW) * win.uiScale)
     exclusionMode: ExclusionMode.Ignore
+    color: "transparent"
+
+    readonly property real cardW: 320
+    readonly property real hotW: 8
+
+    property real slide: SideMenuService.open === "work" ? 1 : 0
+    Behavior on slide { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
 
     visible: SideMenuService.open === "work" || win.slide > 0.001
-    color: "transparent"
+        || hotspot.containsMouse
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: SideMenuService.open === "work"
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    property real slide: SideMenuService.open === "work" ? 1 : 0
-    Behavior on slide { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
-
     mask: Region { item: card }
 
-    PanelWindow {
-        id: catcher
-        screen: win.screen
-        anchors { top: true; bottom: true; left: true; right: true }
-        visible: win.slide > 0.999
-        color: "transparent"
-        WlrLayershell.layer: WlrLayer.Top
-        MouseArea {
-            anchors.fill: parent
-            onClicked: SideMenuService.hide()
+    // ===== edge hotspot (left) =====
+    MouseArea {
+        id: hotspot
+        x: 0
+        y: 0
+        width: Math.ceil(win.hotW * win.uiScale)
+        height: win.height
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton
+        cursorShape: Qt.PointingHandCursor
+        onContainsMouseChanged: {
+            if (containsMouse) SideMenuService.hoverEnter("work")
+            else SideMenuService.hoverLeave()
         }
+        onClicked: SideMenuService.toggle("work")
     }
 
     Item {
         id: card
 
-        x: Math.round(-win.width * win.slide)
+        x: Math.round(-win.cardW * win.uiScale * (1 - win.slide))
         y: 0
-        width: win.width
+        width: Math.round(win.cardW * win.uiScale)
         height: win.height
+
+        HoverHandler { id: cardHover }
+        Binding { target: SideMenuService; property: "cardHovered"; value: cardHover.hovered }
+
+        focus: SideMenuService.open === "work"
+        Keys.onEscapePressed: SideMenuService.hide()
 
         Rectangle {
             anchors.fill: parent
@@ -79,38 +94,24 @@ PanelWindow {
                     font.letterSpacing: 6 * win.uiScale
                 }
 
-                Rectangle {
+                Text {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 34 * win.uiScale
-                    height: 34 * win.uiScale
-                    radius: 17 * win.uiScale
-                    color: closeMa.pressed ? mt.nbRaised : mt.nbSurface
-                    border.width: 1
-                    border.color: mt.nbBorder
-                    Text {
-                        anchors.centerIn: parent
-                        text: "✕"
-                        color: mt.nbInk
-                        font.pixelSize: 14 * win.uiScale
-                    }
-                    MouseArea {
-                        id: closeMa
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: SideMenuService.hide()
-                    }
+                    text: SideMenuService.pinned === "work" ? "📌" : ""
+                    color: mt.nbInkSub
+                    font.pixelSize: 13 * win.uiScale
                 }
             }
 
             // ===== Pomodoro =====
             Rectangle {
                 width: parent.width
-                height: 150 * win.uiScale
+                height: 158 * win.uiScale
                 radius: 12 * win.uiScale
                 color: mt.nbRaised
                 border.width: 1
-                border.color: PomodoroService.state !== PomodoroService.Idle ? mt.accentCyan : mt.nbBorder
+                border.color: PomodoroService.running || !PomodoroService.idle
+                    ? mt.accentCyan : mt.nbBorder
 
                 Column {
                     anchors.centerIn: parent
@@ -137,18 +138,15 @@ PanelWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         spacing: 10 * win.uiScale
 
-                        // play / pause
                         RoundWorkKey {
                             icon: PomodoroService.running ? "pause" : "play_arrow"
                             onClicked: PomodoroService.toggle()
                         }
-                        // skip
                         RoundWorkKey {
                             icon: "skip_next"
-                            visible: PomodoroService.state !== PomodoroService.Idle
+                            visible: !PomodoroService.idle
                             onClicked: PomodoroService.skip()
                         }
-                        // reset
                         RoundWorkKey {
                             icon: "refresh"
                             onClicked: PomodoroService.reset()
@@ -157,7 +155,8 @@ PanelWindow {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("%1 ciclos hoy · %2 min").arg(PomodoroService.completedCycles)
+                        text: qsTr("%1 ciclos hoy · %2 min")
+                              .arg(PomodoroService.completedCycles)
                               .arg(Math.floor(PomodoroService.totalWorkTime / 60))
                         color: mt.nbInkSub
                         font.pixelSize: 11 * win.uiScale
@@ -199,7 +198,6 @@ PanelWindow {
                         : qsTr("Grabando · Secretos nunca se guardan")
                     on: ClipboardHistoryService.privateMode
                     onToggled: {
-                        // Toggle + the same OSD the keybind shows.
                         const on = ClipboardHistoryService.togglePrivate()
                         OSDSource.showPrivate(on)
                     }
@@ -215,12 +213,10 @@ PanelWindow {
                 }
             }
 
-            Item { width: 1; height: 1 }
-
             Text {
                 width: parent.width
                 wrapMode: Text.WordWrap
-                text: qsTr("Esc o clic fuera cierra. Super + Shift + W alterna este panel.")
+                text: qsTr("Toca el borde izquierdo para abrir · Esc cierra")
                 color: mt.nbInkSub
                 font.pixelSize: 12 * win.uiScale
             }

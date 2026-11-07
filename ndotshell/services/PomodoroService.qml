@@ -27,6 +27,8 @@ Singleton {
     // Readable from outside (WorkDrawer's play/pause icon): the Timer's
     // `running` bit, mirrored here because ids are not accessible outside.
     property bool running: false
+    // Idle flag for outside use (enum members aren't reachable cross-file).
+    readonly property bool idle: state === State.Idle
 
     readonly property string script: Directories.script("state/service-state.sh")
     readonly property bool loaded: loader.loaded
