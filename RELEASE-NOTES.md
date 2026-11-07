@@ -1,35 +1,51 @@
-## 🖐️ Side drawers estilo Caelestia: tocas el borde y se despliegan
+## ✨ 1.1.0 — Drawers pulidos, 0 errores, listo release
 
-Rediseño completo de los paneles laterales — el fallo que reportaste
-(no se ejecutaban bien: un catcher se comía los clics de toda la
-pantalla) está arreglado, y ahora se abren **tocando el borde**, como
-Caelestia:
+### 🐛 Errores arreglados (auditoría completa del log)
 
-- **Hotspot de 8 px** en el borde derecho (Gaming) e izquierdo (Focus).
-  Acerca el puntero al borde y el panel **se despliega solo**; aléjalo y
-  se recoge (con 450 ms de gracia para no cerrarse en falso).
-- **Un toque en el borde también abre** (útil en pantalla táctil).
-- `Super + Shift + G` / `Super + Shift + W` **fijan** el panel (pin 📌):
-  se queda abierto aunque muevas el puntero; otra vez (o Esc) lo suelta.
-- **Cero costo en reposo**: los paneles se desmapean al cerrarse; lo
-  único siempre vivo es la franja de 8 px.
-- Los clics del escritorio **nunca** se comen: el catcher es
-  pass-through (solo hover).
+- **16 iconos faltantes** (nombres Material que no existen en el set Solar):
+  `local_cafe`, `wb_sunny`, `wb_twilight`, `nightlight`, `branch`, `work`,
+  `hourglass_bottom`, `center_focus_strong`, `visibility`, `visibility_off`,
+  `delete_sweep`, `fingerprint`, `lock_clock`, `verified`, `system_update`,
+  `storefront`, `toolbar`, `campaign`, `gpp_maybe`, `comments_disabled`,
+  `notifications` — todos mapeados en `IconMap.js` a archivos Solar reales.
+  Fix de un solo punto: también cura los usos upstream de esos nombres.
+- **`FocusService.toggle` no era llamable** desde QML (vive dentro del
+  IpcHandler): el drawer now toggles vía `SettingsService.toggle`.
+- **Hotspot roto**: `containsMouse` referenciado desde el scope de la
+  ventana (era la razón por la que "no se ejecutaba bien" el hover).
+- **Press-scale roto** en los tiles (id de MouseArea inexistente).
 
-### Panel GAMING (derecha)
-Game Mode · Grabadora con timer en vivo · Avisos off · Keep Awake ·
-medidores CPU/RAM (muestrean solo abierto).
+### 🖐️ Interacción Caelestia, ahora correcta
 
-### Panel FOCUS (izquierda, ofimática)
-Pomodoro (Ndot 55, play/pausa/saltar/reset, stats persistentes) ·
-Focus Mode · Modo privado del portapapeles · Borrar historial.
+- **Hotspots siempre vivos**: ventanas separadas de 8 px (capa Overlay,
+  pass-through total) en el borde derecho (Gaming) e izquierdo (Focus).
+  Tocas el borde → el panel se despliega; te alejas → se recoge (450 ms
+  de gracia). Un toque también abre (táctil).
+- La franja **se ilumina con una línea de acento de 2 px** cuando el
+  puntero toca el borde: el borde dice "abro algo".
+- Los paneles se desmapean al cerrarse (**costo idle cero**) — y el bug
+  del huevo y la gallina (hotspot dentro de la ventana del drawer) es
+  historia.
 
-## 🔒 `Super + P` — Modo privado (de 1.0.7/1.0.8, intacto)
-OSD animado con icono 👁️‍🗨️; secretos nunca grabados; historial en RAM;
-auto-wipe al bloquear pantalla.
+### 🎨 Apariencia (lenguaje Nothing)
 
-## 🛠️ Fixes
-- Catcher que tragaba clics de toda la pantalla → eliminado
-  (pass-through `acceptedButtons: NoButton`)
-- Enums no accesibles cross-file → `PomodoroService.idle` expuesto
-- Pin 📌 visible en la cabecera del panel fijado
+- **Línea de acento de 2 px** del canal a lo largo del borde de pantalla
+  de cada drawer abierto
+- Cabecera: título Ndot 55 + kicker con tracking ("MODO RENDIMIENTO" /
+  "OFIMÁTICA"), chip **FIJADO** (adiós emoji 📌), hairline bajo la
+  cabecera
+- Tiles rediseñados: **placas de icono de 40 px** con tinte de acento al
+  activarse, **press-scale 0.97**, radio mayor, ritmo más apretado
+
+## ⌨️ Atajos
+
+| Atajo | Acción |
+|---|---|
+| tocar borde derecho | Panel Gaming |
+| tocar borde izquierdo | Panel Focus |
+| `Super + Shift + G` / `W` | Fijar/soltar panel |
+| `Super + P` | Modo privado + OSD |
+| `Esc` | Cerrar panel |
+
+**0 errores en el log. Tests: settings (178), welcome, update-check,
+update-notify, phone-wallpaper — todos en verde.**
