@@ -21,13 +21,17 @@ Singleton {
     property bool ryotunesInstalled: false
     property bool hubInstalled: false
     property bool hubRashin: false       // rashin (theme daemon) status
+    property bool shellDaemon: false     // daemon ryoku-shell vivo
     property string ryokuVersion: ""
     property string ryokuRelease: ""     // ej: "Amaterasu v1.0.6"
     property string pluginList: ""
+    property string barWidgets: ""       // salida de ryoku-shell bar list
+    property string themeSchemes: ""     // salida de ryoku-shell theme catalog
     property bool probing: false
 
     Component.onCompleted: {
         probe()
+        probeDaemon()
         ffFetch()
     }
 
@@ -40,7 +44,52 @@ Singleton {
             "command -v ryotunes >/dev/null 2>&1 && echo tunes=yes || echo tunes=no; " +
             "command -v ryoku-hub >/dev/null 2>&1 && echo hub=yes || echo hub=no; " +
             "command -v ryoku-hub >/dev/null 2>&1 && ryoku-hub rashin status 2>/dev/null | grep -q true && echo rashin=yes || echo rashin=no; " +
+            "command -v ryoku-shell >/dev/null 2>&1 && ryoku-shell status 2>/dev/null | grep -q running && echo shd=yes || echo shd=no; " +
             "command -v ryoku >/dev/null 2>&1 && ryoku status 2>/dev/null | grep '^release:' | cut -d: -f2- | xargs || true"])
+    }
+
+    // probe ligero solo del daemon (para que el toggle responda al instante)
+    function probeDaemon() {
+        daemonProber.exec(["sh", "-c",
+            "command -v ryoku-shell >/dev/null 2>&1 && ryoku-shell status 2>/dev/null | grep -q running && echo yes || echo no"])
+    }
+
+    function startDaemon() {
+        Quickshell.execDetached(["sh", "-c",
+            "S=\"$XDG_RUNTIME_DIR/ryoku-shell.sock\"; " +
+            "if ! [ -S \"$S\" ]; then setsid ryoku-shell daemon >/dev/null 2>&1 < /dev/null & " +
+            "i=0; while ! [ -S \"$S\" ] && [ $i -lt 20 ]; do sleep 0.15; i=$((i+1)); done; fi"])
+        Qt.callLater(() => { delayProbe.restart() })
+    }
+
+    function stopDaemon() {
+        // [r] trick: el patrón no matchea el propio sh -c que lo ejecuta
+        Quickshell.execDetached(["sh", "-c",
+            "pkill -f \"[r]yoku-shell daemon\" 2>/dev/null; sleep 0.3; true"])
+        Qt.callLater(() => { delayProbe.restart() })
+    }
+
+    function toggleDaemon() {
+        if (root.shellDaemon) root.stopDaemon()
+        else root.startDaemon()
+    }
+
+    function fetchBarWidgets() {
+        if (!root.ryokuInstalled) return
+        barProber.exec(["sh", "-c", "ryoku-shell bar list 2>&1 | head -20"])
+    }
+
+    function fetchThemeSchemes() {
+        if (!root.ryokuInstalled) return
+        themeProber.exec(["sh", "-c",
+            "ryoku-shell theme catalog 2>/dev/null | jq -r '.[].label' 2>/dev/null || " +
+            "ryoku-shell theme catalog 2>&1 | head -24"])
+    }
+
+    Timer {
+        id: delayProbe
+        interval: 900
+        onTriggered: root.probeDaemon()
     }
 
     function ffFetch() {
@@ -131,6 +180,7 @@ Singleton {
                     if (l === "tunes=yes") root.ryotunesInstalled = true
                     if (l === "hub=yes") root.hubInstalled = true
                     if (l === "rashin=yes") root.hubRashin = true
+                    if (l === "shd=yes") root.shellDaemon = true
                     if (l !== "" && !l.includes("="))
                         root.ryokuRelease = l
                 }
@@ -143,6 +193,24 @@ Singleton {
     Process { id: prober2
         stdout: StdioCollector {
             onStreamFinished: root.pluginList = text.trim()
+        }
+    }
+
+    Process { id: daemonProber
+        stdout: StdioCollector {
+            onStreamFinished: root.shellDaemon = text.trim() === "yes"
+        }
+    }
+
+    Process { id: barProber
+        stdout: StdioCollector {
+            onStreamFinished: root.barWidgets = text.trim()
+        }
+    }
+
+    Process { id: themeProber
+        stdout: StdioCollector {
+            onStreamFinished: root.themeSchemes = text.trim()
         }
     }
 
