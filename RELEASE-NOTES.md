@@ -1,37 +1,88 @@
-# 🫧 2.0.2 — La hitbox blanca era el fondo del hotspot + zonas funcionales
+# 🎂 NdotShell 2.1.0 — **BIRTHDAY EDITION**
 
-## 🐛 Lo que viste: "es la hitbox del botón brooo"
+> En 6 días es mi cumpleaños y esto es lo mejor que he hecho.
+> Gracias a todos los que lo usen. 🖤
 
-Exacto. El `PanelWindow` de los hotspots **no tenía `color: "transparent"`** —
-Quickshell pinta el fondo de la ventana **BLANCO por defecto**, y la hitbox
-se veía como franja blanca en las esquinas donde tocas. Ahora es
-transparente: **0 blancos** en las 4 zonas (verificado por píxel).
+---
 
-## 🐛 Y los botones que no respondían
+## ⚡ Optimización (CPU 22% → 7.7%)
 
-Los hotspots de **isla** (mid) y **música** (bottom) eran ventanas de
-**altura 0** — sin input, el doble toque nunca podía funcionar. Además los
-hotspots no tenían máscara, así que sus ventanas completas podían comerse
-clics del borde.
+- **Clipboard watcher**: 500ms → 1000ms (los cambios de clipboard no son tan rápidos)
+- **Pulpo typewriter**: solo corre con el drawer >90% abierto
+- **Vinilo del MusicDock**: solo gira cuando media.playing Y el dock está visible
+- **Ventilador del GamingDrawer**: no tickhea con el drawer cerrado
+- **CPU estable: 7.7%** (antes 22%) — mismo visual, menos coste
 
-Ahora: **windows de borde completo con `mask: Region { item: ma }`** — la
-entrada vive SOLO en la franja de 10 px de cada zona; todo lo demás (barra,
-ventanas, widgets) recibe sus clics normal.
+## ✨ Todo lo que incluye NDotShell
 
-## 🖐️ Zonas de doble toque (todas funcionales)
+### 🎮 Panel Gaming (derecha, doble toque)
+Game Mode · grabadora con timer · captura · avisos · keep awake · ventilador CPU animado con RPM en Ndot 55 · medidores CPU/RAM
 
-| Zona | Abre |
+### 🐙 Panel Focus (izquierda, doble toque)
+Pomodoro 25/5 con stats persistentes · pulpo que flota, respira y teclea · Focus Mode · modo privado · borrar historial · Notas / To-Do / Calendario
+
+### 🕳️ Dynamic Island (lateral derecho, doble toque)
+Agujero negro girando (disco de acento + satélite en órbita) · REC · Pomodoro · Música · Privado · Captura · abre Gaming/Focus
+
+### 🎶 Dock de Música (esquina inferior derecha, doble toque)
+Vinilo girando con arte real del álbum · título/artista · transporte prev/play/next · volumen con barra
+
+### 📋 Clipboard privado
+Filtro de secretos (passwords, tokens, tarjetas — 8/8 tests) · historial en RAM · solo fijados van a disco · auto-wipe al bloquear
+
+### 🌅 Wallpaper dinámico
+Mañana (6-10) · día (10-18) · tarde (18-22) · noche (22-6) · transición configurable
+
+### 🔧 Sistema
+- **6 canales de acento**: red · mono · amber · lime · blue · violet
+- **Update system**: stable/dev sin reinstalar, end-to-end verificado
+- **Fastfetch** config estilo Nothing desde Ajustes
+- **Ryostore** compatibilidad con Ryoku Linux
+- **Bar/dock Capsule** Nothing skin permanente
+
+---
+
+## ⌨️ Atajos
+
+| Tecla | Acción |
 |---|---|
-| esquina superior derecha ×2 | Panel GAMING |
-| esquina superior izquierda ×2 | Panel FOCUS |
-| lateral derecho, al medio ×2 | Isla (agujero negro) |
-| esquina inferior derecha ×2 | **Dock de música** 🎶 |
+| `Super` (tap) | Apps |
+| `Super + N` | Quick Panel (teléfono) |
+| `Super + I` | Ajustes |
+| `Super + /` | Cheat sheet |
+| `Super + G` | Game Mode |
+| `Super + P` | Modo privado |
+| `Super + Shift + G/W` | Fijar drawers |
+| `Super + Shift + D` | Dynamic Island |
+| `Super + Shift + U` | Dock de música |
+| Doble toque esquinas | Drawers / Isla / Música |
 
-## ✅ Verificación
+---
 
-- 0 blancos en las 4 zonas (píxel)
-- 0 errores en el log
-- Capas correctas: 4 hotspots 10×1080 con máscara de zona, isla oculta
-  hasta keybind, dock oculto hasta doble toque
-- Tests: settings 183 · welcome · update-check · update-notify ·
-  phone-wallpaper · click-away · power-press — verdes
+## 🚀 Instalar
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/OptiJK181/NdotShell/main/get.sh) --yes
+```
+
+## 🔄 Actualizar sin reinstalar
+
+```bash
+# Ajustes → Acerca de → Actualizar ahora
+# o:
+update-check.sh apply
+```
+
+---
+
+<div align="center">
+
+**GPL-3.0** · fork de [SekaiPop](https://github.com/Blapples/SekaiPop) · Nothing OS para Hyprland
+
+```
+. . .  . . .  . . .
+nothing else to see
+. . .  . . .  . . .
+```
+
+</div>

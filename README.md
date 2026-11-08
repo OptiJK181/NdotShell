@@ -1,165 +1,179 @@
 <div align="center">
 
-# NdotShell
+<!-- wordmark dot-matrix -->
+<img src="https://readme-typing-svg.demolab.com?font=Ndot+55&size=48&duration=3000&pause=1200&color=D71921&center=true&vCenter=true&width=800&lines=NDOTSHELL" alt="NDotShell" />
 
-**Un escritorio Quickshell para Hyprland** — estilo *Nothing OS*, teléfono holograma 2.5D,  
-seis canales de color y actualizaciones automáticas.
+**Un escritorio Nothing OS para Hyprland** — teléfono holograma 2.5D, Dynamic Island, drawers laterales gelatinosos y canales de acento.
 
-[![Release](https://img.shields.io/github/v/release/OptiJK181/NdotShell?label=latest)](https://github.com/OptiJK181/NdotShell/releases/latest)
-[![License](https://img.shields.io/github/license/OptiJK181/NdotShell)](LICENSE)
-[![Arch](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=white)]()
-[![Hyprland](https://img.shields.io/badge/Hyprland-0.55+-00FFD5?logo=hyprland&logoColor=white)]()
+[![Release](https://img.shields.io/badge/RELEASE-2.1.0-D71921?style=flat-square&labelColor=0B0B0B)](https://github.com/OptiJK181/NdotShell/releases/latest)
+[![Arch Linux](https://img.shields.io/badge/ARCH%20LINUX-1793D1?style=flat-square&labelColor=0B0B0B)](https://archlinux.org)
+[![Hyprland](https://img.shields.io/badge/HYPRLAND-0.55+-00FFD5?style=flat-square&labelColor=0B0B0B)](https://hyprland.org)
+[![License GPL-3.0](https://img.shields.io/badge/GPL--3.0-F5F5F5?style=flat-square&labelColor=0B0B0B)](LICENSE)
+
+<br/>
+<img width="60" src="https://img.shields.io/badge/●_●_●-000000?style=flat-square&labelColor=000000" />
+<br/>
 
 </div>
 
 ---
 
-## ✨ Qué trae
+## ✨ Qué hace NDotShell
 
-| Característica | Detalle |
-|----------------|---------|
-| **Diseño Nothing** | Barra y dock *Capsule*: slab negro 36 px, 1 px rim `#2b2b2b`, sin sombras |
-| **Teléfono holograma 2.5D** | Pantalla nítida y opaca, extrusión con filamento de acento, pared translúcida, alambre trasero, halo de 3 anillos, scanlines detrás de la UI |
-| **6 canales de acento** | Ndot Red (default), Mono, Amber, Lime, Blue, Violet — solo cambia el color, el diseño nunca |
-| **Welcome tour** | Letra Ndot/Shell + marca de punto, fondo *dot-grid*, barrido de scanlines y *glitch* al cambiar de diapositiva |
-| **Actualizaciones propias** | `stable` = rama `main`, `dev` = rama `dev` — nunca toca SekaiPop upstream |
-| **Instalador 1-click** | `bash <(curl -fsSL https://raw.githubusercontent.com/OptiJK181/NdotShell/main/get.sh)` |
-| **Autostart real** | Arranca solo tras reboot vía `qs-autostart` |
-| **Renombrado limpio** | Corre junto a SekaiPop: `qs -c ndotshell`, config en `~/.config/ndotshell` |
+Un Quickshell desktop que se siente como un **teléfono Nothing**: la barra es una cápsula negra, el centro de notificaciones es un teléfono con render holograma 2.5D, y todo — drawers, isla, dock de música — responde con animaciones gelatinosas que se conectan a los bordes.
+
+|  |  |
+|:---|:---|
+| ● **TELÉFONO HOLOGRAMA** | Quick Panel 2.5D con filamento de acento, pared translúcida, halo |
+| ● **DRAWERS LATERALES** | doble toque en las esquinas → Gaming y Focus se despliegan |
+| ● **DYNAMIC ISLAND** | agujero negro girando con acceso a REC, Pomodoro, música |
+| ● **DOCK DE MÚSICA** | vinilo girando con arte real, transporte y volumen |
+| ● **MODO PRIVADO** | clipboard que nunca guarda secretos (Super + P) |
+| ● **POMODORO** | ciclos 25/5 con stats persistentes y notificaciones |
+| ● **SCREEN RECORDER** | pantalla, ventana o región, con/sin audio |
+| ● **6 CANALES** | red · mono · amber · lime · blue · violet |
+| ● **WALLPAPER DINÁMICO** | cambia por hora del día con transición suave |
+| ● **ACTUALIZACIONES** | stable / dev desde tu propio repo, sin reinstalar |
 
 ---
 
-## 🚀 Instalación rápida
+## 📸 Capturas
+
+| Panel Gaming | Panel Focus | Dock de Música |
+|:---:|:---:|:---:|
+| ![Gaming](docs/screenshots/quickpanel.png) | ![Settings](docs/screenshots/settings.png) | ![Dock](docs/screenshots/dock.png) |
+
+---
+
+## 🚀 Instalación
 
 ```bash
-# Desde una terminal (bash, zsh)
+# bash / zsh
 bash <(curl -fsSL https://raw.githubusercontent.com/OptiJK181/NdotShell/main/get.sh) --yes
 
-# En fish shell
+# fish
 bash (curl -fsSL https://raw.githubusercontent.com/OptiJK181/NdotShell/main/get.sh | psub) --yes
 ```
 
-> **Requisitos**: Arch / CachyOS / EndeavourOS, Hyprland ≥ 0.55, Quickshell, git, curl.  
-> El script instala dependencias (pacman), copia la configuración, genera `monitors.lua` para tus pantallas y configura el autostart.
+> Requiere Arch / CachyOS / EndeavourOS, Hyprland ≥ 0.55. El script instala dependencias, copia la config, genera `monitors.lua` para tus pantallas y configura el autostart.
 
----
-
-## ⌨️ Atajos principales (después de instalar)
-
-| Acción | Tecla |
-|--------|-------|
-| Abrir **Apps** | `Super` (tap) |
-| Abrir **Quick Panel** | `Super + N` |
-| Abrir **Ajustes** | `Super + I` |
-| Cheat sheet (todos los atajos) | `Super + /` |
-| Cambiar tema/canal | `Super + T` → *Theme picker* |
-| Power menu | `Super + Esc` |
-
-> Todos personalizables en **Ajustes → Hyprland → Keybinds** (tablero visual).
-
----
-
-## 🖼️ Capturas
-
-| Quick Panel (teléfono) | Ajustes / Canales | Dock estilo Cápsula |
-|:----------------------:|:-----------------:|:-------------------:|
-| ![Quick Panel](docs/screenshots/quickpanel.png) | ![Settings](docs/screenshots/settings.png) | ![Dock](docs/screenshots/dock.png) |
-
-> **Añade tus capturas** en `docs/screenshots/` y actualiza las rutas arriba.
-
----
-
-## 🔧 Canales de actualización
-
-| Canal | Rama | Qué trae |
-|-------|------|----------|
-| **Stable** (default) | `main` | Versiones testeadas, release oficial |
-| **Dev** | `dev` | Cambios entre releases, para probar |
+<details>
+<summary><b>Instalación manual</b></summary>
 
 ```bash
-# Ver canal actual
-update-check.sh channel
+git clone https://github.com/OptiJK181/NdotShell.git
+cd NdotShell
+./install.sh --yes
+```
+</details>
 
-# Cambiar a dev
-update-check.sh channel dev
+---
 
-# O desde la UI: Ajustes → About / Update → Update channel
+## ⌨️ Atajos
+
+| Tecla | Acción |
+|---|---|
+| `Super` (tap) | Apps |
+| `Super + N` | Quick Panel (teléfono) |
+| `Super + I` | Ajustes |
+| `Super + /` | Cheat sheet |
+| `Super + G` | Game Mode |
+| `Super + P` | Modo privado + OSD |
+| `Super + Shift + G` | Panel Gaming |
+| `Super + Shift + W` | Panel Focus |
+| `Super + Shift + D` | Dynamic Island |
+| `Super + Shift + U` | Dock de música |
+| Doble toque esquinas | Drawers / Isla / Música |
+| `Super + Escape` | Power menu |
+
+Todos reasignables en **Ajustes → Hyprland → Keybinds** (tablero visual).
+
+---
+
+## 🔄 Actualización
+
+El shell se actualiza **sin reinstalar**:
+
+- **Desde la UI**: Ajustes → Acerca de / Actualizar → Actualizar ahora
+- **Por CLI**: `update-check.sh apply`
+- **Canales**: `stable` (main) · `dev` (dev) — cambiables desde Ajustes o `update-check.sh channel dev`
+
+---
+
+## 🔒 Privacidad incorporada
+
+- **Filtro de secretos**: contraseñas, API keys, tokens, JWTs, tarjetas — **nunca** entran al historial del clipboard
+- **Modo privado**: `Super + P` pausa toda la grabación del portapapeles
+- **Historial en RAM**: nada va a disco salvo lo que fijes
+- **Auto-wipe al bloquear** la pantalla
+- **Cero telemetría** — todo es local
+
+---
+
+## 📁 Estructura
+
+```
+~/.config/ndotshell/            # tu configuración
+~/.local/state/ndotshell/       # estado (tema, canal, stats)
+~/.cache/ndotshell/             # caché y logs
+~/.config/hypr/ndotshell_overrides.lua  # overrides de Hyprland
 ```
 
-> El shell revisa solo (si activas *Tell me about updates*) y te notifica; `Update now` descarga y reinicia solo.
+---
+
+## 🛠️ Tech
+
+|  |  |
+|---|---|
+| **Shell** | Quickshell (QML) |
+| **WM** | Hyprland 0.55+ (config Lua) |
+| **Visualizer** | cava / analizador Python con aubio |
+| **Fuentes** | Ndot 55 · Google Sans Flex · Material Symbols |
+| **Iconos** | Solar Icon Set (2400+ SVGs) |
 
 ---
 
-## 🛠️ Personalización rápida
+## 🤝 Créditos
 
-- **Tema / Canal**: `Super + T` o Ajustes → Desktop → Theme
-- **Barra / Dock estilo**: Ajustes → Bar / Dock → Style (Capsule, Pill, etc.)
-- **Wallpaper teléfono**: Ajustes → Quick Panel → Phone wallpaper
-- **Idle / suspensión**: Ajustes → General → Idle & sleep
-- **Fuentes de apps (GTK/Qt/KDE)**: Ajustes → Desktop → App fonts
-- **Plugins**: Ajustes → About / Update → Get plugins
-
----
-
-## 🔁 Cambiar entre NdotShell y SekaiPop
-
-```bash
-shell-use ndotshell   # usa NdotShell
-shell-use sekaipop    # usa SekaiPop original
-```
-
-> Solo uno puede correr a la vez (comparten lockscreen, notificaciones, polkit).
+| | |
+|---|---|
+| **Base** | [SekaiPop](https://github.com/Blapples/SekaiPop) por Blapples (GPL-3.0) |
+| **Fork** | renombrado, Nothing skin, holograma, canales, drawers |
+| **Fundación** | end4 · dots-hyprland |
+| **Inspiración** | pCtrade · end4-pC |
+| **Colores** | matugen |
+| **Toolkit** | Quickshell · Hyprland |
 
 ---
 
-## 📦 Estructura de carpetas
-
-```
-~/.config/ndotshell/          # Configuración de usuario
-~/.local/state/ndotshell/     # Estado (tema, canal, etc.)
-~/.cache/ndotshell/           # Caché, logs de autostart
-~/.config/hypr/ndotshell_overrides.lua  # Overrides Hyprland
-```
-
----
-
-## 🐛 Problemas comunes
-
-| Síntoma | Solución |
-|---------|----------|
-| Pantalla negra tras instalar | `hyprctl reload` o relogeate; `monitors.lua` se generó para tus pantallas actuales |
-| El instalador falla en `git clone` | `NDOTSHELL_REPO=https://github.com/OptiJK181/NdotShell.git bash <(curl ...)` |
-| `update-check.sh` dice `nosource` | Asegúrate de que el repo remoto es `fork` (no `origin` de SekaiPop) |
-| Fuente Ndot 55 no sale | `fc-cache -fv` y reinicia Quickshell |
-| Teclas multimedia no funcionan | Añade `playerctl` y `hypridle` (`sudo pacman -S playerctl hypridle`) |
-
----
-
-## 🤝 Créditos y licencia
-
-- **Original**: [SekaiPop](https://github.com/Blapples/SekaiPop) por Blapples (GPL-3.0)
-- **Fork**: NdotShell — renombrado, Nothing skin, canales, holograma, welcome tour
-- **Partes**: end4·dots-hyprland, matugen, Quickshell, Hyprland, Material Symbols, Google Sans Flex, emojibase, Open-Meteo, lyric providers
-- **Licencia**: GPL-3.0 — ver [LICENSE](LICENSE)
-
----
-
-## 📖 Docs completas
+## 📖 Docs
 
 | Tema | Archivo |
-|------|---------|
-| Fork / merge policy | `docs/NDOT.md` |
-| Changelog | `ndotshell/CHANGELOG.md` |
-| Plugins | `docs/PLUGINS.md` / `docs/PLUGIN-INSTALL.md` |
-| Theming / Matugen | `docs/MATUGEN-CONTROLS.md` |
-| Phone click-away | `docs/PHONE-CLICK-AWAY.md` |
-| Idle & sleep | `docs/IDLE.md` |
+|---|---|
+| Fork / merge | `docs/NDOT.md` |
+| Changelog | `CHANGELOG.md` |
+| Plugins | `docs/PLUGINS.md` |
+| Theming | `docs/MATUGEN-CONTROLS.md` |
+| Idle | `docs/IDLE.md` |
 
 ---
 
 <div align="center">
 
-**Hecho con ❤️ para Hyprland + Quickshell**  
-¿Te gusta? ⭐ el repo y comparte tu rice en `/r/unixporn`
+<br/>
+
+```
+. . .  . . .  . . .
+nothing else to see
+. . .  . . .  . . .
+```
+
+<br/>
+
+![visitors](https://komarev.com/ghpvc/?username=OptiJK181&label=VISITAS&color=D71921&style=flat-square&labelColor=0B0B0B)
+
+<br/>
+
+**GPL-3.0** · hecho con ❤️ para Hyprland + Quickshell
 
 </div>

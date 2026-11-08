@@ -206,7 +206,7 @@ PanelWindow {
 
                         Timer {
                             interval: 30
-                            running: media.playing
+                            running: media.playing && parent.visible
                             repeat: true
                             onTriggered: spinAngle.angle = (spinAngle.angle + 2.6) % 360
                         }

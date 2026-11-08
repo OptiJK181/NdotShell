@@ -363,7 +363,7 @@ PanelWindow {
 
     Timer {
         interval: 62
-        running: win.slide > 0.5
+        running: win.slide > 0.9
         repeat: true
         onTriggered: {
             const full = win.octoMessages[win.octoMsg]

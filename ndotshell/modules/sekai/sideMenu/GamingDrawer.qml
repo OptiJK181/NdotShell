@@ -324,7 +324,7 @@ PanelWindow {
 
         Timer {
             interval: Math.max(16, 58 - fan.cpu * 0.42)
-            running: fan.visible
+            running: fan.opacity > 0.1 && win.visible
             repeat: true
             onTriggered: fan.angle = (fan.angle + 7) % 360
         }

@@ -204,7 +204,7 @@ Singleton {
     property string lastText: ""
     Timer {
         id: monitorTimer
-        interval: 500
+        interval: 1000
         running: false
         repeat: true
         onTriggered: {
