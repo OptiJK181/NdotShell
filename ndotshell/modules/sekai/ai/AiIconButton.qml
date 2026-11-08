@@ -11,6 +11,7 @@ Rectangle {
     property string icon: ""
     property string tip: ""
     property bool danger: false
+    property color iconColor: danger ? mt.nbAccent : mt.nbInkSub
     signal clicked()
 
     readonly property var mt: Theme.of(QsWindow.window)
@@ -26,7 +27,7 @@ Rectangle {
         anchors.centerIn: parent
         name: root.icon
         size: 16
-        color: root.danger ? mt.nbAccent : mt.nbInkSub
+        color: root.iconColor
     }
 
     MouseArea {

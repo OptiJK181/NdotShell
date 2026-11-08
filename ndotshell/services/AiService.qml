@@ -335,10 +335,11 @@ Singleton {
             root.error = ""
             root.streamingText = ""
             // The script only needs role+content; keep the payload small.
-            // Sanitize: collapse consecutive same-role messages so APIs like GLM/Claude never fail with 400.
+            // Sanitize: take the last 30 messages to avoid context overflow, and collapse consecutive same-role messages so APIs like GLM/Claude never fail with 400.
+            const history = root.messages.slice(-30)
             const wire = []
-            for (let i = 0; i < root.messages.length; i++) {
-                const m = root.messages[i]
+            for (let i = 0; i < history.length; i++) {
+                const m = history[i]
                 if (!m || typeof m.content !== "string" || m.content.trim() === "") continue
                 if (wire.length > 0 && wire[wire.length - 1].role === m.role) {
                     wire[wire.length - 1].content += "\n\n" + m.content.trim()

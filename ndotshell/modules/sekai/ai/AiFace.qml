@@ -452,6 +452,26 @@ Item {
                 width: parent.width
                 height: 46
 
+                // Glyph pulse halo behind the eyes while thinking or talking
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 86
+                    height: 38
+                    radius: 19
+                    color: face.accent
+                    opacity: face.busy ? (face.streaming ? 0.16 : 0.10) : 0
+                    visible: opacity > 0.01
+
+                    Behavior on opacity { NumberAnimation { duration: 280 } }
+
+                    SequentialAnimation on scale {
+                        running: face.busy && face.active
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 0.94; to: 1.08; duration: 680; easing.type: Easing.InOutQuad }
+                        NumberAnimation { from: 1.08; to: 0.94; duration: 680; easing.type: Easing.InOutQuad }
+                    }
+                }
+
                 Bolita {
                     x: (parent.width - width) / 2 - 29
                     y: (parent.height - height) / 2

@@ -77,7 +77,7 @@ Column {
                     id: codeText
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.rightMargin: block.isRun ? 96 : 10
+                    anchors.rightMargin: block.isRun ? 96 : 38
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.margins: 10
                     text: modelData.body.replace(/\s+$/, "")
@@ -87,6 +87,44 @@ Column {
                     font.family: root.monoFamily
                     font.pixelSize: 13
                     lineHeight: 1.2
+                }
+
+                // Copy code button for normal code blocks
+                Rectangle {
+                    visible: !block.isRun
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 6
+                    width: 26
+                    height: 26
+                    radius: 6
+                    color: copyCodeMa.pressed ? root.mt.nbBorder : (copyCodeMa.containsMouse ? root.mt.nbRaised : "transparent")
+                    property bool codeCopied: false
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        name: parent.codeCopied ? "check" : "content_copy"
+                        size: 14
+                        color: parent.codeCopied ? root.mt.nbAccent : root.mt.nbInkSub
+                    }
+
+                    MouseArea {
+                        id: copyCodeMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            Quickshell.execDetached(["wl-copy", modelData.body.trim()])
+                            parent.codeCopied = true
+                            codeCopyTimer.restart()
+                        }
+                    }
+
+                    Timer {
+                        id: codeCopyTimer
+                        interval: 1400
+                        onTriggered: parent.codeCopied = false
+                    }
                 }
 
                 // the Ejecutar key, only on a ```run``` block: the command

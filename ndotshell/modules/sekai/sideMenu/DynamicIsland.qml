@@ -131,7 +131,7 @@ PanelWindow {
                     RotationAnimation on rotation {
                         from: 0
                         to: 360
-                        duration: 3200
+                        duration: AiService.busy ? 1200 : 3200
                         loops: Animation.Infinite
                     }
                 }
@@ -212,6 +212,15 @@ PanelWindow {
                     onClicked: {
                         SideMenuService.islandOpen = false
                         RegionService.showLater("copy")
+                    }
+                }
+
+                IslandKey {
+                    icon: "smart_toy"
+                    accent: AiService.busy || AiService.drawerOpen
+                    onClicked: {
+                        SideMenuService.islandOpen = false
+                        AiService.toggle()
                     }
                 }
 

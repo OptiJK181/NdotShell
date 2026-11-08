@@ -25,9 +25,31 @@ Item {
     ]
 
     function submit() {
-        const text = input.text
-        if (text.trim() === "") return
+        const text = input.text.trim()
+        if (text === "") return
         input.text = ""
+
+        // Instant local slash commands
+        if (text === "/clear" || text === "/limpiar") {
+            AiService.clear()
+            return
+        }
+        if (text === "/stop" || text === "/parar") {
+            AiService.stop()
+            return
+        }
+        if (text === "/retry" || text === "/reintentar") {
+            AiService.retry()
+            return
+        }
+        if (text === "/info" || text === "/modelo") {
+            AiService.messages = AiService.messages.concat([
+                { role: "user", content: text },
+                { role: "assistant", content: "⚡ **Ndot AI Estado:**\n• **Proveedor:** " + AiService.providerLabel + "\n• **Modelo:** `" + AiService.model + "`\n• **Base URL:** `" + AiService.baseUrl + "`\n• **Tokens máx:** " + AiService.maxTokens + "\n• **Mensajes en memoria:** " + AiService.messages.length }
+            ])
+            return
+        }
+
         AiService.send(text)
     }
 
@@ -203,11 +225,23 @@ Item {
                     }
 
                     AiIconButton {
+                        id: copyMsgBtn
                         width: 22
                         height: 22
-                        icon: "content_copy"
+                        property bool copied: false
+                        icon: copied ? "check" : "content_copy"
+                        iconColor: copied ? panel.mt.nbAccent : panel.mt.nbInkSub
                         visible: !messageRow.mine
-                        onClicked: Quickshell.execDetached(["wl-copy", messageRow.modelData.content])
+                        onClicked: {
+                            Quickshell.execDetached(["wl-copy", messageRow.modelData.content])
+                            copyMsgBtn.copied = true
+                            copyTimer.restart()
+                        }
+                        Timer {
+                            id: copyTimer
+                            interval: 1400
+                            onTriggered: copyMsgBtn.copied = false
+                        }
                     }
                 }
 
@@ -280,11 +314,56 @@ Item {
                         }
                     }
 
+                    // Animated typing dots when waiting for first token
+                    Row {
+                        visible: AiService.streamingText === ""
+                        spacing: 5
+                        height: 20
+
+                        Repeater {
+                            model: 3
+                            Rectangle {
+                                width: 6
+                                height: 6
+                                radius: 3
+                                color: panel.mt.nbAccent
+                                opacity: 0.35
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                SequentialAnimation on opacity {
+                                    loops: Animation.Infinite
+                                    running: AiService.busy && AiService.streamingText === ""
+                                    PauseAnimation { duration: index * 160 }
+                                    NumberAnimation { to: 1.0; duration: 340; easing.type: Easing.InOutQuad }
+                                    NumberAnimation { to: 0.35; duration: 340; easing.type: Easing.InOutQuad }
+                                    PauseAnimation { duration: (2 - index) * 160 }
+                                }
+
+                                SequentialAnimation on scale {
+                                    loops: Animation.Infinite
+                                    running: AiService.busy && AiService.streamingText === ""
+                                    PauseAnimation { duration: index * 160 }
+                                    NumberAnimation { to: 1.35; duration: 340; easing.type: Easing.OutBack }
+                                    NumberAnimation { to: 1.0; duration: 340; easing.type: Easing.InQuad }
+                                    PauseAnimation { duration: (2 - index) * 160 }
+                                }
+                            }
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 6
+                            text: "pensando con " + AiService.providerLabel + "…"
+                            color: panel.mt.nbInkSub
+                            font.family: panel.mt.fontFamily
+                            font.pixelSize: 12
+                        }
+                    }
+
                     AiMessageBody {
+                        visible: AiService.streamingText !== ""
                         width: parent.width
-                        text: AiService.streamingText !== ""
-                            ? AiService.streamingText
-                            : "pensando…"
+                        text: AiService.streamingText
                     }
                 }
             }
@@ -387,29 +466,68 @@ Item {
         border.width: 1
         border.color: panel.mt.nbAccent
 
-        Column {
-            id: errorColumn
-            x: 12
-            y: 9
-            width: parent.width - 24
-            spacing: 2
+        Row {
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 10
 
-            Text {
-                width: parent.width
-                text: "ERROR"
-                color: panel.mt.nbAccent
-                font.family: panel.mt.fontFamily
-                font.pixelSize: 9
-                font.weight: Font.ExtraBold
-                font.letterSpacing: 2
+            Column {
+                id: errorColumn
+                width: parent.width - retryBtn.width - 10
+                spacing: 2
+
+                Text {
+                    width: parent.width
+                    text: "ERROR"
+                    color: panel.mt.nbAccent
+                    font.family: panel.mt.fontFamily
+                    font.pixelSize: 9
+                    font.weight: Font.ExtraBold
+                    font.letterSpacing: 2
+                }
+                Text {
+                    width: parent.width
+                    text: AiService.error
+                    color: panel.mt.nbInk
+                    font.family: panel.mt.fontFamily
+                    font.pixelSize: 12
+                    wrapMode: Text.Wrap
+                }
             }
-            Text {
-                width: parent.width
-                text: AiService.error
-                color: panel.mt.nbInk
-                font.family: panel.mt.fontFamily
-                font.pixelSize: 12
-                wrapMode: Text.Wrap
+
+            Rectangle {
+                id: retryBtn
+                anchors.verticalCenter: parent.verticalCenter
+                width: 78
+                height: 28
+                radius: 14
+                color: retryMa.pressed ? "#3b1215" : "#240b0e"
+                border.width: 1
+                border.color: panel.mt.nbAccent
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 4
+                    MaterialIcon {
+                        name: "refresh"
+                        size: 13
+                        color: panel.mt.nbAccent
+                    }
+                    Text {
+                        text: "Reintentar"
+                        color: "#ffffff"
+                        font.family: panel.mt.fontFamily
+                        font.pixelSize: 10
+                        font.weight: Font.Bold
+                    }
+                }
+
+                MouseArea {
+                    id: retryMa
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: AiService.retry()
+                }
             }
         }
     }
