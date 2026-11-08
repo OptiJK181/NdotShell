@@ -502,6 +502,46 @@ SettingsPage {
     }
 
     SectionCard {
+        title: "Ryotunes + Ryoku Hub"
+
+        SettingAction {
+            icon: "music-note-2"
+            label: SystemToolsService.ryotunesInstalled ? "Ryotunes detectado" : "Ryotunes no detectado"
+            detail: SystemToolsService.ryotunesInstalled
+                ? "Cliente de música nativo de Ryoku"
+                : "No está en el PATH — viene con Ryoku Linux"
+            onActivated: SystemToolsService.openRyotunes()
+        }
+
+        SettingAction {
+            icon: "dashboard"
+            label: SystemToolsService.hubInstalled ? "Ryoku Hub" : "Ryoku Hub no detectado"
+            detail: SystemToolsService.hubRashin
+                ? (SystemToolsService.ryokuRelease !== "" ? SystemToolsService.ryokuRelease + " · rashin OK" : "rashin (temas) activo")
+                : "ryoku-shell hub open"
+            onActivated: SystemToolsService.openHubGui()
+        }
+
+        SettingAction {
+            icon: "terminal"
+            label: "Ryoku Hub CLI"
+            detail: "desktop · keybinds · phone · rashin · plugins"
+            onActivated: SystemToolsService.hubCli()
+        }
+
+        Text {
+            width: page.fullWidth
+            wrapMode: Text.WordWrap
+            text: SystemToolsService.hubRashin
+                ? "Rashin (el sistema de temas de Ryoku) está activo — NdotShell usa su propio tema Nothing y no lo toca."
+                : "Instala Ryoku Hub desde Ryoku Linux para gestionar temas (rashin), teléfonos (phone) y plugins desde una GUI."
+            color: mt.pInkSub
+            font.family: mt.fontFamily
+            font.pixelSize: 13
+        }
+    }
+
+    SectionCard {
         title: "Widgets"
 
         SettingChoice {

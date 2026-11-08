@@ -15,10 +15,14 @@ Singleton {
     property bool ffBusy: false
     property bool ffConfigWritten: false
 
-    // ===== ryoku / ryostore =====
+    // ===== ryoku / ryostore / ryotunes / hub =====
     property bool ryokuInstalled: false
     property bool ryostoreInstalled: false
+    property bool ryotunesInstalled: false
+    property bool hubInstalled: false
+    property bool hubRashin: false       // rashin (theme daemon) status
     property string ryokuVersion: ""
+    property string ryokuRelease: ""     // ej: "Amaterasu v1.0.6"
     property string pluginList: ""
     property bool probing: false
 
@@ -33,7 +37,10 @@ Singleton {
             "command -v fastfetch >/dev/null 2>&1 && echo ff=yes || echo ff=no; " +
             "command -v ryoku >/dev/null 2>&1 && echo ryoku=yes || echo ryoku=no; " +
             "command -v ryostore >/dev/null 2>&1 && echo store=yes || echo store=no; " +
-            "command -v ryoku >/dev/null 2>&1 && ryoku --version 2>/dev/null | head -1 || true"])
+            "command -v ryotunes >/dev/null 2>&1 && echo tunes=yes || echo tunes=no; " +
+            "command -v ryoku-hub >/dev/null 2>&1 && echo hub=yes || echo hub=no; " +
+            "command -v ryoku-hub >/dev/null 2>&1 && ryoku-hub rashin status 2>/dev/null | grep -q true && echo rashin=yes || echo rashin=no; " +
+            "command -v ryoku >/dev/null 2>&1 && ryoku status 2>/dev/null | grep '^release:' | cut -d: -f2- | xargs || true"])
     }
 
     function ffFetch() {
@@ -87,6 +94,23 @@ Singleton {
             "command -v kitty >/dev/null 2>&1 && kitty --title ryostore sh -c 'ryostore catalog; exec sh' >/dev/null 2>&1 &"])
     }
 
+    function openRyotunes() {
+        // ryotunes pide a ryotunesd mostrar el cliente nativo
+        Quickshell.execDetached(["sh", "-c", "command -v ryotunes >/dev/null 2>&1 && ryotunes >/dev/null 2>&1 &"])
+    }
+
+    function openHubGui() {
+        // el Hub GUI vive en ryoku-shell (el daemon de la bar/dock de Ryoku)
+        Quickshell.execDetached(["sh", "-c",
+            "command -v ryoku-shell >/dev/null 2>&1 && ryoku-shell hub open >/dev/null 2>&1 &"])
+    }
+
+    function hubCli() {
+        // ryoku-hub en kitty para comandos directos (desktop, keybinds, phone…)
+        Quickshell.execDetached(["sh", "-c",
+            "command -v kitty >/dev/null 2>&1 && kitty --title ryoku-hub sh -c 'ryoku-hub 2>&1 | head -40; exec sh' >/dev/null 2>&1 &"])
+    }
+
     Process {
         id: prober
         stdout: StdioCollector {
@@ -97,9 +121,14 @@ Singleton {
                     if (l === "ff=yes") root.ffInstalled = true
                     if (l === "ryoku=yes") root.ryokuInstalled = true
                     if (l === "store=yes") root.ryostoreInstalled = true
-                    if (l !== "" && !l.startsWith("ff=") && !l.startsWith("ryoku=") && !l.startsWith("store="))
-                        root.ryokuVersion = l
+                    if (l === "tunes=yes") root.ryotunesInstalled = true
+                    if (l === "hub=yes") root.hubInstalled = true
+                    if (l === "rashin=yes") root.hubRashin = true
+                    if (l !== "" && !l.includes("="))
+                        root.ryokuRelease = l
                 }
+                // release va a ryokuVersion para compat con la UI existente
+                if (root.ryokuRelease !== "") root.ryokuVersion = root.ryokuRelease
             }
         }
     }
