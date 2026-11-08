@@ -6,9 +6,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.sekai.sideMenu
 
-// Work drawer (ofimática) — Caelestia hotspot on the left edge; Sekai
-// power-menu typography inside. Pomodoro card + menu: Focus Mode,
-// clipboard privacy, Notas / To-Do / Calendario toggles.
+// Work drawer (ofimática) — full height en el lado izquierdo (patrón Bar).
 PanelWindow {
     id: win
 
@@ -17,26 +15,23 @@ PanelWindow {
     readonly property var mt: Theme.of(screen)
     readonly property real uiScale: ShellScale.forScreen(screen)
 
-    // window = card EXACTO (sin mask)
-    anchors { bottom: true; left: true }
-    implicitHeight: Math.round(screen.height - win.topPad)
+    anchors { top: true; bottom: true; left: true }
+    implicitWidth: Math.round(cardW * win.uiScale)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
     readonly property real cardW: 330
-    // conexión con la barra: el slab nace justo bajo la barra
     readonly property real topPad: SettingsService.flag("bar.visible")
-        ? BarPositionService.thicknessFor("top") : 0
+        ? BarPositionService.thicknessFor("top") + 6 : 12
 
     property real slide: SideMenuService.open === "work"
         && SettingsService.flag("side.work") ? 1 : 0
-    // liquid gelatinous: elastic overshoot on the slide itself
     Behavior on slide {
         NumberAnimation {
-            duration: 760
+            duration: 640
             easing.type: Easing.OutElastic
-            easing.amplitude: 1.35
-            easing.period: 0.42
+            easing.amplitude: 1.3
+            easing.period: 0.45
         }
     }
 
@@ -45,32 +40,27 @@ PanelWindow {
     WlrLayershell.keyboardFocus: SideMenuService.open === "work"
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
+    mask: Region { item: card }
+
     // driver de stagger
     Item {
         id: driver
         property real t: SideMenuService.open === "work" ? 1 : 0
         Behavior on t { NumberAnimation { duration: 640; easing.type: Easing.OutCubic } }
         function prog(i) {
-            return Math.max(0, Math.min(1, (t - (0.10 + i * 0.085)) / 0.30))
+            return Math.max(0, Math.min(1, (t - (0.06 + i * 0.07)) / 0.35))
         }
     }
 
     Item {
         id: card
 
-        // pegado a la esquina SIEMPRE: wobble por scale desde el borde
         x: 0
         y: Math.round(win.topPad)
-        width: Math.round(win.cardW * win.uiScale)
+        width: Math.round(parent.width)
         height: Math.round(parent.height - win.topPad)
-        transformOrigin: Item.Left
-
-        scale: win.slide
-        opacity: Math.min(1, win.slide * 2.5)
 
         HoverHandler { id: cardHover }
-
-        Binding { target: SideMenuService; property: "cardHovered"; value: cardHover.hovered }
 
         focus: SideMenuService.open === "work"
         Keys.onEscapePressed: SideMenuService.hide()
@@ -82,7 +72,6 @@ PanelWindow {
             border.color: mt.nbBorder
         }
 
-        // accent hairline on the screen edge
         Rectangle {
             anchors.left: parent.left
             anchors.top: parent.top
@@ -96,14 +85,14 @@ PanelWindow {
             anchors.fill: parent
             anchors.leftMargin: 22 * win.uiScale
             anchors.rightMargin: 22 * win.uiScale
-            anchors.topMargin: 24 * win.uiScale
-            anchors.bottomMargin: 18 * win.uiScale
+            anchors.topMargin: 20 * win.uiScale
+            anchors.bottomMargin: 14 * win.uiScale
             spacing: 8 * win.uiScale
 
-            // ===== header =====
+            // header
             Item {
                 width: parent.width
-                height: 46 * win.uiScale
+                height: 44 * win.uiScale
 
                 Column {
                     anchors.left: parent.left
@@ -151,10 +140,10 @@ PanelWindow {
 
             Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
 
-            // ===== Pomodoro card (label can never touch the border) =====
+            // Pomodoro
             Rectangle {
                 width: parent.width
-                height: 160 * win.uiScale
+                height: 150 * win.uiScale
                 radius: 14 * win.uiScale
                 color: mt.nbRaised
                 border.width: 1
@@ -162,7 +151,7 @@ PanelWindow {
 
                 Column {
                     anchors.centerIn: parent
-                    spacing: 7 * win.uiScale
+                    spacing: 6 * win.uiScale
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -183,7 +172,7 @@ PanelWindow {
 
                     Row {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 8 * win.uiScale
+                        spacing: 10 * win.uiScale
 
                         RoundWorkKey {
                             icon: PomodoroService.running ? "pause" : "play"
@@ -211,10 +200,10 @@ PanelWindow {
                 }
             }
 
-            // ===== pulpo escribiendo =====
+            // pulpo
             Rectangle {
                 width: parent.width
-                height: 72 * win.uiScale
+                height: 68 * win.uiScale
                 radius: 14 * win.uiScale
                 color: mt.nbRaised
                 border.width: 1
@@ -222,10 +211,9 @@ PanelWindow {
 
                 Row {
                     anchors.fill: parent
-                    anchors.margins: 12 * win.uiScale
+                    anchors.margins: 10 * win.uiScale
                     spacing: 12 * win.uiScale
 
-                    // el pulpo: flota y respira mientras teclea
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "🐙"
@@ -234,7 +222,7 @@ PanelWindow {
                         SequentialAnimation on y {
                             loops: Animation.Infinite
                             alwaysRunToEnd: true
-                            NumberAnimation { to: -4 * win.uiScale; duration: 900; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: -3 * win.uiScale; duration: 900; easing.type: Easing.InOutQuad }
                             NumberAnimation { to: 3 * win.uiScale; duration: 900; easing.type: Easing.InOutQuad }
                         }
 
@@ -248,8 +236,8 @@ PanelWindow {
 
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width - 34 * win.uiScale - 12 * win.uiScale - 24 * win.uiScale
-                        spacing: 3 * win.uiScale
+                        width: parent.width - 28 * win.uiScale - 12 * win.uiScale - 16 * win.uiScale
+                        spacing: 2 * win.uiScale
 
                         Text {
                             width: parent.width
@@ -273,7 +261,7 @@ PanelWindow {
                 }
             }
 
-            // ===== the menu =====
+            // menu
             DrawerMenuItem {
                 appear: driver.prog(0)
                 s: win.uiScale
@@ -352,15 +340,14 @@ PanelWindow {
             Text {
                 width: parent.width
                 wrapMode: Text.WordWrap
-                text: qsTr("Toca el borde izquierdo para abrir · Esc cierra")
+                text: qsTr("Doble toque en la esquina · Esc cierra")
                 color: mt.nbInkSub
                 font.pixelSize: 11 * win.uiScale
             }
         }
     }
 
-    // máquina de escribir del pulpo: letra por letra, con cursor que respira
-    // (QtObject no admite hijos: los Timers van al nivel del drawer)
+    // pulpo typer
     property string octoFull: ""
     property int octoMsg: 0
     property int octoChars: 0
@@ -401,9 +388,9 @@ PanelWindow {
         property string icon: ""
         signal clicked()
 
-        width: 44 * win.uiScale
-        height: 44 * win.uiScale
-        radius: 22 * win.uiScale
+        width: 40 * win.uiScale
+        height: 40 * win.uiScale
+        radius: 20 * win.uiScale
         color: keyMa.pressed ? mt.nbBorder : mt.nbSurface
         border.width: 1
         border.color: mt.nbBorder
@@ -411,7 +398,7 @@ PanelWindow {
         MaterialIcon {
             anchors.centerIn: parent
             name: parent.icon
-            size: 20 * win.uiScale
+            size: 18 * win.uiScale
             color: mt.nbInk
         }
 

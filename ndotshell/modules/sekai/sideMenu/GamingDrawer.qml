@@ -6,10 +6,9 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.sekai.sideMenu
 
-// Gaming drawer — Caelestia hotspot on the right edge; Sekai power-menu
-// typography inside (skewed wedge + italic accent word on select).
-// 100% gaming: Game Mode, recorder (screen / window / region), screenshot,
-// notifications, Keep Awake, CPU/RAM meters.
+// Gaming drawer — ancla top+bottom+right (full height, como la Bar).
+// El card vive adentro con topPadding para la barra. Doble toque en la
+// esquina superior derecha lo abre. Gelatinoso, Caelestia-style.
 PanelWindow {
     id: win
 
@@ -19,27 +18,25 @@ PanelWindow {
     readonly property var mt: Theme.of(screen)
     readonly property real uiScale: ShellScale.forScreen(screen)
 
-    // window = card EXACTO (sin mask): los botones reciben el clic seguro
-    anchors { bottom: true; right: true }
+    // ===== full height en el lado derecho (patrón Bar.qml) =====
+    anchors { top: true; bottom: true; right: true }
     implicitWidth: Math.round(cardW * win.uiScale)
-    implicitHeight: Math.round(screen.height - win.topPad)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
     readonly property real cardW: 330
-    // conexión con la barra: el slab nace justo bajo la barra
+    // espacio para la barra arriba
     readonly property real topPad: SettingsService.flag("bar.visible")
-        ? BarPositionService.thicknessFor("top") : 0
+        ? BarPositionService.thicknessFor("top") + 6 : 12
 
     property real slide: SideMenuService.open === "gaming"
         && SettingsService.flag("side.gaming") ? 1 : 0
-    // liquid gelatinous: elastic overshoot on the slide itself
     Behavior on slide {
         NumberAnimation {
-            duration: 760
+            duration: 640
             easing.type: Easing.OutElastic
-            easing.amplitude: 1.35
-            easing.period: 0.42
+            easing.amplitude: 1.3
+            easing.period: 0.45
         }
     }
 
@@ -48,31 +45,29 @@ PanelWindow {
     WlrLayershell.keyboardFocus: SideMenuService.open === "gaming"
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    // driver de stagger
+    // input solo en el card (el resto del window es transparente)
+    mask: Region { item: card }
+
+    // ===== driver de stagger =====
     Item {
         id: driver
         property real t: SideMenuService.open === "gaming" ? 1 : 0
         Behavior on t { NumberAnimation { duration: 640; easing.type: Easing.OutCubic } }
         function prog(i) {
-            return Math.max(0, Math.min(1, (t - (0.10 + i * 0.085)) / 0.30))
+            return Math.max(0, Math.min(1, (t - (0.06 + i * 0.07)) / 0.35))
         }
     }
 
+    // ===== el card: x = window.width - cardW (pegado al borde derecho) =====
     Item {
         id: card
 
-        // gelatinoso que NO se despega: el borde derecho está SIEMPRE en
-        // win.width (x fijo); el rebote es squash del width con OutBack —
-        // el panel se estira hacia adentro, nunca se separa de la esquina
-        x: Math.round(win.width - parent.width * win.uiScale * win.slide)
+        x: Math.round(parent.width - parent.width * slide)
         y: Math.round(win.topPad)
-        width: Math.round(parent.width * win.uiScale * win.slide)
+        width: Math.round(parent.width)
         height: Math.round(parent.height - win.topPad)
-        opacity: Math.min(1, win.slide * 2.5)
 
         HoverHandler { id: cardHover }
-
-        Binding { target: SideMenuService; property: "cardHovered"; value: cardHover.hovered }
 
         focus: SideMenuService.open === "gaming"
         Keys.onEscapePressed: SideMenuService.hide()
@@ -85,7 +80,7 @@ PanelWindow {
             border.color: mt.nbBorder
         }
 
-        // accent hairline on the screen edge
+        // accent hairline en el borde de pantalla
         Rectangle {
             anchors.right: parent.right
             anchors.top: parent.top
@@ -99,14 +94,14 @@ PanelWindow {
             anchors.fill: parent
             anchors.leftMargin: 22 * win.uiScale
             anchors.rightMargin: 22 * win.uiScale
-            anchors.topMargin: 24 * win.uiScale
-            anchors.bottomMargin: 18 * win.uiScale
-            spacing: 10 * win.uiScale
+            anchors.topMargin: 20 * win.uiScale
+            anchors.bottomMargin: 14 * win.uiScale
+            spacing: 8 * win.uiScale
 
             // ===== header =====
             Item {
                 width: parent.width
-                height: 46 * win.uiScale
+                height: 44 * win.uiScale
 
                 Column {
                     anchors.left: parent.left
@@ -154,7 +149,7 @@ PanelWindow {
 
             Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
 
-            // ===== the menu =====
+            // ===== menu =====
             DrawerMenuItem {
                 appear: driver.prog(0)
                 fromRight: true
@@ -253,13 +248,12 @@ PanelWindow {
 
             Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
 
-            // ===== live stats + ventilador =====
+            // ===== sistema + ventilador =====
             Column {
                 width: parent.width
-                spacing: 9 * win.uiScale
+                spacing: 8 * win.uiScale
 
                 Text {
-                    opacity: driver.prog(7)
                     text: qsTr("SISTEMA")
                     color: mt.nbInkSub
                     font.family: mt.fontDisplay
@@ -272,28 +266,25 @@ PanelWindow {
                     spacing: 12 * win.uiScale
 
                     GamingFan {
-                        width: 64 * win.uiScale
-                        height: 64 * win.uiScale
+                        width: 60 * win.uiScale
+                        height: 60 * win.uiScale
                         cpu: stats.cpuPercent
-                        opacity: driver.prog(8)
                     }
 
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width - 64 * win.uiScale - 12 * win.uiScale
+                        width: parent.width - 60 * win.uiScale - 12 * win.uiScale
                         spacing: 9 * win.uiScale
 
                         GamingMeter {
                             width: parent.width
                             label: qsTr("CPU")
-                            opacity: driver.prog(8)
                             value: stats.cpuPercent
                         }
 
                         GamingMeter {
                             width: parent.width
                             label: qsTr("RAM")
-                            opacity: driver.prog(9)
                             value: stats.memPercent
                         }
                     }
@@ -303,7 +294,7 @@ PanelWindow {
             Text {
                 width: parent.width
                 wrapMode: Text.WordWrap
-                text: qsTr("Toca el borde derecho para abrir · Esc cierra")
+                text: qsTr("Doble toque en la esquina · Esc cierra")
                 color: mt.nbInkSub
                 font.pixelSize: 11 * win.uiScale
             }
@@ -321,7 +312,6 @@ PanelWindow {
         return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s
     }
 
-    // mini ventilador: gira más rápido cuanto más caliente va la CPU
     component GamingFan: Rectangle {
         id: fan
         property real cpu: 0
@@ -334,7 +324,7 @@ PanelWindow {
 
         Timer {
             interval: Math.max(16, 58 - fan.cpu * 0.42)
-            running: fan.opacity > 0.05
+            running: fan.visible
             repeat: true
             onTriggered: fan.angle = (fan.angle + 7) % 360
         }

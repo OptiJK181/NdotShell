@@ -5,13 +5,8 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
-// Dynamic Island — menú interactivo vertical en el lateral derecho: del
-// medio del borde hasta la esquina inferior derecha. 100% manual (Super +
-// Shift + D o ipc call island toggle). En su cabeza, un agujero negro
-// girando (núcleo negro, disco de acento y satélite en órbita); debajo,
-// las llaves del menú: REC · POMODORO · MÚSICA · PRIVADO · CAPTURA ·
-// GAMING · FOCUS. Esc lo cierra; el toggle de Ajustes (side.island) lo
-// apaga entero.
+// Dynamic Island — full height en el lado derecho, menú abajo.
+// 100% manual (Super + Shift + D o ipc island toggle).
 PanelWindow {
     id: win
 
@@ -21,11 +16,9 @@ PanelWindow {
     readonly property real uiScale: ShellScale.forScreen(screen)
 
     anchors { top: true; bottom: true; right: true }
+    implicitWidth: Math.round(cardW * win.uiScale)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    implicitWidth: Math.round(cardW * win.uiScale)
-    visible: SettingsService.flag("side.island")
-        && (SideMenuService.islandOpen || win.openAnim > 0.001)
 
     readonly property real cardW: 76
 
@@ -39,87 +32,89 @@ PanelWindow {
         }
     }
 
+    visible: SettingsService.flag("side.island")
+        && (SideMenuService.islandOpen || win.openAnim > 0.001)
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: SideMenuService.islandOpen
-        ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+
     mask: Region { item: card }
 
     Item {
         id: card
 
-        // del medio del lateral (40%) hasta cerca de la esquina inferior (94%)
-        // pegada al borde derecho; el rebote es scale desde el borde
-        x: Math.round(win.width - win.cardW * win.uiScale)
+        x: 0
+        // abajo: desde el 40% de la pantalla hasta casi el fondo
         y: Math.round(parent.height * 0.40)
-        width: Math.round(win.cardW * win.uiScale)
-        height: Math.round(parent.height * 0.54)
-        scale: win.openAnim
-        opacity: Math.min(1, win.openAnim * 2)
-        transformOrigin: Item.Right
-
-        HoverHandler { id: cardHover }
+        width: Math.round(parent.width)
+        height: Math.round(parent.height * 0.55)
 
         Keys.onEscapePressed: SideMenuService.islandOpen = false
 
+        opacity: win.openAnim
+
         // slab
         Rectangle {
-            // abajo-derecha: desde el 55% de la pantalla
-        x: 0
-        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
-        width: Math.round(win.cardW * win.uiScale)
-        height: Math.round(480 * win.uiScale)
-        opacity: win.openAnim
-            radius: 26 * win.uiScale
+            anchors.fill: parent
+            radius: 20 * win.uiScale
             color: mt.nbSurface
             border.width: 1
             border.color: mt.nbBorder
+
+            Rectangle {
+                visible: ScreenRecorderService.recording
+                anchors.fill: parent
+                radius: parent.radius
+                color: "transparent"
+                border.width: 1
+                border.color: mt.nbAccent
+            }
         }
 
-        // accent hairline on the screen edge
+        // ✕ close
         Rectangle {
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: 2 * win.uiScale
-            color: mt.nbAccent
-            opacity: win.openAnim
+            anchors.margins: 8 * win.uiScale
+            width: 22 * win.uiScale
+            height: 22 * win.uiScale
+            radius: 11 * win.uiScale
+            color: xMa.pressed ? mt.nbBorder : mt.nbSurface
+            border.width: 1
+            border.color: mt.nbBorder
+
+            Text {
+                anchors.centerIn: parent
+                text: "✕"
+                color: mt.nbInk
+                font.pixelSize: 11 * win.uiScale
+            }
+
+            MouseArea {
+                id: xMa
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: SideMenuService.islandOpen = false
+            }
         }
 
         Column {
-            // abajo-derecha: desde el 55% de la pantalla
-        x: 0
-        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
-        width: Math.round(win.cardW * win.uiScale)
-        height: Math.round(480 * win.uiScale)
-        opacity: win.openAnim
-            anchors.topMargin: 18 * win.uiScale
-            anchors.bottomMargin: 16 * win.uiScale
-            anchors.leftMargin: 12 * win.uiScale
-            anchors.rightMargin: 12 * win.uiScale
-            spacing: 10 * win.uiScale
+            anchors.fill: parent
+            anchors.topMargin: 12 * win.uiScale
+            anchors.bottomMargin: 12 * win.uiScale
+            anchors.leftMargin: 10 * win.uiScale
+            anchors.rightMargin: 10 * win.uiScale
+            spacing: 8 * win.uiScale
 
-            // ===== agujero negro =====
+            // agujero negro
             Item {
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: 56 * win.uiScale
-                height: 56 * win.uiScale
+                width: 48 * win.uiScale
+                height: 48 * win.uiScale
 
-                // disco de acento girando (arco 270°)
                 Item {
-                    // abajo-derecha: desde el 55% de la pantalla
-        x: 0
-        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
-        width: Math.round(win.cardW * win.uiScale)
-        height: Math.round(480 * win.uiScale)
-        opacity: win.openAnim
+                    anchors.fill: parent
 
                     Canvas {
-                        // abajo-derecha: desde el 55% de la pantalla
-        x: 0
-        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
-        width: Math.round(win.cardW * win.uiScale)
-        height: Math.round(480 * win.uiScale)
-        opacity: win.openAnim
+                        anchors.fill: parent
                         onPaint: {
                             const ctx = getContext("2d")
                             ctx.clearRect(0, 0, width, height)
@@ -141,20 +136,14 @@ PanelWindow {
                     }
                 }
 
-                // satélite en órbita contraria
                 Item {
-                    // abajo-derecha: desde el 55% de la pantalla
-        x: 0
-        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
-        width: Math.round(win.cardW * win.uiScale)
-        height: Math.round(480 * win.uiScale)
-        opacity: win.openAnim
+                    anchors.fill: parent
 
                     Rectangle {
                         x: parent.width / 2 - 3 * win.uiScale
                         y: -2 * win.uiScale
-                        width: 6 * win.uiScale
-                        height: 6 * win.uiScale
+                        width: 5 * win.uiScale
+                        height: 5 * win.uiScale
                         radius: 3 * win.uiScale
                         color: mt.nbInk
                     }
@@ -166,27 +155,23 @@ PanelWindow {
                     }
                 }
 
-                // núcleo
                 Rectangle {
                     anchors.centerIn: parent
-                    width: 26 * win.uiScale
-                    height: 26 * win.uiScale
-                    radius: 13 * win.uiScale
+                    width: 22 * win.uiScale
+                    height: 22 * win.uiScale
+                    radius: 11 * win.uiScale
                     color: "#000000"
                     border.width: 1
                     border.color: mt.nbInkSub
                 }
-
-                property real angle: 0
-                property real angle2: 0
             }
 
             Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
 
-            // ===== llaves del menú =====
+            // llaves
             Column {
                 anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 10 * win.uiScale
+                spacing: 8 * win.uiScale
 
                 IslandKey {
                     icon: ScreenRecorderService.recording ? "stop" : "videocam"
@@ -208,7 +193,7 @@ PanelWindow {
 
                 Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    width: 24 * win.uiScale
+                    width: 20 * win.uiScale
                     height: 1
                     color: mt.nbBorder
                 }
@@ -258,9 +243,9 @@ PanelWindow {
         property bool accent: false
         signal clicked()
 
-        width: 42 * win.uiScale
-        height: 42 * win.uiScale
-        radius: 21 * win.uiScale
+        width: 36 * win.uiScale
+        height: 36 * win.uiScale
+        radius: 18 * win.uiScale
         color: keyMa.pressed ? mt.nbBorder : (accent ? mt.nbAccent : mt.nbRaised)
         border.width: 1
         border.color: accent ? mt.nbAccent : mt.nbBorder
@@ -270,18 +255,13 @@ PanelWindow {
         MaterialIcon {
             anchors.centerIn: parent
             name: parent.icon
-            size: 18 * win.uiScale
+            size: 16 * win.uiScale
             color: parent.accent ? "#ffffff" : mt.nbInk
         }
 
         MouseArea {
             id: keyMa
-            // abajo-derecha: desde el 55% de la pantalla
-        x: 0
-        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
-        width: Math.round(win.cardW * win.uiScale)
-        height: Math.round(480 * win.uiScale)
-        opacity: win.openAnim
+            anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             onClicked: parent.clicked()
         }

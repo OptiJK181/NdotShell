@@ -5,11 +5,8 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
-// Music dock — la esquina inferior derecha, doble toque la abre.
-// Completamente hermoso: vinilo girando con el arte del álbum, título,
-// artista y transporte completo, todo en slab Nothing. Gelatinosa al
-// abrir (OutElastic). Esc o la ✕ cierran; el toggle de Ajustes
-// (side.music) apaga el hotspot y el keybind.
+// Music dock — full height en el lado derecho (patrón Bar), card abajo.
+// Doble toque en la esquina inferior derecha lo abre.
 PanelWindow {
     id: win
 
@@ -19,11 +16,9 @@ PanelWindow {
     readonly property real uiScale: ShellScale.forScreen(screen)
 
     anchors { top: true; bottom: true; right: true }
+    implicitWidth: Math.round(cardW * win.uiScale)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
-    implicitWidth: Math.round(cardW * win.uiScale)
-    visible: SettingsService.flag("side.music")
-        && (SideMenuService.musicOpen || win.openAnim > 0.001)
 
     readonly property real cardW: 340
 
@@ -37,23 +32,19 @@ PanelWindow {
         }
     }
 
+    visible: SettingsService.flag("side.music")
+        && (SideMenuService.musicOpen || win.openAnim > 0.001)
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: SideMenuService.musicOpen
-        ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+
     mask: Region { item: card }
 
     Item {
         id: card
 
-        // de la parte baja (con margen) hasta media pantalla
-        // pegada a la esquina inferior derecha; rebote por scale
-        x: Math.round(win.width - win.cardW * win.uiScale)
-        y: Math.round(parent.height * 0.40)
-        width: Math.round(win.cardW * win.uiScale)
-        height: Math.round(parent.height * 0.52)
-        scale: win.openAnim
-        opacity: Math.min(1, win.openAnim * 2)
-        transformOrigin: Item.Right
+        x: 0
+        y: Math.round(parent.height * 0.50)
+        width: Math.round(parent.width)
+        height: Math.round(parent.height * 0.46)
 
         HoverHandler { id: cardHover }
 
@@ -68,7 +59,7 @@ PanelWindow {
             border.color: mt.nbBorder
         }
 
-        // accent hairline on the screen edge
+        // accent hairline
         Rectangle {
             anchors.right: parent.right
             anchors.top: parent.top
@@ -84,7 +75,7 @@ PanelWindow {
             anchors.rightMargin: 22 * win.uiScale
             spacing: 14 * win.uiScale
 
-            // ===== header =====
+            // header
             Item {
                 width: parent.width
                 height: 44 * win.uiScale
@@ -139,18 +130,16 @@ PanelWindow {
 
             Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
 
-            // ===== vinilo + info =====
+            // vinilo + texto
             Row {
                 width: parent.width
                 spacing: 16 * win.uiScale
 
-                // vinilo girando con el arte
                 Item {
-                    width: 110 * win.uiScale
-                    height: 110 * win.uiScale
+                    width: 100 * win.uiScale
+                    height: 100 * win.uiScale
                     anchors.verticalCenter: parent.verticalCenter
 
-                    // disco
                     Rectangle {
                         anchors.centerIn: parent
                         width: parent.width
@@ -160,7 +149,6 @@ PanelWindow {
                         border.width: 1
                         border.color: mt.nbBorder
 
-                        // surcos
                         Rectangle {
                             anchors.centerIn: parent
                             width: parent.width * 0.72
@@ -170,30 +158,18 @@ PanelWindow {
                             border.width: 1
                             border.color: Qt.rgba(1, 1, 1, 0.06)
                         }
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: parent.width * 0.5
-                            height: width
-                            radius: width / 2
-                            color: "transparent"
-                            border.width: 1
-                            border.color: Qt.rgba(1, 1, 1, 0.06)
-                        }
 
-                        // arte del álbum (girando con el disco)
                         Item {
                             anchors.centerIn: parent
                             width: parent.width * 0.62
                             height: width
-                            rotation: spin.angle
+                            rotation: spinAngle.angle
 
                             Image {
                                 anchors.fill: parent
                                 source: media.artUrl !== "" ? media.artUrl : ""
                                 visible: media.artUrl !== ""
                                 fillMode: Image.PreserveAspectCrop
-                                layer.enabled: true
-                                layer.effect: null
                             }
 
                             Rectangle {
@@ -205,17 +181,16 @@ PanelWindow {
                                 MaterialIcon {
                                     anchors.centerIn: parent
                                     name: "music-note-2"
-                                    size: 30 * win.uiScale
+                                    size: 28 * win.uiScale
                                     color: mt.nbInkSub
                                 }
                             }
 
-                            // agujero del vinilo
                             Rectangle {
                                 anchors.centerIn: parent
-                                width: 12 * win.uiScale
-                                height: 12 * win.uiScale
-                                radius: 6 * win.uiScale
+                                width: 10 * win.uiScale
+                                height: 10 * win.uiScale
+                                radius: 5 * win.uiScale
                                 color: mt.nbSurface
                                 border.width: 1
                                 border.color: mt.nbBorder
@@ -223,26 +198,24 @@ PanelWindow {
                         }
                     }
 
-                    RotationAnimation on rotation {
-                        from: 0
-                        to: 360
-                        duration: media.playing ? 4200 : 0
-                        loops: media.playing ? Animation.Infinite : 1
-                    }
-                    Timer {
-                        id: spin
+                    Item {
+                        id: spinAngle
                         property real angle: 0
-                        interval: 30
-                        running: media.playing
-                        repeat: true
-                        onTriggered: parent.rotation = (parent.rotation + 2.6) % 360
+                        anchors.fill: parent
+                        rotation: angle
+
+                        Timer {
+                            interval: 30
+                            running: media.playing
+                            repeat: true
+                            onTriggered: spinAngle.angle = (spinAngle.angle + 2.6) % 360
+                        }
                     }
                 }
 
-                // texto
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - 110 * win.uiScale - 16 * win.uiScale
+                    width: parent.width - 100 * win.uiScale - 16 * win.uiScale
                     spacing: 4 * win.uiScale
 
                     Text {
@@ -252,7 +225,7 @@ PanelWindow {
                         text: media.playing ? media.title : qsTr("Nothing playing")
                         color: mt.nbInk
                         font.family: mt.fontDisplay
-                        font.pixelSize: 17 * win.uiScale
+                        font.pixelSize: 16 * win.uiScale
                         font.weight: Font.DemiBold
                     }
 
@@ -270,31 +243,31 @@ PanelWindow {
 
             Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
 
-            // ===== transporte =====
+            // transporte
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 18 * win.uiScale
 
-                DockKey { icon: "skip-previous"; onClicked: media.previous() }
+                MusicKey { icon: "skip-previous"; onClicked: media.previous() }
 
-                DockKey {
-                    size: 64
+                MusicKey {
+                    size: 60
                     icon: media.playing ? "pause" : "play"
                     accent: media.playing
                     onClicked: media.togglePlaying()
                 }
 
-                DockKey { icon: "skip-next"; onClicked: media.next() }
+                MusicKey { icon: "skip-next"; onClicked: media.next() }
             }
 
-            // ===== volumen rápido (si el player lo soporta) =====
+            // volumen
             Row {
                 visible: media.volumeAvailable
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 10 * win.uiScale
 
-                DockKey {
-                    size: 34
+                MusicKey {
+                    size: 32
                     icon: "volume-cross"
                     onClicked: media.changeVolume(-1)
                 }
@@ -315,8 +288,8 @@ PanelWindow {
                     }
                 }
 
-                DockKey {
-                    size: 34
+                MusicKey {
+                    size: 32
                     icon: "volume-loud"
                     onClicked: media.changeVolume(1)
                 }
@@ -326,10 +299,10 @@ PanelWindow {
 
     MediaSource { id: media }
 
-    component DockKey: Rectangle {
+    component MusicKey: Rectangle {
         property string icon: ""
         property bool accent: false
-        property int size: 48
+        property int size: 46
         signal clicked()
 
         width: size * win.uiScale
