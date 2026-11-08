@@ -98,7 +98,7 @@ PanelWindow {
             anchors.rightMargin: 22 * win.uiScale
             anchors.topMargin: 24 * win.uiScale
             anchors.bottomMargin: 18 * win.uiScale
-            spacing: 10 * win.uiScale
+            spacing: 8 * win.uiScale
 
             // ===== header =====
             Item {
@@ -154,7 +154,7 @@ PanelWindow {
             // ===== Pomodoro card (label can never touch the border) =====
             Rectangle {
                 width: parent.width
-                height: 186 * win.uiScale
+                height: 160 * win.uiScale
                 radius: 14 * win.uiScale
                 color: mt.nbRaised
                 border.width: 1
@@ -178,12 +178,12 @@ PanelWindow {
                         text: PomodoroService.format()
                         color: mt.nbInk
                         font.family: mt.fontDisplay
-                        font.pixelSize: 50 * win.uiScale
+                        font.pixelSize: 44 * win.uiScale
                     }
 
                     Row {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 10 * win.uiScale
+                        spacing: 8 * win.uiScale
 
                         RoundWorkKey {
                             icon: PomodoroService.running ? "pause" : "play"
@@ -214,7 +214,7 @@ PanelWindow {
             // ===== pulpo escribiendo =====
             Rectangle {
                 width: parent.width
-                height: 86 * win.uiScale
+                height: 72 * win.uiScale
                 radius: 14 * win.uiScale
                 color: mt.nbRaised
                 border.width: 1
@@ -229,7 +229,7 @@ PanelWindow {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "🐙"
-                        font.pixelSize: 34 * win.uiScale
+                        font.pixelSize: 28 * win.uiScale
 
                         SequentialAnimation on y {
                             loops: Animation.Infinite
