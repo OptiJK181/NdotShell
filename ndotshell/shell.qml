@@ -4,6 +4,7 @@ import QtQuick
 import Qt.labs.folderlistmodel
 import qs.services
 import qs.modules.common
+import qs.modules.sekai.ai
 import qs.modules.sekai.background
 import qs.modules.sekai.bar
 import qs.modules.sekai.cheatSheet
@@ -648,6 +649,19 @@ ShellRoot {
         MusicDock {}
     }
 
+    // AI drawer — right edge, full height (modules/sekai/ai/AiDrawer.qml).
+    // One service (AiService) drives it, the bar key and the desktop orb.
+    //   qs -c ndotshell ipc call ai open | ask "…"
+    Variants {
+        id: aiDrawers
+        model: Quickshell.screens
+        AiDrawer {}
+    }
+
+    // The AI orb on the desktop (one, on the first monitor): click to open
+    // the chat there; drag it around. Settings -> IA shows/hides it.
+    AiOrb {}
+
     // The screen lock (Lockscreen.qml): one WlSessionLock for the whole
     // shell, a LockSurface per monitor. Locked via LockState.lock() —
     // the Quick Panel's Power menu does that, and so can a keybind or
@@ -726,6 +740,64 @@ ShellRoot {
         function hidemode(mode: string): void {
             if (mode === "off" || mode === "auto")
                 SettingsService.set("bar.hideMode", mode)
+        }
+    }
+
+    // The AI widget's own IPC. Everything the bar key, the drawer and the
+    // desktop orb do, from a keybind or a script:
+    //   qs -c ndotshell ipc call ai toggle | open | close
+    //                                  | ask "explícame esto"   (opens + sends)
+    //                                  | clear | stop | retry | regenerate
+    //                                  | orb                    (show/hide the desktop orb)
+    //                                  | status                 (one line: busy/model/key)
+    IpcHandler {
+        target: "ai"
+
+        function toggle(): void {
+            AiService.toggle()
+        }
+
+        function open(): void {
+            AiService.open()
+        }
+
+        function close(): void {
+            AiService.close()
+        }
+
+        function ask(text: string): void {
+            AiService.ask(text)
+        }
+
+        function clear(): void {
+            AiService.clear()
+        }
+
+        function stop(): void {
+            AiService.stop()
+        }
+
+        function retry(): void {
+            AiService.retry()
+        }
+
+        function regenerate(): void {
+            AiService.regenerate()
+        }
+
+        function test(): void {
+            AiService.testConnection()
+        }
+
+        function orb(): void {
+            AiService.toggleOrbVisible()
+        }
+
+        function status(): string {
+            if (AiService.busy)
+                return "generando · " + AiService.providerLabel
+            return (AiService.configured ? "listo" : "sin configurar")
+                + " · " + AiService.providerLabel + " · " + AiService.model
         }
     }
 

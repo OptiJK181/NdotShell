@@ -52,6 +52,7 @@ Singleton {
         { id: "privacy", label: "Privacy", icon: "shield_with_heart" },
         { id: "discord", label: "Discord call", icon: "headset_mic" },
         { id: "updates", label: "Updates", icon: "system_update_alt" },
+        { id: "ai", label: "AI assistant", icon: "auto_awesome" },
         { id: "utilButtons", label: "Utility keys", icon: "construction" },
         { id: "resources", label: "CPU & RAM", icon: "memory" },
         { id: "status", label: "Wi-Fi, Bluetooth & sound", icon: "wifi" },
@@ -123,7 +124,7 @@ Singleton {
         left: ["activeWindow", "media", "tray"],
         center: ["status", "weather", "workspaces", "clock", "date"],
         right: ["utilButtons", "resources", "battery", "keyboardLayout", "privacy", "discord", "updates",
-                "notifications"]
+                "notifications", "ai"]
     })
 
     // { left: [...], center: [...], right: [...] }: the shared layout. Always

@@ -79,6 +79,7 @@ Item {
         { id: "general", icon: "tune", label: "General", title: "General", sub: "How the shell behaves" },
         { id: "bar", icon: "toast", label: "Bar", title: "Bar", sub: "Where it sits and what it carries" },
         { id: "desktop", icon: "desktop_windows", label: "Desktop", title: "Desktop", sub: "Wallpaper, widgets and effects" },
+        { id: "ai", icon: "auto_awesome", label: "IA", longLabel: "Inteligencia Artificial", title: "Inteligencia Artificial", sub: "Proveedor, modelo y conversación" },
         { id: "hyprland", icon: "grid_view", label: "Hyprland", title: "Hyprland", sub: "Windows, workspaces and input" },
         { id: "about", icon: "info", label: "About", longLabel: "About / Update", title: "About / Update", sub: "Version, updates and credits" }
     ]
@@ -687,7 +688,8 @@ Item {
                     : slot.index === 1 ? generalPage
                     : slot.index === 2 ? barPage
                     : slot.index === 3 ? desktopPage
-                    : slot.index === 4 ? hyprlandPage : aboutPage
+                    : slot.index === 4 ? aiPage
+                    : slot.index === 5 ? hyprlandPage : aboutPage
             }
         }
     }
@@ -832,6 +834,15 @@ Item {
     Component {
         id: desktopPage
         SettingsPageDesktop {
+            host: face
+            width: pageArea.width
+            height: pageArea.height
+        }
+    }
+
+    Component {
+        id: aiPage
+        SettingsPageAI {
             host: face
             width: pageArea.width
             height: pageArea.height

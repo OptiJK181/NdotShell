@@ -33,6 +33,7 @@ Un Quickshell desktop que se siente como un **teléfono Nothing**: la barra es u
 | ● **SCREEN RECORDER** | pantalla, ventana o región, con/sin audio |
 | ● **6 CANALES** | red · mono · amber · lime · blue · violet |
 | ● **WALLPAPER DINÁMICO** | cambia por hora del día con transición suave |
+| ● **WIDGET IA** | opencode (y tus modelos NVIDIA del CLI), NIM, OpenAI, Claude, Ollama · streaming en drawer, barra y orbe |
 | ● **RYOKU SERVICES** | Hub, Ryotunes y temas desde Ajustes — sin duplicar barras |
 | ● **ACTUALIZACIONES** | stable / dev desde tu propio repo, sin reinstalar |
 

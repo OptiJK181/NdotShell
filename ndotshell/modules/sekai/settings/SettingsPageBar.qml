@@ -30,6 +30,7 @@ SettingsPage {
         { key: "bar.utilButtons", icon: "construction", label: "Utility keys" },
         { key: "bar.privacy", icon: "shield_with_heart", label: "Privacy (mic / screen share)" },
         { key: "bar.updates", icon: "system_update_alt", label: "Package updates" },
+        { key: "bar.ai", icon: "auto_awesome", label: "AI assistant" },
         { key: "bar.discord", icon: "headset_mic", label: "Discord call" }
     ]
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.6.0 — Widget IA
+- **AI widget** (new): one conversation with an AI on three surfaces — a key in the bar, a full-height drawer from the right edge (double-tap the top-right corner, like the other drawers) and a draggable desktop orb. Streaming answers, stop, retry, regenerate, copy, clear; the history (last 60 messages) and every setting persist in `~/.config/ndotshell/ai.json` (mode 600 — it holds the API key, keep it out of dotfiles and backups). `AiService` is the one brain; the network only ever happens in `scripts/ai/ai-request.sh`, which reads the key from that file, so it never appears in a process list or in QML. Settings > Inteligencia Artificial configures it. `qs -c ndotshell ipc call ai toggle | open | close | ask "…" | clear | stop | retry | regenerate | test | orb | status`.
+- **Ten providers, four wire formats**: opencode (your own CLI — no key here, it uses whatever opencode has authenticated, including the `nvidia/*` models behind your Nvidia login), NVIDIA NIM (`nvapi-…`, Llama / Nemotron / DeepSeek), OpenAI and anything that speaks `/v1` (OpenRouter, Groq, DeepSeek, Mistral), LM Studio and Ollama (local, no key), Anthropic (Claude). A model picker in Settings lists each provider's ids (`scripts/ai/ai-models.sh`) with a search box — opencode's list is its `opencode models`, NVIDIA's its `/models` — and "Probar conexión" makes a keyless GET to check URL and key.
+- opencode: each message is a one-shot archived session (`--archived`, title "NdotShell AI widget"), the whole conversation rides in the prompt, stdin is `/dev/null` — opencode reads stdin when it is a pipe, and Quickshell never closes the pipe it hands the script, so without the redirect it waited for EOF forever.
+
 ## 1.0.0 — 2026-11-06
 - **Nothing design baked in**: bar and dock use Capsule style (36 px black slab, 1 px `#2b2b2b` rim, no shadow) permanently.
 - **Six Ndot channels** that only swap the accent colour (Ndot Red default, Mono, Amber, Lime, Blue, Violet); chosen in the theme picker or `update-check.sh channel [stable|dev]`.

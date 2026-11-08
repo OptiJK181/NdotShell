@@ -212,7 +212,7 @@ Item {
         left: ["activeWindow", "media", "tray"],
         center: ["status", "weather", "workspaces", "clock", "date"],
         right: ["utilButtons", "resources", "battery", "keyboardLayout", "privacy", "discord", "updates",
-                "notifications"]
+                "notifications", "ai"]
     })
 
     // module id -> its place in its zone, and module id -> its zone. The tray
@@ -1040,6 +1040,19 @@ Item {
             doNotDisturb: status_Bar.notificationsMuted
             barPosition: status_Bar.barPosition
             onClicked: status_Bar.notificationsToggleRequested()
+        }
+
+        // The AI key: opens the chat drawer (services/AiService.qml). Its
+        // module id is "ai" (Settings -> Bar -> AI).
+        AiBarKey {
+            id: aiKey
+            parent: status_Bar.zoneItem("ai")
+            Layout.row: status_Bar.vertical ? status_Bar.slotOf("ai") : 0
+            Layout.column: status_Bar.vertical ? 0 : status_Bar.slotOf("ai")
+            visible: status_Bar.shows("ai")
+            Layout.alignment: status_Bar.crossAlign
+            transform: Translate { y: status_Bar.liftY }
+            barPosition: status_Bar.barPosition
         }
 
         // The tray pill, at the bar's 36px pill height: the pinned apps

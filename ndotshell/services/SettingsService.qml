@@ -61,6 +61,8 @@ Singleton {
         // Two newer modules: who is using the mic / screen, and pending Arch updates.
         "bar.privacy": true,
         "bar.updates": false,           // pending-updates badge: off in the default bar (switch it on here)
+        // The AI assistant's key: opens the chat drawer (services/AiService.qml).
+        "bar.ai": true,
         // The Discord voice call you are in (needs the Discord bridge, see scripts/discordVoice).
         "bar.discord": true,
         // What a left click on the Discord pill does: "panel" opens the call panel
@@ -333,6 +335,7 @@ Singleton {
             clock: root.flag("bar.clock"),
             privacy: root.flag("bar.privacy"),
             updates: root.flag("bar.updates"),
+            ai: root.flag("bar.ai"),
             discord: root.flag("bar.discord"),
             status: root.flag("bar.status")
         }

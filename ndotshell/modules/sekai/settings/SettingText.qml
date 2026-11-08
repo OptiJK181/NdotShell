@@ -26,6 +26,9 @@ Item {
     property string value: ""
     property string placeholder: ""
     property bool clearable: true
+    // A secret (an API key): dots instead of the text. The value still goes in
+    // and out as plain text, so nothing else changes.
+    property bool password: false
     property real labelWidth: 196
 
     signal submitted(string text)
@@ -95,6 +98,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             clip: true
             selectByMouse: true
+            echoMode: root.password ? TextInput.Password : TextInput.Normal
             text: root.value
             color: mt.pInk
             selectionColor: mt.accentCyan
