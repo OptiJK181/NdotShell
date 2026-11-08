@@ -4,15 +4,13 @@ import Quickshell.Wayland
 import qs.services
 import qs.modules.common
 
-// Edge hotspots (double-tap): thin strips in the screen edges that open
-// their panel on a double tap. First tap pulses the accent line, second
-// tap (≤420 ms) fires. Zones:
-//   gaming  top-right corner  → Gaming drawer
-//   work    top-left corner   → Focus drawer
-//   island  right edge, mid   → Dynamic Island
-//   music   bottom-right corner → Music dock
-// The strips are tiny on purpose: every other pixel of the screen stays
-// fully clickable.
+// Edge hotspots (double-tap): the window is full-edge, but its INPUT MASK
+// is only the zone strip — así dan entrada en su franja y NUNCA se comen
+// clics del resto (barra, ventanas, widgets). Taponcito de 10 px:
+//   1er toque → pulsa la línea de acento
+//   2º toque (≤420 ms) → abre su panel
+// Zonas: gaming (corner sup-der) · work (corner sup-izq) · island (mid der)
+// · music (bottom inf-der).
 PanelWindow {
     id: win
 
@@ -20,26 +18,28 @@ PanelWindow {
     screen: modelData.screen
     // "gaming" | "work" | "island" | "music"
     property string name: "gaming"
-    // "corner" (top 210 px) | "mid" (right, centrado) | "bottom" (bottom 210 px)
+    // "corner" (superior 210 px) | "mid" (derecha, centrado) | "bottom" (inferior 210 px)
     property string zone: "corner"
     readonly property bool atRight: name !== "work"
 
     readonly property var mt: Theme.of(screen)
     readonly property real uiScale: ShellScale.forScreen(screen)
-
     readonly property bool topZone: zone === "corner"
     readonly property real barPad: SettingsService.flag("bar.visible")
         ? BarPositionService.thicknessFor("top") : 0
 
-    anchors { top: topZone; bottom: zone !== "corner"; right: atRight; left: !atRight }
+    anchors { top: true; bottom: true; right: atRight; left: !atRight }
+    // sin esto, Quickshell pinta el fondo de la window BLANCO (la hitbox
+    // blanca de las esquinas que viste)
+    color: "transparent"
     implicitWidth: Math.round(10 * win.uiScale)
-    implicitHeight: topZone ? Math.round(210 * win.uiScale) : 0
 
-    // Quickshell anchors no tiene top/bottomMargin: el pad va en los hijos
+    // geometría de la zona (coordenadas del window, top = 0)
     readonly property real zoneTop: topZone ? barPad
-        : (zone === "mid" ? screen.height * 0.42 : screen.height - 210 * win.uiScale)
+        : (zone === "mid" ? screen.height * 0.42
+                          : screen.height - barPad - 210 * win.uiScale)
     readonly property real zoneH: topZone ? 210 * win.uiScale
-        : (zone === "mid" ? 190 * win.uiScale : (screen.height - barPad) * 0.2 - 8 * win.uiScale)
+        : (zone === "mid" ? 190 * win.uiScale : 210 * win.uiScale)
 
     readonly property bool active: name === "gaming" || name === "work"
         ? SideMenuService.open === name
@@ -54,6 +54,19 @@ PanelWindow {
     }
 
     property bool waitingSecond: false
+
+    function fire() {
+        if (name === "gaming" || name === "work")
+            SideMenuService.toggle(name)
+        else if (name === "island")
+            SideMenuService.toggleIsland()
+        else if (name === "music")
+            SideMenuService.toggleMusic()
+    }
+
+    // la entrada vive SOLO en la franja (mask) — el resto del window es
+    // transparente y deja pasar todo
+    mask: Region { item: ma }
 
     MouseArea {
         id: ma
@@ -74,15 +87,6 @@ PanelWindow {
                 pulseAnim.restart()
             }
         }
-    }
-
-    function fire() {
-        if (name === "gaming" || name === "work")
-            SideMenuService.toggle(name)
-        else if (name === "island")
-            SideMenuService.toggleIsland()
-        else if (name === "music")
-            SideMenuService.toggleMusic()
     }
 
     Timer {
