@@ -15,7 +15,8 @@ PanelWindow {
     id: win
 
     required property var modelData
-    screen: modelData.screen
+    // Variants entrega la pantalla directamente (model: Quickshell.screens).
+    screen: modelData
     property string name: "gaming"
     property string zone: "corner"
     readonly property bool atRight: name !== "work"
@@ -33,8 +34,8 @@ PanelWindow {
 
     // la zona dentro del window: y + height en coords del window
     readonly property real zoneY: topZone ? barPad
-        : (zone === "mid" ? parent.height * 0.42
-                          : parent.height - 210 * win.uiScale)
+        : (zone === "mid" ? win.height * 0.42
+                          : win.height - 210 * win.uiScale)
     readonly property real zoneH: zone === "mid" ? 190 * win.uiScale
                                                   : 210 * win.uiScale
 

@@ -11,7 +11,9 @@ Singleton {
     id: root
 
     enum State { Idle, Work, Break, LongBreak }
-    property int state: State.Idle
+    // Idle = 0 (State.Idle). Se escribe el literal porque el enum aún no
+    // está resuelto cuando el singleton evalúa su valor inicial.
+    property int state: 0
     property int timeLeft: 25 * 60
     property int workDuration: 25 * 60
     property int breakDuration: 5 * 60
@@ -31,7 +33,6 @@ Singleton {
     readonly property bool idle: state === State.Idle
 
     readonly property string script: Directories.script("state/service-state.sh")
-    readonly property bool loaded: loader.loaded
 
     // The notification when the timer runs out (one per state change).
     function notify(kind) {

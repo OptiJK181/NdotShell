@@ -13,7 +13,7 @@ PanelWindow {
     id: win
 
     required property var modelData
-    screen: modelData.screen
+    screen: modelData
     property var qsSource
     readonly property var mt: Theme.of(screen)
     readonly property real uiScale: ShellScale.forScreen(screen)
