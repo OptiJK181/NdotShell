@@ -194,6 +194,9 @@ QtObject {
     // root, the To-Do card)? Only then, and only in classic mode, they use
     // the classic colours.
     function classicFor(item) {
+        // Nothing: jamás papel blanco — los widgets visten slab negro
+        if (nothing)
+            return false
         if (!classic)
             return false
         for (let p = item; p; p = p.parent)

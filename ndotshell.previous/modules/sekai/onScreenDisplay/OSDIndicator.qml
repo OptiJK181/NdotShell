@@ -36,7 +36,7 @@ import qs.modules.common.widgets
 Pill {
     id: root
 
-    property string kind: "volume"   // "volume" | "mic" | "brightness" | "gamma"
+    property string kind: "volume"   // "volume" | "mic" | "brightness" | "gamma" | "private"
     property real value: 0           // 0-100 (volume can be pushed past 100)
     property bool muted: false
 
@@ -47,6 +47,8 @@ Pill {
             return "contrast"
         if (kind === "mic")
             return muted ? "mic_off" : "mic"
+        if (kind === "private")
+            return muted ? "visibility" : "visibility_off"
         if (muted)
             return "volume_off"
         return value < 34 ? "volume_down" : "volume_up"
@@ -56,11 +58,12 @@ Pill {
         if (kind === "brightness") return "Brightness"
         if (kind === "gamma") return "Gamma"
         if (kind === "mic") return "Microphone"
+        if (kind === "private") return "Modo privado"
         return "Volume"
     }
 
-    // Brightness and gamma have no mute state to show — "muted" only
-    // ever applies to volume/mic.
+    // Brightness, gamma and private have no mute state to show — "muted"
+    // only ever applies to volume/mic (private reuses it as its on/off bit).
     readonly property bool showsMuted: root.muted && root.kind !== "brightness" && root.kind !== "gamma"
     // Past 100 % (a boosted sink): the gauge is full, the number says the truth.
     readonly property bool over: !root.showsMuted && root.value > 100.5

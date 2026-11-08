@@ -381,7 +381,35 @@ const map = {
     date_desc: "sort-by-time",
     cloud_off: "clound-cross",
     link: "link",
-    print: "printer"
+    print: "printer",
+
+    // ===== NdotShell drawers / settings / about =====
+    local_cafe: "cup-hot",
+    coffee: "cup-hot",
+    crop_landscape: "monitor",
+    wb_sunny: "sun",
+    sunny: "sun",
+    wb_twilight: "sunrise",
+    nightlight: "moon-stars",
+    branch: "branching-paths-up",
+    work: "stopwatch",
+    hourglass_bottom: "hourglass",
+    center_focus_strong: "target",
+    visibility: "eye",
+    visibility_off: "eye-closed",
+    delete_sweep: "broom",
+    fingerprint: "key-minimalistic",
+    lock_clock: "lock",
+    verified: "check-circle",
+    system_update: "refresh-square",
+    storefront: "shop",
+    toolbar: "tuning-2",
+    campaign: "bell-bing",
+    gpp_maybe: "danger-triangle",
+    comments_disabled: "dialog",
+    notifications: "bell",
+    notifications_off: "bell-off",
+    edit_off: "pen-2"
 }
 
 function candidates(name, filled, style) {

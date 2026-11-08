@@ -361,6 +361,147 @@ SettingsPage {
     }
 
     SectionCard {
+        title: "Barras de tareas"
+
+        SettingToggle {
+            icon: "sports_esports"
+            label: "Panel Gaming (borde derecho)"
+            detail: SettingsService.flag("side.gaming")
+                ? "Game Mode, grabadora y CPU/RAM al tocar el borde"
+                : "OFF · vuelve con el toggle o el keybind"
+            checked: SettingsService.flag("side.gaming")
+            onToggled: SettingsService.toggle("side.gaming")
+        }
+
+        SettingToggle {
+            icon: "center_focus_strong"
+            label: "Panel Focus (borde izquierdo)"
+            detail: SettingsService.flag("side.work")
+                ? "Pomodoro, Focus Mode y privacidad al tocar el borde"
+                : "OFF · vuelve con el toggle o el keybind"
+            checked: SettingsService.flag("side.work")
+            onToggled: SettingsService.toggle("side.work")
+        }
+
+        SettingToggle {
+            icon: "crop"
+            label: "Abrir tocando el borde"
+            detail: SettingsService.flag("side.hotspots")
+                ? "Las franjas de 8 px de cada borde abren al pasar el puntero"
+                : "OFF · solo keybind (Super + Shift + G / W) o IPC"
+            checked: SettingsService.flag("side.hotspots")
+            onToggled: SettingsService.toggle("side.hotspots")
+        }
+
+        SettingToggle {
+            icon: "music-note-2"
+            label: "Dock de música (esquina inferior)"
+            detail: SettingsService.flag("side.music")
+                ? "Doble toque en la esquina inferior derecha"
+                : "OFF"
+            checked: SettingsService.flag("side.music")
+            onToggled: SettingsService.toggle("side.music")
+        }
+
+        SettingToggle {
+            icon: "moon-stars"
+            label: "Dynamic Island"
+            detail: SettingsService.flag("side.island")
+                ? "Se asoma sola con rec / pomodoro / música; hover en el centro la abre"
+                : "OFF"
+            checked: SettingsService.flag("side.island")
+            onToggled: SettingsService.toggle("side.island")
+        }
+
+        SettingToggle {
+            icon: "dock_to_bottom"
+            label: "Barra superior"
+            detail: SettingsService.flag("bar.visible")
+                ? "La barra clásica arriba · quítala si solo quieres la isla"
+                : "OFF · la Dynamic Island manda"
+            checked: SettingsService.flag("bar.visible")
+            onToggled: SettingsService.toggle("bar.visible")
+        }
+    }
+
+    SectionCard {
+        title: "Fastfetch"
+
+        SettingAction {
+            icon: "info-circle"
+            label: SystemToolsService.ffInstalled ? "Actualizar salida" : "Fastfetch no está instalado"
+            detail: SystemToolsService.ffInstalled ? "fastfetch --pipe" : "Instálalo con: sudo pacman -S fastfetch"
+            busy: SystemToolsService.ffBusy
+            onActivated: SystemToolsService.ffFetch()
+        }
+
+        SettingToggle {
+            icon: "brush"
+            label: "Config estilo Nothing"
+            detail: SystemToolsService.ffConfigWritten
+                ? "Escrito en ~/.config/fastfetch/config.jsonc"
+                : "Escribe un config.jsonc con acento rojo Ndot"
+            checked: SystemToolsService.ffConfigWritten
+            onToggled: SystemToolsService.writeNothingConfig()
+        }
+
+        Text {
+            visible: SystemToolsService.ffOutput !== ""
+            width: page.fullWidth
+            text: SystemToolsService.ffOutput
+            color: mt.pInkSub
+            font.family: "monospace"
+            font.pixelSize: 12
+            wrapMode: Text.WrapAnywhere
+        }
+    }
+
+    SectionCard {
+        title: "Ryostore (Ryoku Linux)"
+
+        SettingAction {
+            icon: "store"
+            label: SystemToolsService.ryostoreInstalled ? "Ryostore detectado" : "Ryostore no detectado"
+            detail: SystemToolsService.ryokuInstalled
+                ? (SystemToolsService.ryokuVersion !== "" ? SystemToolsService.ryokuVersion : "Ryoku Linux presente")
+                : "Ryoku no está en el PATH"
+            onActivated: SystemToolsService.openStore()
+        }
+
+        SettingAction {
+            icon: "tuning"
+            label: "Abrir Ryoku Hub"
+            detail: "ryoku-shell hub open"
+            onActivated: SystemToolsService.openHub()
+        }
+
+        SettingAction {
+            icon: "list"
+            label: "Ver plugins de Ryoku"
+            detail: SystemToolsService.pluginList !== "" ? SystemToolsService.pluginList.split("\n").length + " plugins" : "ryoku plugin list"
+            onActivated: SystemToolsService.listRyokuPlugins()
+        }
+
+        Text {
+            visible: SystemToolsService.pluginList !== ""
+            width: page.fullWidth
+            text: SystemToolsService.pluginList
+            color: mt.pInkSub
+            font.family: "monospace"
+            font.pixelSize: 12
+        }
+
+        Text {
+            width: page.fullWidth
+            wrapMode: Text.WordWrap
+            text: "NdotShell corre junto a Ryoku sin pelear: usa sus propios directorios (~/.config/ndotshell, ~/.local/state/ndotshell) y su propio comando (qs -c ndotshell). Cambia entre shells con: shell-use ndotshell | sekaipop."
+            color: mt.pInkSub
+            font.family: mt.fontFamily
+            font.pixelSize: 13
+        }
+    }
+
+    SectionCard {
         title: "Widgets"
 
         SettingChoice {

@@ -498,6 +498,57 @@ SettingsPage {
     }
 
     SectionCard {
+        title: "Tema automático"
+
+        SettingToggle {
+            icon: "brightness_6"
+            label: "Auto dark / light"
+            detail: AutoThemeService.enabled
+                ? "Activo — cambia según la hora del día"
+                : "OFF · cambia manualmente con Super + T"
+            checked: AutoThemeService.enabled
+            onToggled: AutoThemeService.toggle()
+        }
+
+        SettingStepper {
+            width: page.halfWidth
+            visible: AutoThemeService.enabled
+            icon: "wb_sunny"
+            label: "Modo light desde"
+            from: 0
+            to: 23
+            step: 1
+            suffix: ":00"
+            value: AutoThemeService.dayStart
+            onMoved: v => AutoThemeService.setDayStart(v)
+        }
+
+        SettingStepper {
+            width: page.halfWidth
+            visible: AutoThemeService.enabled
+            icon: "bedtime"
+            label: "Modo dark desde"
+            from: 0
+            to: 23
+            step: 1
+            suffix: ":00"
+            value: AutoThemeService.nightStart
+            onMoved: v => AutoThemeService.setNightStart(v)
+        }
+
+        Text {
+            visible: AutoThemeService.enabled
+            width: page.fullWidth
+            text: AutoThemeService.isDay
+                ? "☀ Modo light activo (día)"
+                : "🌙 Modo dark activo (noche)"
+            color: Theme.pInkSub
+            font.family: Theme.fontFamily
+            font.pixelSize: 14
+        }
+    }
+
+    SectionCard {
         title: "Pomodoro"
 
         SettingToggle {

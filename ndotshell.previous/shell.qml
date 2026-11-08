@@ -23,6 +23,7 @@ import qs.modules.sekai.palette
 import qs.modules.sekai.polkit
 import qs.modules.sekai.quickPanel
 import qs.modules.sekai.regionSelector
+import qs.modules.sekai.sideMenu
 import qs.modules.sekai.visualizer
 import qs.modules.sekai.welcome
 
@@ -35,6 +36,15 @@ ShellRoot {
     // "Failed to load configuration" (e.g. "UndoTile is not a type"). When the
     // update finishes, UpdateService does one hard reload from the new files.
     settings.watchFiles: !UpdateService.updating
+
+    // Instantiate the singletons whose side effects (IPC targets, startup
+    // timers, state files) must exist from the very first frame, even before
+    // a widget or page references them. A bare reference is enough.
+    property bool _servicesLoaded: UpdateService.script !== ""
+        && ClipboardHistoryService.script !== ""
+        && PomodoroService.script !== ""
+        && ScreenRecorderService.wfRecorder !== ""
+        && DynamicWallpaperService.mode !== ""
 
     // The Wayland background itself — one per screen, owning
     // WlrLayer.Background directly (see WallpaperLayer.qml's header
@@ -563,6 +573,79 @@ ShellRoot {
             quickPanel: panel
             picker: wallpaperEntry
         }
+    }
+
+    // ===== Side drawers (modules/sekai/sideMenu) =====
+    // Two purpose-built edge panels, one open at a time (SideMenuService):
+    //   gaming — right edge, hover the 8 px strip: game mode, recorder, stats
+    //   work   — left edge, hover the 8 px strip: pomodoro, focus, clipboard
+    // Hotspots are always-on 8 px strips (Hotspot.qml) that light a 2 px
+    // accent line when touched; drawers only map while open. Everything
+    // gates from Settings → Desktop → Barras de tareas (side.*).
+    Variants {
+        id: gamingHotspots
+        model: Quickshell.screens
+        Hotspot {
+            name: "gaming"
+            zone: "corner"
+            visible: SettingsService.flag("side.gaming") && SettingsService.flag("side.hotspots")
+        }
+    }
+
+    Variants {
+        id: workHotspots
+        model: Quickshell.screens
+        Hotspot {
+            name: "work"
+            zone: "corner"
+            visible: SettingsService.flag("side.work") && SettingsService.flag("side.hotspots")
+        }
+    }
+
+    Variants {
+        id: islandHotspots
+        model: Quickshell.screens
+        Hotspot {
+            name: "island"
+            zone: "mid"
+        }
+    }
+
+    Variants {
+        id: musicHotspots
+        model: Quickshell.screens
+        Hotspot {
+            name: "music"
+            zone: "bottom"
+        }
+    }
+
+    Variants {
+        id: gamingDrawers
+        model: Quickshell.screens
+        GamingDrawer {
+            qsSource: quickState
+        }
+    }
+
+    Variants {
+        id: workDrawers
+        model: Quickshell.screens
+        WorkDrawer {}
+    }
+
+    // Dynamic Island — Apple-style pill, Nothing dress (side.island).
+    Variants {
+        id: islands
+        model: Quickshell.screens
+        DynamicIsland {}
+    }
+
+    // Music dock — esquina inferior derecha, doble toque (side.music).
+    Variants {
+        id: musicDocks
+        model: Quickshell.screens
+        MusicDock {}
     }
 
     // The screen lock (Lockscreen.qml): one WlSessionLock for the whole

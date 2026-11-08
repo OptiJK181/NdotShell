@@ -121,8 +121,11 @@ Variants {
                 value: OSDSource.kind === "mic" ? OSDSource.micVolume
                     : OSDSource.kind === "brightness" ? OSDSource.brightness
                     : OSDSource.kind === "gamma" ? OSDSource.gamma
+                    : OSDSource.kind === "private" ? (OSDSource.privateOn ? 100 : 0)
                     : OSDSource.speakerVolume
-                muted: OSDSource.kind === "mic" ? OSDSource.micMuted : OSDSource.speakerMuted
+                muted: OSDSource.kind === "mic" ? OSDSource.micMuted
+                    : OSDSource.kind === "private" ? !OSDSource.privateOn
+                    : OSDSource.speakerMuted
 
                 opacity: win.revealed
                 // Grows out of the edge the bar is on (and goes back into it),

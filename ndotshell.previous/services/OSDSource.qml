@@ -14,7 +14,7 @@ Singleton {
 
     // ===== what's showing =====
     property bool open: false
-    property string kind: "volume"   // "volume" | "mic" | "brightness" | "gamma"
+    property string kind: "volume"   // "volume" | "mic" | "brightness" | "gamma" | "private"
     property int hideDelay: 1600
 
     // Which monitor OSDPopup.qml should show on — decided fresh every
@@ -24,6 +24,18 @@ Singleton {
     // one persistent window per screen (see OSDPopup.qml) rather than
     // being torn down and recreated on every open/close.
     property string targetMonitorName: ""
+
+    // Modo privado: the gauge shows ON (100) or OFF (0); `muted` carries
+    // the state bit so the icon flips between visibility_off/visibility.
+    property bool privateOn: false
+
+    function showPrivate(on) {
+        root.privateOn = on === true
+        root.kind = "private"
+        root.targetMonitorName = root.focusedMonitorName()
+        root.open = true
+        hideTimer.restart()
+    }
 
     function show(newKind) {
         kind = newKind

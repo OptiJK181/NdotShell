@@ -38,6 +38,9 @@ Singleton {
         "side.hotspots": true,          // hover-the-edge opens; off = keybind/IPC only
         "side.island": true,            // the Dynamic Island (right-side menu)
         "side.music": true,             // the Music dock (bottom-right corner)
+        "autoTheme.enabled": false,      // auto dark/light by time of day
+        "autoTheme.dayStart": 7,         // hour → light
+        "autoTheme.nightStart": 20,      // hour → dark
         // ===== Bar =====
         "bar.visible": true,
         "bar.hideMode": "off",          // off | auto (slides off its edge until the pointer touches that edge; reserves no space)

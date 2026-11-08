@@ -661,6 +661,16 @@ PanelWindow {
                 }
 
                 TabKey {
+                    icon: "view_column"
+                    label: "TAREAS"
+                    on: win.tab === "side"
+                    onActivated: {
+                        EditMode.select("")
+                        win.tab = "side"
+                    }
+                }
+
+                TabKey {
                     icon: "palette"
                     label: "THEME"
                     on: win.tab === "theme"
@@ -698,6 +708,19 @@ PanelWindow {
             // ===== the dock tab =====
             EditDockBoard {
                 visible: win.tab === "dock"
+                anchors.left: tabs.right
+                anchors.leftMargin: 14
+                anchors.right: dividerRight.left
+                anchors.rightMargin: 14
+                anchors.top: parent.top
+                anchors.topMargin: 14
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 14
+            }
+
+            // ===== the tareas tab (side drawers + island) =====
+            EditSideBoard {
+                visible: win.tab === "side"
                 anchors.left: tabs.right
                 anchors.leftMargin: 14
                 anchors.right: dividerRight.left

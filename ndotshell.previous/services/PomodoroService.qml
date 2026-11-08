@@ -1,14 +1,18 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
+import qs.modules.common
 
-// Pomodoro timer: 25/5 cycles, persistent stats, notifications
+// Pomodoro timer: 25/5 cycles, persistent stats, notifications.
+// Stats persist via scripts/state/service-state.sh (Process + shell I/O),
+// so they survive restarts; daily counters reset when the date changes.
 Singleton {
     id: root
 
     enum State { Idle, Work, Break, LongBreak }
     property int state: State.Idle
-    property int timeLeft: 25 * 60      // seconds
+    property int timeLeft: 25 * 60
     property int workDuration: 25 * 60
     property int breakDuration: 5 * 60
     property int longBreakDuration: 15 * 60
@@ -18,69 +22,101 @@ Singleton {
     property bool autoStartBreaks: true
     property bool autoStartWork: false
 
-    // Persisted stats
-    property string statsPath: ""
+    property int totalCyclesAllTime: 0
+    property int totalWorkTimeAllTime: 0
+    // Readable from outside (WorkDrawer's play/pause icon): the Timer's
+    // `running` bit, mirrored here because ids are not accessible outside.
+    property bool running: false
+    // Idle flag for outside use (enum members aren't reachable cross-file).
+    readonly property bool idle: state === State.Idle
 
-    Component.onCompleted: {
-        // Construct path without FileSystem
-        var homeDir = String(Qt.resolvedUrl("../..")).replace("file://", "");
-        root.statsPath = homeDir + "/.cache/ndotshell/pomodoro-stats.json";
-        root.loadStats()
-        root.reset()
+    readonly property string script: Directories.script("state/service-state.sh")
+    readonly property bool loaded: loader.loaded
+
+    // The notification when the timer runs out (one per state change).
+    function notify(kind) {
+        const msg = kind === "work_done"
+            ? qsTr("¡Ciclo completado! %1 ciclos hoy.").arg(root.completedCycles)
+            : qsTr("Descanso terminado. ¿Otra ronda?")
+        const icon = kind === "work_done" ? "check_circle" : "coffee"
+        Quickshell.execDetached(["notify-send", "-a", "ndotshell", "-i", "material:" + icon,
+            "Pomodoro", msg])
     }
 
     function loadStats() {
-        var file = readFile(root.statsPath)
-        if (file !== "") {
-            try {
-                var data = JSON.parse(file)
-                root.completedCycles = data.completedCycles || 0
-                root.totalWorkTime = data.totalWorkTime || 0
-                root.totalCyclesAllTime = data.totalCyclesAllTime || 0
-                root.totalWorkTimeAllTime = data.totalWorkTimeAllTime || 0
-                // Reset daily counters if date changed
-                var today = Qt.formatDate(new Date(), "yyyy-MM-dd")
-                if (data.lastDate !== today) {
-                    root.completedCycles = 0
-                    root.totalWorkTime = 0
-                }
-            } catch (e) {}
-        }
+        loader.running = true
     }
 
     function saveStats() {
-        var data = {
+        const data = {
             completedCycles: root.completedCycles,
             totalWorkTime: root.totalWorkTime,
             totalCyclesAllTime: root.totalCyclesAllTime,
             totalWorkTimeAllTime: root.totalWorkTimeAllTime,
             lastDate: Qt.formatDate(new Date(), "yyyy-MM-dd")
         }
-        writeFile(root.statsPath, JSON.stringify(data))
+        writer.exec(["sh", root.script, "save", "pomodoro-stats", JSON.stringify(data)])
     }
+
+    // Load once at startup.
+    Process {
+        id: loader
+        command: ["sh", root.script, "load", "pomodoro-stats"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.trim() === "")
+                    return
+                try {
+                    const data = JSON.parse(text)
+                    root.completedCycles = data.completedCycles || 0
+                    root.totalWorkTime = data.totalWorkTime || 0
+                    root.totalCyclesAllTime = data.totalCyclesAllTime || 0
+                    root.totalWorkTimeAllTime = data.totalWorkTimeAllTime || 0
+                    // Reset daily counters if the date changed.
+                    const today = Qt.formatDate(new Date(), "yyyy-MM-dd")
+                    if (data.lastDate !== today) {
+                        root.completedCycles = 0
+                        root.totalWorkTime = 0
+                    }
+                } catch (e) {
+                    console.warn("PomodoroService: bad stats JSON:", e)
+                }
+            }
+        }
+    }
+
+    // Writes; one at a time, the last request wins.
+    Process { id: writer }
 
     function startWork() {
         if (root.state !== State.Idle && root.state !== State.Work) return
         root.state = State.Work
         root.timeLeft = root.workDuration
         timer.running = true
+        root.running = true
     }
 
     function startBreak() {
-        var isLong = (root.completedCycles + 1) % root.cyclesBeforeLongBreak === 0
+        const isLong = (root.completedCycles + 1) % root.cyclesBeforeLongBreak === 0
         root.state = isLong ? State.LongBreak : State.Break
         root.timeLeft = isLong ? root.longBreakDuration : root.breakDuration
         timer.running = true
+        root.running = true
     }
 
     function toggle() {
-        if (root.state === State.Idle) root.startWork()
-        else if (timer.running) timer.running = false
-        else timer.running = true
+        if (root.state === State.Idle) {
+            root.startWork()
+            return
+        }
+        timer.running = !timer.running
+        root.running = timer.running
     }
 
     function reset() {
         timer.running = false
+        root.running = false
         root.state = State.Idle
         root.timeLeft = root.workDuration
     }
@@ -94,9 +130,11 @@ Singleton {
             root.saveStats()
             if (root.autoStartBreaks) root.startBreak()
             else root.reset()
-            notify("work_done")
-        } else {
-            root.reset()
+            root.notify("work_done")
+        } else if (root.state !== State.Idle) {
+            if (root.autoStartWork) root.startWork()
+            else root.reset()
+            root.notify("break_done")
         }
     }
 
@@ -114,28 +152,12 @@ Singleton {
         }
     }
 
-    function notify(kind) {
-        var msg = ""
-        var icon = "schedule"
-        if (kind === "work_done") {
-            msg = qsTr("¡Pomodoro completado! %1 ciclos hoy.").arg(root.completedCycles)
-            icon = "check_circle"
-        } else if (kind === "break_done") {
-            msg = qsTr("Descanso terminado. ¿Empezamos otro?")
-            icon = "coffee"
-        }
-        Quickshell.execDetached(["notify-send", "-a", "ndotshell", "-i", "material:" + icon,
-            "Pomodoro", msg])
-    }
-
-    // Format mm:ss
     function format() {
-        var m = Math.floor(root.timeLeft / 60)
-        var s = root.timeLeft % 60
+        const m = Math.floor(root.timeLeft / 60)
+        const s = root.timeLeft % 60
         return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s
     }
 
-    // State label
     readonly property string stateLabel: {
         switch (root.state) {
         case State.Work: return qsTr("Trabajo")
@@ -143,20 +165,5 @@ Singleton {
         case State.LongBreak: return qsTr("Descanso largo")
         default: return qsTr("Listo")
         }
-    }
-
-    // File I/O helpers (since FileSystem import is blackholed)
-    function readFile(path) {
-        var process = Qt.createComponent("file:///usr/bin/cat");
-        // Use shell command to read file
-        var result = ""
-        // Use a simple approach - we can't easily read files without FileSystem
-        // This is a placeholder - in practice we'd use a Process
-        return ""
-    }
-
-    function writeFile(path, content) {
-        // Use shell command to write file
-        // This is a placeholder - in practice we'd use a Process
     }
 }
