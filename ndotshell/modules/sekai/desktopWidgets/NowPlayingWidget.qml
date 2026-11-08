@@ -517,6 +517,11 @@ PanelWindow {
         width: cov.side
         height: cov.side
 
+        scale: coverMa.containsMouse ? 1.03 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 220; easing.type: Easing.OutBack }
+        }
+
         RoundClip {
             anchors.fill: parent
             radii: [13, 13, 13, 13]
@@ -563,9 +568,19 @@ PanelWindow {
             anchors.fill: parent
             radius: 13
             color: "transparent"
-            border.width: 1.5
-            border.color: cov.mt.line
+            border.width: coverMa.containsMouse ? 2 : 1.5
+            border.color: coverMa.containsMouse ? cov.mt.accentCyan : cov.mt.line
             antialiasing: true
+
+            Behavior on border.color { ColorAnimation { duration: 180 } }
+            Behavior on border.width { NumberAnimation { duration: 180 } }
+        }
+
+        MouseArea {
+            id: coverMa
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
         }
     }
 
@@ -647,17 +662,33 @@ PanelWindow {
 
             // The playhead: a small round dot, Nothing's own punctuation.
             Rectangle {
+                id: playhead
                 visible: lane.seekable
-                width: 8
-                height: 8
-                radius: 4
-                y: -2
+                readonly property bool activeHover: laneArea.containsMouse || lane.dragging
+                width: activeHover ? 11 : 8
+                height: width
+                radius: width / 2
+                y: activeHover ? -3.5 : -2
                 color: lane.accent
                 x: Math.max(0, Math.min(track.width - width, track.width * lane.frac - width / 2))
 
+                Behavior on width { NumberAnimation { duration: 140; easing.type: Easing.OutBack } }
+                Behavior on y { NumberAnimation { duration: 140; easing.type: Easing.OutBack } }
                 Behavior on x {
                     enabled: !lane.dragging
                     NumberAnimation { duration: 460; easing.type: Easing.Linear }
+                }
+
+                // Subtle glowing halo when hovered or dragging
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: parent.width + 10
+                    height: width
+                    radius: width / 2
+                    color: lane.accent
+                    opacity: playhead.activeHover ? 0.3 : 0
+                    visible: opacity > 0.01
+                    Behavior on opacity { NumberAnimation { duration: 160 } }
                 }
             }
         }
@@ -733,6 +764,11 @@ PanelWindow {
 
         width: key.big ? 46 : 36
         height: width
+
+        scale: keyArea.pressed && key.usable ? 0.90 : (keyArea.containsMouse && key.usable ? 1.06 : 1.0)
+        Behavior on scale {
+            NumberAnimation { duration: 140; easing.type: Easing.OutBack }
+        }
 
         Rectangle {
             anchors.fill: parent

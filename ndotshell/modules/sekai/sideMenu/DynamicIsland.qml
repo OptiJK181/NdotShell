@@ -41,7 +41,7 @@ PanelWindow {
     Item {
         id: card
 
-        x: 0
+        x: Math.round((1 - Math.min(1.18, Math.max(0, win.openAnim))) * parent.width)
         // abajo: desde el 40% de la pantalla hasta casi el fondo
         y: Math.round(parent.height * 0.40)
         width: Math.round(parent.width)
@@ -49,7 +49,7 @@ PanelWindow {
 
         Keys.onEscapePressed: SideMenuService.islandOpen = false
 
-        opacity: win.openAnim
+        opacity: Math.min(1.0, Math.max(0, win.openAnim))
 
         // slab
         Rectangle {
@@ -255,11 +255,13 @@ PanelWindow {
         width: 36 * win.uiScale
         height: 36 * win.uiScale
         radius: 18 * win.uiScale
-        color: keyMa.pressed ? mt.nbBorder : (accent ? mt.nbAccent : mt.nbRaised)
+        color: keyMa.pressed ? mt.nbBorder : (accent ? mt.nbAccent : (keyMa.containsMouse ? (mt.nbRaisedHover || Qt.lighter(mt.nbRaised, 1.15)) : mt.nbRaised))
         border.width: 1
-        border.color: accent ? mt.nbAccent : mt.nbBorder
-        scale: keyMa.pressed ? 0.92 : 1
-        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutCubic } }
+        border.color: accent ? mt.nbAccent : (keyMa.containsMouse ? mt.nbInkSub : mt.nbBorder)
+        scale: keyMa.pressed ? 0.90 : (keyMa.containsMouse ? 1.08 : 1.0)
+        Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutBack } }
+        Behavior on color { ColorAnimation { duration: 120 } }
+        Behavior on border.color { ColorAnimation { duration: 120 } }
 
         MaterialIcon {
             anchors.centerIn: parent
@@ -271,6 +273,7 @@ PanelWindow {
         MouseArea {
             id: keyMa
             anchors.fill: parent
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: parent.clicked()
         }

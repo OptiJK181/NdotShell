@@ -53,6 +53,25 @@ Item {
     property int seqIndex: 0
     property string eyeStyle: "open" // open | happy | angry | sad | sleep | wide
     property real runFlash: 0
+    property real breathScale: 1.0
+
+    // Music reaction: Ndot head-bobs gently to the groove when relaxed
+    MediaSource { id: faceMedia }
+    readonly property bool jamming: faceMedia.playing && shownMood === "neutral" && !following && !dragging && !pressed
+
+    SequentialAnimation {
+        running: face.active && !face.dragging && !face.pressed && face.shownMood !== "sleepy"
+        loops: Animation.Infinite
+        NumberAnimation { target: face; property: "breathScale"; to: 1.012; duration: 2400; easing.type: Easing.InOutSine }
+        NumberAnimation { target: face; property: "breathScale"; to: 1.0; duration: 2400; easing.type: Easing.InOutSine }
+    }
+
+    SequentialAnimation {
+        running: face.active && !face.dragging && !face.pressed && face.shownMood === "sleepy"
+        loops: Animation.Infinite
+        NumberAnimation { target: face; property: "breathScale"; to: 1.022; duration: 3200; easing.type: Easing.InOutSine }
+        NumberAnimation { target: face; property: "breathScale"; to: 0.985; duration: 3200; easing.type: Easing.InOutSine }
+    }
 
     Timer {
         id: runFlashTimer
@@ -145,6 +164,12 @@ Item {
 
     // ===== eyes follow the pointer while it is over the card =====
     readonly property bool following: hasPointer && !dragging && !pressed
+    onHasPointerChanged: {
+        if (hasPointer && !pressed && !dragging) {
+            drowsy = false
+            greetBounce.restart()
+        }
+    }
     onFollowingChanged: {
         if (!following) {
             lookX = 0
@@ -344,7 +369,8 @@ Item {
         transformOrigin: Item.Center
         // one wobble knob: press squashes, the animations gelatinize it
         property real wob: 0
-        scale: (face.pressed ? 0.96 : 1) * (1 + wob * 0.05)
+        scale: (face.pressed ? 0.96 : 1) * (1 + wob * 0.05) * face.breathScale
+        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutQuad } }
         // leans towards the pointer
         rotation: face.following
             ? Math.max(-3, Math.min(3, (face.pointerX - face.cardW / 2) / face.cardW * 8)) : 0
@@ -717,6 +743,20 @@ Item {
             id: pop
             NumberAnimation { target: card; property: "wob"; to: 1.3; duration: 80; easing.type: Easing.OutQuad }
             NumberAnimation { target: card; property: "wob"; to: 0; duration: 520; easing.type: Easing.OutElastic; easing.amplitude: 1.4 }
+        }
+        // Pointer greeting bounce when cursor moves over Ndot
+        SequentialAnimation {
+            id: greetBounce
+            NumberAnimation { target: card; property: "wob"; to: 0.38; duration: 90; easing.type: Easing.OutQuad }
+            NumberAnimation { target: card; property: "wob"; to: 0; duration: 320; easing.type: Easing.OutBack }
+        }
+        // Music jam: subtle rhythm head-bob while playing tracks
+        SequentialAnimation {
+            running: face.jamming && face.active
+            loops: Animation.Infinite
+            NumberAnimation { target: card; property: "wob"; to: 0.16; duration: 260; easing.type: Easing.OutQuad }
+            NumberAnimation { target: card; property: "wob"; to: 0; duration: 260; easing.type: Easing.InQuad }
+            PauseAnimation { duration: 80 }
         }
     }
 }
