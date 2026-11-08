@@ -190,7 +190,8 @@ Singleton {
         { id: "image", title: "Image", icon: "add_photo_alternate" },
         { id: "palettecard", title: "Palette", icon: "palette" },
         { id: "lyrics", title: "Lyrics", icon: "lyrics" },
-        { id: "nowplaying", title: "Now Playing", icon: "music_note" }
+        { id: "nowplaying", title: "Now Playing", icon: "music_note" },
+        { id: "aiwidget", title: "Carita IA", icon: "smile-circle" }
     ]
 
     // What the shelf shows: the widgets above, then the desktop widget plugins that loaded
@@ -217,7 +218,7 @@ Singleton {
     // edge), the To-Do or the Sticky Notes (one monitor, chosen in Settings → Desktop → Widgets or by
     // adding them while editing that monitor: DesktopMonitors.qml); a picture is already
     // its own widget on its own monitor.
-    readonly property var cloneIds: ["clock", "usercard", "weathercard", "calendarcard", "palettecard", "lyrics", "nowplaying"]
+    readonly property var cloneIds: ["clock", "usercard", "weathercard", "calendarcard", "palettecard", "lyrics", "nowplaying", "aiwidget"]
 
     function cloneable(id) {
         if (PluginService.isPluginId(id)) {
@@ -242,6 +243,8 @@ Singleton {
             return LyricsService
         if (id === "nowplaying")
             return NowPlayingService
+        if (id === "aiwidget")
+            return AiWidgetService
         if (PluginService.isPluginId(id))
             return PluginService.stateFor(id)
         return null
@@ -357,6 +360,8 @@ Singleton {
             return LyricsService.shown
         if (id === "nowplaying")
             return NowPlayingService.shown
+        if (id === "aiwidget")
+            return AiWidgetService.shown
         if (id === "todo")
             return TodoService.shown
         if (id === "notes")
@@ -471,6 +476,13 @@ Singleton {
                 NowPlayingService.screenName = here
             }
             NowPlayingService.setShown(true)
+        } else if (id === "aiwidget") {
+            if (here !== "" && root.homeScreen(AiWidgetService.screenName) !== here) {
+                AiWidgetService.posX = -1
+                AiWidgetService.posY = -1
+                AiWidgetService.screenName = here
+            }
+            AiWidgetService.setShown(true)
         } else if (id === "visualizer") {
             if (here !== "" && root.homeScreen(VisualizerService.screenName) !== here) {
                 VisualizerService.posX = -1
@@ -533,6 +545,8 @@ Singleton {
             LyricsService.setShown(false)
         else if (id === "nowplaying")
             NowPlayingService.setShown(false)
+        else if (id === "aiwidget")
+            AiWidgetService.setShown(false)
         else if (id === "todo")
             TodoService.setShown(false)
         else if (id === "notes")

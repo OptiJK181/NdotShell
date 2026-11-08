@@ -1,50 +1,47 @@
 import QtQuick
 import qs.services
 import qs.modules.common
+import qs.modules.common.widgets
 
-// AiFace — the desktop pet: a Nothing slab wearing two dot-matrix eyes and a
-// speech bubble set in Ndot 55, Nothing's own font. Its mood is AiService's
-// business (faceMood): while the model thinks the pupils orbit, while it
-// writes they bounce, and its words decide the face afterwards — happy with
-// exclamations or good news, sad when it could not help, curious when it asks
-// back, X-eyed on an error.
+// AiFace — the AI pet's card content, wearing the Now Playing widget's own
+// clothes: the Pill housing, a header with a breathing red dot, a banner that
+// reads THINKING / TYPING / ERROR / IDLE, and four little bars dancing while
+// the model works. The eyes are this card's cover: two 5×5 dot matrices that
+// blink, wander, follow the pointer, and wear the mood the reply leaves
+// behind (happy `^^`, sad eyes down, error `x x`). The words arrive where the
+// track title would sit, set in fontDisplay — Ndot 55 on the Nothing theme —
+// live, word by word, while the model writes. Under them, the ask row: type
+// and Enter (or the red key) sends the question from the card itself; while
+// the pet is talking the key stays grey and your text is kept.
 //
-// It is also a pet: hover it and the eyes follow the pointer while the bubble
-// repeats what it said; press it and it startles; drag it and it rides happy;
-// leave it alone long enough and it dozes off, blinking in its sleep.
-// `qs -c ndotshell ipc call ai face happy` pins a mood for 8 s.
-//
-// Pure visuals: the orb (AiOrb.qml) owns the window, the drag and the chat.
+// Everything here is design pixels: the widget (AiWidget.qml) hosts this
+// inside a ScaleHost, and owns the window, the drag and the chat drawer.
+// The mood is AiService's business (faceMood). `ipc call ai face happy`
+// pins one; `ipc call ai ask "…"` sends from anywhere.
 Item {
     id: face
 
     property var mt
-    property real uiScale: 1
-    // Fed by the orb's mouse area and drag handler.
+    // Fed by the widget's mouse areas and drag handler.
     property bool hasPointer: false
     property real pointerX: 0
     property real pointerY: 0
     property bool dragging: false
     property bool pressed: false
 
-    // ===== sizes (the window is this big when collapsed) =====
-    readonly property real faceW: 118 * uiScale
-    readonly property real faceH: 86 * uiScale
-    readonly property real gap: 10 * uiScale
-    readonly property real bubbleMaxW: 268 * uiScale
-    readonly property real bubbleMaxH: 88 * uiScale
-    readonly property real bubbleZone: bubbleMaxH + gap
-    // The bubble is visual only: the input mask (see AiOrb) covers the slab,
-    // so clicks over the bubble fall through to the wallpaper.
-    readonly property real contentW: Math.max(faceW, bubbleMaxW)
-    readonly property real contentH: faceH + bubbleZone
+    // ===== the card's size, in design pixels =====
+    readonly property int cardW: 320
+    readonly property int cardH: 198
+    readonly property int pad: 18
+    readonly property color accent: mt.accentCyan // the Nothing red on the dot theme
 
-    implicitWidth: contentW
-    implicitHeight: contentH
+    implicitWidth: cardW
+    implicitHeight: cardH
 
     // ===== mood engine =====
     readonly property string mood: AiService.faceMood
     readonly property bool streaming: AiService.streamingText !== ""
+    readonly property bool busy: AiService.busy
     property bool drowsy: false
     property bool blinking: false
     property int lookX: 0
@@ -58,6 +55,11 @@ Item {
         : (drowsy && mood === "neutral" && !hasPointer ? "sleepy" : mood))
     onShownMoodChanged: applyMood()
     Component.onCompleted: applyMood()
+
+    // The banner, Now Playing style: what the model is up to right now.
+    readonly property string banner: busy
+        ? (streaming ? "TYPING" : "THINKING")
+        : (AiService.error !== "" ? "ERROR" : "IDLE")
 
     // Dot frames: 5 rows of 5, '#' a lit dot, 'o' the pupil, '.' dark.
     readonly property var frames: ({
@@ -145,7 +147,7 @@ Item {
         blinkOffTimer.restart()
     }
 
-    // ===== eyes follow the pointer while it is over the pet =====
+    // ===== eyes follow the pointer while it is over the card =====
     readonly property bool following: hasPointer && !dragging && !pressed
     onFollowingChanged: {
         if (!following) {
@@ -157,24 +159,31 @@ Item {
     onPointerYChanged: followPointer()
     function followPointer() {
         if (!following) return
-        const cx = width / 2
-        const cy = contentH - faceH / 2
-        lookX = Math.max(-1, Math.min(1, Math.round((pointerX - cx) / (faceW / 2))))
-        lookY = Math.max(-1, Math.min(1, Math.round((pointerY - cy) / (faceH / 2))))
+        const cx = cardW / 2
+        const cy = cardH * 0.42
+        lookX = Math.max(-1, Math.min(1, Math.round((pointerX - cx) / (cardW / 2))))
+        lookY = Math.max(-1, Math.min(1, Math.round((pointerY - cy) / (cardH / 2))))
     }
 
-    // ===== speech =====
+    // ===== the words, where the track title sits =====
     readonly property string rawSpeech: streaming
         ? AiService.streamingText
         : (AiService.lastAssistant ? AiService.lastAssistant.content : "")
     readonly property string speech: {
         const t = rawSpeech.trim()
         if (t === "") return ""
-        return t.length > 180 ? t.slice(0, 179) + "…" : t
+        return t.length > 140 ? t.slice(0, 139) + "…" : t
     }
-    property bool bubbleFresh: false
-    readonly property bool bubbleShown: !dragging && speech !== ""
-        && (streaming || bubbleFresh || hasPointer)
+    readonly property string headline: speech !== "" ? speech : "Pregúntame lo que sea"
+
+    // ===== the ask row =====
+    function sendQuestion() {
+        const t = askInput.text.trim()
+        if (t === "") return
+        if (face.busy) return   // the pet is talking: keep your text
+        AiService.send(t)
+        askInput.text = ""
+    }
 
     // ===== timers =====
     Timer {
@@ -216,24 +225,16 @@ Item {
         running: face.shownMood === "neutral" && !face.following && !face.pressed
         onTriggered: face.drowsy = true
     }
-    Timer {
-        id: freshTimer
-        repeat: true
-        running: face.visible
-        interval: 400
-        onTriggered: face.bubbleFresh = !AiService.busy && AiService.lastReplyAt > 0
-            && (Date.now() - AiService.lastReplyAt) < 7000
-    }
 
-    // ===== one eye: a 5x5 dot matrix =====
+    // ===== one eye: a 5×5 dot matrix =====
     component Eye: Item {
         id: eye
         property var frame: [".....", ".....", ".....", ".....", "....."]
         property color litColor
         property color pupilColor
-        readonly property real cell: 8 * face.uiScale
-        readonly property real dotR: 2.6 * face.uiScale
-        readonly property real pupilR: 3.4 * face.uiScale
+        readonly property real cell: 8
+        readonly property real dotR: 2.6
+        readonly property real pupilR: 3.4
         width: cell * 5
         height: cell * 5
 
@@ -256,109 +257,258 @@ Item {
         }
     }
 
-    // ===== the slab =====
-    Rectangle {
-        id: slab
-        x: (face.width - face.faceW) / 2
-        y: face.height - face.faceH
-        width: face.faceW
-        height: face.faceH
-        radius: 26 * face.uiScale
-        color: face.mt.nbSurface
-        border.width: 1
-        border.color: face.hasPointer || face.pressed ? face.mt.nbAccent : face.mt.nbBorder
-        Behavior on border.color { ColorAnimation { duration: 140 } }
+    // ===== the card =====
+    Item {
+        id: card
+        anchors.fill: parent
+
         transformOrigin: Item.Center
-
-        // leans towards the pointer, squashes under a press
-        rotation: face.following
-            ? Math.max(-6, Math.min(6, (face.pointerX - face.width / 2) / face.width * 10)) : 0
-        Behavior on rotation { NumberAnimation { duration: 220; easing.type: Easing.OutQuad } }
-        scale: face.pressed ? 0.94 : 1
+        scale: face.pressed ? 0.97 : 1
         Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
+        // leans towards the pointer
+        rotation: face.following
+            ? Math.max(-3, Math.min(3, (face.pointerX - face.cardW / 2) / face.cardW * 8)) : 0
+        Behavior on rotation { NumberAnimation { duration: 220; easing.type: Easing.OutQuad } }
 
-        Eye {
-            x: 11 * face.uiScale
-            y: (slab.height - height) / 2
-            litColor: face.mt.nbInk
-            pupilColor: face.streaming ? face.mt.nbAccent : face.mt.nbInk
-            frame: face.frameFor(face.seqIndex)
-        }
-        Eye {
-            x: slab.width - width - 11 * face.uiScale
-            y: (slab.height - height) / 2
-            litColor: face.mt.nbInk
-            pupilColor: face.streaming ? face.mt.nbAccent : face.mt.nbInk
-            frame: face.frameFor(face.seqIndex + (face.shownMood === "talking" ? 2 : 0))
-        }
-
-        // The Nothing red dot: the model is writing.
-        Rectangle {
-            visible: face.streaming
-            anchors.top: parent.top
-            anchors.right: parent.right
-            anchors.topMargin: 8 * face.uiScale
-            anchors.rightMargin: 8 * face.uiScale
-            width: 7 * face.uiScale
-            height: width
-            radius: width / 2
-            color: face.mt.nbAccent
+        // The same housing as the other desktop cards: outline, pale ring,
+        // fill, hard shadow. Black glass with grey rings on the Nothing theme.
+        Pill {
+            anchors.fill: parent
+            cornerRadius: 16
+            ringWidth: face.mt.borderWidth + face.mt.outerRingWidth
+            ringColorTop: face.mt.surfaceRing
+            ringColorBottom: ringColorTop
+            fillColor: face.mt.surface
         }
 
-        // A gentle idle bob when there is nothing to say.
-        SequentialAnimation on y {
-            running: face.visible && !face.hasPointer && !face.dragging
-                && (face.shownMood === "neutral" || face.shownMood === "sleepy")
-            loops: Animation.Infinite
-            NumberAnimation { from: face.height - face.faceH; to: face.height - face.faceH - 2 * face.uiScale; duration: 1600; easing.type: Easing.InOutSine }
-            NumberAnimation { from: face.height - face.faceH - 2 * face.uiScale; to: face.height - face.faceH; duration: 1600; easing.type: Easing.InOutSine }
+        Column {
+            x: face.pad
+            y: 14
+            width: face.cardW - face.pad * 2
+            spacing: 8
+
+            // ===== header: dot + banner + bars · provider on the right =====
+            Item {
+                width: parent.width
+                height: 16
+
+                Row {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 8
+
+                    // The red state dot: breathes while the model works.
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 8
+                        height: 8
+                        radius: 4
+                        color: face.busy ? face.accent : face.mt.inkSub
+                        opacity: face.busy ? 1 : 0.55
+
+                        SequentialAnimation on opacity {
+                            running: face.busy
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.35; duration: 720; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 1.0; duration: 720; easing.type: Easing.InOutQuad }
+                        }
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: face.banner
+                        color: face.mt.inkSub
+                        font.family: face.mt.fontDisplay
+                        font.pixelSize: 11
+                        font.weight: Font.ExtraBold
+                        font.letterSpacing: 2.5
+                    }
+
+                    // Four little bars that dance while the model works.
+                    Row {
+                        id: eq
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        height: 14
+                        property real phase: 0
+
+                        FrameAnimation {
+                            running: face.busy
+                            onTriggered: eq.phase += frameTime
+                        }
+
+                        Repeater {
+                            model: 4
+
+                            Rectangle {
+                                required property int index
+                                readonly property real wave: Math.abs(Math.sin(eq.phase * (2.4 + index * 0.45) + index * 1.3))
+                                width: 3
+                                height: face.busy ? 3 + 10 * wave : 3
+                                radius: 1.5
+                                color: face.accent
+                                opacity: face.busy ? 1 : 0.5
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.min(implicitWidth, parent.width * 0.42)
+                    horizontalAlignment: Text.AlignRight
+                    elide: Text.ElideRight
+                    text: AiService.providerLabel
+                    color: face.mt.inkSub
+                    opacity: 0.75
+                    font.family: face.mt.fontFamily
+                    font.pixelSize: 10
+                    font.weight: Font.DemiBold
+                }
+            }
+
+            // ===== the eyes, this card's cover =====
+            Item {
+                width: parent.width
+                height: 44
+
+                Eye {
+                    x: (parent.width - width) / 2 - 9
+                    y: (parent.height - height) / 2
+                    litColor: face.mt.ink
+                    pupilColor: face.streaming ? face.accent : face.mt.ink
+                    frame: face.frameFor(face.seqIndex)
+                }
+                Eye {
+                    x: (parent.width - width) / 2 + 9
+                    y: (parent.height - height) / 2
+                    litColor: face.mt.ink
+                    pupilColor: face.streaming ? face.accent : face.mt.ink
+                    frame: face.frameFor(face.seqIndex + (face.shownMood === "talking" ? 2 : 0))
+                }
+            }
+
+            // ===== the words, in the display face =====
+            Text {
+                width: parent.width
+                height: 32
+                text: face.headline
+                color: face.mt.ink
+                font.family: face.mt.fontDisplay
+                font.pixelSize: 15
+                font.weight: Font.ExtraBold
+                wrapMode: Text.Wrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
+                lineHeight: 1.05
+            }
+
+            Text {
+                width: parent.width
+                text: face.speech !== "" ? AiService.model : "doble toque abre el chat · arrastra desde Edit Desktop"
+                color: face.mt.inkSub
+                opacity: 0.65
+                font.family: face.mt.fontFamily
+                font.pixelSize: 10
+                font.weight: Font.DemiBold
+                elide: Text.ElideRight
+            }
+
+            // ===== the ask row: type here, Enter or the red key sends =====
+            Item {
+                width: parent.width
+                height: 34
+
+                Rectangle {
+                    id: field
+                    width: parent.width - 42
+                    height: 34
+                    radius: 12
+                    color: face.mt.surfaceDivider
+                    border.width: 1
+                    border.color: askInput.activeFocus ? face.accent : face.mt.line
+
+                    Behavior on border.color { ColorAnimation { duration: 140 } }
+
+                    TextInput {
+                        id: askInput
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 10
+                        clip: true
+                        selectByMouse: true
+                        color: face.mt.ink
+                        selectionColor: face.accent
+                        selectedTextColor: face.mt.surface
+                        font.family: face.mt.fontFamily
+                        font.pixelSize: 12
+                        font.weight: Font.DemiBold
+                        verticalAlignment: TextInput.AlignVCenter
+                        onAccepted: face.sendQuestion()
+                        Keys.onEscapePressed: {
+                            askInput.text = ""
+                            askInput.focus = false
+                        }
+
+                        Text {
+                            visible: askInput.text === "" && !askInput.activeFocus
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "Pregúntale algo…"
+                            color: face.mt.inkSub
+                            font.family: face.mt.fontFamily
+                            font.pixelSize: 12
+                            font.weight: Font.DemiBold
+                        }
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: field
+                    cursorShape: Qt.IBeamCursor
+                    onPressed: askInput.forceActiveFocus()
+                }
+
+                // the red key: send (grey while the pet is talking or the
+                // field is empty)
+                Rectangle {
+                    x: field.width + 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 34
+                    height: 34
+                    radius: 17
+                    color: !face.busy && askInput.text.trim() !== "" ? face.accent : face.mt.surfaceDivider
+
+                    Behavior on color { ColorAnimation { duration: 140 } }
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        name: "send-square"
+                        size: 16
+                        weight: 600
+                        color: !face.busy && askInput.text.trim() !== "" ? "#ffffff" : face.mt.inkSub
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: face.sendQuestion()
+                    }
+                }
+            }
         }
 
         // the happy bounce, and the startle pop
         SequentialAnimation {
             id: bounce
-            NumberAnimation { target: slab; property: "scale"; to: 1.07; duration: 130; easing.type: Easing.OutQuad }
-            NumberAnimation { target: slab; property: "scale"; to: 1; duration: 260; easing.type: Easing.OutBack }
+            NumberAnimation { target: card; property: "scale"; to: 1.04; duration: 130; easing.type: Easing.OutQuad }
+            NumberAnimation { target: card; property: "scale"; to: 1; duration: 260; easing.type: Easing.OutBack }
         }
         SequentialAnimation {
             id: pop
-            NumberAnimation { target: slab; property: "scale"; to: 1.12; duration: 90; easing.type: Easing.OutQuad }
-            NumberAnimation { target: slab; property: "scale"; to: 1; duration: 300; easing.type: Easing.OutBack }
-        }
-    }
-
-    // ===== the speech bubble, in Nothing's dot font =====
-    Rectangle {
-        id: bubble
-        property bool shown: face.bubbleShown
-
-        x: (face.width - width) / 2
-        y: 0
-        width: face.bubbleMaxW
-        height: shown ? Math.min(bubbleText.implicitHeight + 18 * face.uiScale, face.bubbleMaxH) : 0
-        opacity: shown ? 1 : 0
-        visible: opacity > 0.01
-        radius: 14 * face.uiScale
-        color: face.mt.nbSurface
-        border.width: 1
-        border.color: face.mt.nbBorder
-        clip: true
-
-        Behavior on height { NumberAnimation { duration: 220; easing.type: Easing.OutQuad } }
-        Behavior on opacity { NumberAnimation { duration: 150 } }
-
-        Text {
-            id: bubbleText
-            x: 10 * face.uiScale
-            y: 8 * face.uiScale
-            width: bubble.width - 20 * face.uiScale
-            text: face.speech
-            font.family: "Ndot 55"
-            font.pixelSize: 13 * face.uiScale
-            color: face.mt.nbInk
-            wrapMode: Text.Wrap
-            maximumLineCount: 4
-            elide: Text.ElideRight
+            NumberAnimation { target: card; property: "scale"; to: 1.06; duration: 90; easing.type: Easing.OutQuad }
+            NumberAnimation { target: card; property: "scale"; to: 1; duration: 300; easing.type: Easing.OutBack }
         }
     }
 }

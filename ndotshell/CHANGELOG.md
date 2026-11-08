@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.8.0 — La carita pide y se edita
+- **The pet is a real desktop widget** (Edit Desktop's shelf, next to Now Playing): the same drag, lock, per-monitor scale, Focus Mode, presets and clones as the other cards. It lives in `AiWidgetService` (`state/aiwidget-state.json`), it can be copied to another monitor, and Ajustes → IA turns it on and off. The old orb window is gone — same card, now placed like every other widget, defaulting to the bottom-right corner it already inhabited.
+- **Ask from the card itself**: an ask row under the words — type and Enter (or the red key) sends the question from the desktop, the reply streams right back into the card's title line, in fontDisplay. While the pet is talking the key goes grey and your text is kept for when it finishes. A double click on the card still opens the full chat drawer.
+
 ## 2.7.0 — La carita
 - **The orb grew a face** (Settings > IA > Carita en el escritorio): a Nothing slab with two dot-matrix eyes, no mouth — the ojitos say everything. While the model thinks the pupils orbit; while it writes they bounce (and the pupil turns the accent red); when a reply lands, its words decide the face — happy with exclamations or good news, sad when it could not help, curious when it asks back, X-eyed on an error. Leave it alone and it wanders its gaze, blinks, and after 45 s dozes off.
 - **It is a pet**: hover it and the eyes follow the pointer (the slab leans a little too) while a speech bubble set in **Ndot 55**, Nothing's own dot font, shows what it said — live, word by word, while the model writes. Press it and it startles; drag it and it rides happy; a click still opens the chat right there.

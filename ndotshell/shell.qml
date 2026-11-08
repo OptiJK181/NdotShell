@@ -658,10 +658,6 @@ ShellRoot {
         AiDrawer {}
     }
 
-    // The AI orb on the desktop (one, on the first monitor): click to open
-    // the chat there; drag it around. Settings -> IA shows/hides it.
-    AiOrb {}
-
     // The screen lock (Lockscreen.qml): one WlSessionLock for the whole
     // shell, a LockSurface per monitor. Locked via LockState.lock() —
     // the Quick Panel's Power menu does that, and so can a keybind or
@@ -748,7 +744,8 @@ ShellRoot {
     //   qs -c ndotshell ipc call ai toggle | open | close
     //                                  | ask "explícame esto"   (opens + sends)
     //                                  | clear | stop | retry | regenerate
-    //                                  | orb                    (show/hide the desktop orb)
+    //                                  | orb                    (show/hide the desktop pet)
+    //                                  | widget                 (same as orb)
     //                                  | face <mood>             (pin the pet's mood: happy, sad, curious…)
     //                                  | status                 (one line: busy/model/mood)
     IpcHandler {
@@ -791,7 +788,11 @@ ShellRoot {
         }
 
         function orb(): void {
-            AiService.toggleOrbVisible()
+            AiWidgetService.setShown(!AiWidgetService.shown)
+        }
+
+        function widget(): void {
+            AiWidgetService.setShown(!AiWidgetService.shown)
         }
 
         function face(mood: string): void {
@@ -1253,6 +1254,35 @@ ShellRoot {
             required property string modelData
             active: shellRoot.woke(6) && shellRoot.widgetsAllowed && LyricsService.loaded && LyricsService.shown
             LyricsWidget { clone: true; monitor: clLyricsWidget.modelData }
+        }
+    }
+
+    // The AI pet (modules/sekai/desktopWidgets/AiWidget.qml): the face card on
+    // the desktop — it asks, answers and reacts, right there. On by default
+    // (AiWidgetService.shown), driven from Ajustes → IA, the shelf or the ipc.
+    FocusGate {
+        id: aiWidgetGate
+        widgetId: "aiwidget"
+        unloads: true
+        screenName: EditMode.homeScreen(AiWidgetService.screenName)
+    }
+
+    LazyLoader {
+        id: aiWidgetLoader
+        active: shellRoot.woke(10) && shellRoot.widgetsAllowed && ((AiWidgetService.loaded && AiWidgetService.shown && !aiWidgetGate.gone) || EditMode.active)
+        AiWidget {}
+    }
+
+    // The copies of the AI pet on the other monitors (services/WidgetClones.qml): a
+    // window each, with a spot of its own.
+    Variants {
+        model: WidgetClones.screens["aiwidget"] ?? []
+
+        delegate: LazyLoader {
+            id: clAiWidget
+            required property string modelData
+            active: shellRoot.woke(10) && shellRoot.widgetsAllowed && AiWidgetService.loaded && AiWidgetService.shown
+            AiWidget { clone: true; monitor: clAiWidget.modelData }
         }
     }
 

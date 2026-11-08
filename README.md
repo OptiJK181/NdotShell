@@ -33,7 +33,7 @@ Un Quickshell desktop que se siente como un **teléfono Nothing**: la barra es u
 | ● **SCREEN RECORDER** | pantalla, ventana o región, con/sin audio |
 | ● **6 CANALES** | red · mono · amber · lime · blue · violet |
 | ● **WALLPAPER DINÁMICO** | cambia por hora del día con transición suave |
-| ● **CARITA IA** | ojitos Nothing que reaccionan a lo que dice la IA y hablan en Ndot 55 |
+| ● **CARITA IA** | widget de escritorio: ojitos que reaccionan a la IA, respóndele desde la card, edítala en Edit Desktop |
 | ● **WIDGET IA** | opencode (y tus modelos NVIDIA del CLI), NIM, OpenAI, Claude, Ollama · streaming en drawer, barra y orbe |
 | ● **RYOKU SERVICES** | Hub, Ryotunes y temas desde Ajustes — sin duplicar barras |
 | ● **ACTUALIZACIONES** | stable / dev desde tu propio repo, sin reinstalar |

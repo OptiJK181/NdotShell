@@ -262,9 +262,9 @@ SettingsPage {
         SettingToggle {
             icon: "smile-circle"
             label: "Carita en el escritorio"
-            detail: "Ojitos que reaccionan a lo que dice la IA · tócala para el chat"
-            checked: AiService.orbVisible
-            onToggled: AiService.toggleOrbVisible()
+            detail: "Pregúntale desde la card · muévela desde Edit Desktop"
+            checked: AiWidgetService.shown
+            onToggled: AiWidgetService.setShown(!AiWidgetService.shown)
         }
 
         SettingAction {

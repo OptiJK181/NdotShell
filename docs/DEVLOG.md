@@ -4,6 +4,14 @@ The detailed notes written while NdotShell was built: what each change touched, 
 and what was only read through, and how to check it. The short release notes are in
 `ndotshell/CHANGELOG.md`.
 
+## Unreleased — The pet becomes a widget: it asks from the card, Edit Desktop moves it
+
+**Checked on the live shell**: boot with no QML errors and no binding loops; `ipc call ai orb` flips `~/.local/state/ndotshell/aiwidget.json` between `shown: false` / `true` (the same file the service restores on the next start); `ipc call ai ask "Di solo: hola bro"` streamed the reply and the mood settled neutral; `qmllint` passes the widget and the face.
+
+- **Ask from the card**: AiFace grows the ask row — a field (Pill look, I-beam, accent ring while focused) and the round red key. Enter or the key calls `AiService.send()` directly, so nothing yanks the drawer open: the reply streams into the card's title line while the pupils bounce. While `busy` the key is grey and `sendQuestion()` keeps the typed text. Escape clears and lets the keyboard go. The widget window takes `WlrKeyboardFocus.OnDemand` so the field can type.
+- **Edit Desktop integration**, copied from NowPlayingWidget: `AiWidgetService.qml` (singleton + `state/aiwidget-state.sh`, the same debounce-and-queue saver), `AiWidget.qml` (the PanelWindow with compact box, `EditStage`/`ScaleHost`/`EditChrome`/`EditPreview`/`FocusGate`, place-glide-settle, WidgetClones copies) and six registration points in `EditMode.qml` (shelf list, cloneIds, svcOf, shown, addTo, removeFrom). The shelf tile is "Carita IA"; the preview is the card's own pixels.
+- **The orb is gone**: `AiOrb.qml` deleted; `shell.qml` now loads `AiWidget` through a `LazyLoader` + `FocusGate` (unloadable, like Now Playing) + clone `Variants`. The `ai orb` ipc keeps its name (a `widget` alias too) and now flips `AiWidgetService.shown`; the IA page's toggle follows. Old orb spots are not migrated — the card defaults to the bottom-right corner the orb used to sit in.
+
 ## Unreleased — AI pet: a face that wears what the model says
 
 **Checked end-to-end on the live shell** (opencode → `nvidia/deepseek-ai/deepseek-v4.1-flash`): `ipc call ai status` reads `generando · OpenCode (CLI) · thinking` while the model works, and after the replies it settles as expected — "¡Genial, listo! 🎉" left it happy, "Lo siento, no pude hacerlo." left it sad, "cuenta hasta 5" left it neutral; `ai clear` back to neutral; `ai face sad` pinned one that expired on its own. A boot after the change reports no QML errors and no binding loops.
