@@ -33,7 +33,7 @@ short_err() {
 }
 
 case "$provider" in
-openai|nvidia|openrouter|groq|deepseek|mistral|lmstudio)
+openai|nvidia|openrouter|groq|deepseek|mistral|lmstudio|glm)
     # All the OpenAI-shaped ones: GET /models, ids under .data[].id.
     case "$provider" in
     lmstudio) ;;

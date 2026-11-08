@@ -49,7 +49,7 @@ console.log('ok  popups measure their origin from the window corner')
 // a standing bar: the menu card (and the dropdown capsule) sit against the bar, not centred in the wide window
 assert.ok(/x: root\.menuPadL \+ \(root\.parentWindow && root\.parentWindow\.vertical\s*\? \(root\.barEdge === "right" \? maxWidth - width : 0\)\s*: \(maxWidth - width\) \/ 2\)/.test(TP), 'menu card against the bar on a standing bar')
 assert.ok(/x: root\.dropPadL \+ \(root\.parentWindow && root\.parentWindow\.vertical\s*\? \(root\.barEdge === "right" \? root\.windowW - width : 0\)\s*: \(root\.windowW - width\) \/ 2\)/.test(TP), 'dropdown capsule against the bar on a standing bar')
-assert.ok(/padB: host\.barEdge === "bottom" \? 6 : host\.bleed/.test(SP), 'a bottom bar gets the same air a top bar has')
+assert.ok(/padB: (!host\.centered && )?host\.barEdge === "bottom" \? 6 : host\.bleed/.test(SP), 'a bottom bar gets the same air a top bar has')
 console.log('ok  standing bar: tray menu against the bar')
 
 // visualizer: a band in the top half of the screen hangs upside down

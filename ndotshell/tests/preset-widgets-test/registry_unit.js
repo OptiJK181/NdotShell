@@ -35,6 +35,7 @@ function world() {
         PaletteService: snap("palettecard", { x: 1, y: 1, shown: true, size: "full", colors: ["#fff"], scheme: "x" }),
         LyricsService: snap("lyrics", { x: 2, y: 3, shown: true, syncMs: 250, offsets: { "a|b|1": 300 } }),
         NowPlayingService: snap("nowplaying", { x: 4, y: 5, scale: 1, shown: true, size: "full", screen: "DP-1" }),
+        AiWidgetService: snap("aiwidget", { x: 6, y: 7, scale: 1, shown: true, screen: "DP-1" }),
         TodoService: { posX: 1, posY: 2, posScale: 1, shown: true, size: "2x2",
             setShown(v) { log.push("todo.setShown(" + v + ")"); this.shown = v },
             setSize(v) { this.size = v }, setPosition(x, y, s) { this.posX = x; this.posY = y; this.posScale = s } },
@@ -51,7 +52,7 @@ const ctx = { name: "P", wearFrames: items => frames.push(items) }
 // ---------- 1. the registry file itself ----------
 let w = world()
 let list = reg.load(w)
-assert.deepStrictEqual(reg.ids, ["clock", "usercard", "weathercard", "visualizer", "todo", "calendarcard", "palettecard", "lyrics", "nowplaying", "notes", "images"])
+assert.deepStrictEqual(reg.ids, ["clock", "usercard", "weathercard", "visualizer", "todo", "calendarcard", "palettecard", "lyrics", "nowplaying", "aiwidget", "notes", "images"])
 assert.deepStrictEqual(PP.problems(list), [], "the real list has no problems: " + JSON.stringify(PP.problems(list)))
 // problems() says what is wrong with a half-made entry
 assert.ok(PP.problems([{ id: "x" }]).some(m => m.includes("no service")))

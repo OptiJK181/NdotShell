@@ -44,7 +44,7 @@ Scope {
 
     // ===== state =====
     property string view: "board"           // board | list
-    property int layer: KB.SUPER            // the modifiers the board shows (and a click records)
+    property int kbLayer: KB.SUPER          // the modifiers the board shows (and a click records)
     property string group: "Shell"          // the List's group
     property string query: ""
     property string selectedId: ""
@@ -63,7 +63,7 @@ Scope {
     // "Open apps" is a modifier tapped on its own (Super by default), not a combination.
     readonly property bool tapAction: root.selRow !== null && root.selRow.tap === true
     // What the strip shows for a combination being built.
-    readonly property int previewMods: root.heldMods !== 0 ? root.heldMods : root.layer
+    readonly property int previewMods: root.heldMods !== 0 ? root.heldMods : root.kbLayer
 
     // ===== open / close =====
     function focusedScreen() {
@@ -84,7 +84,7 @@ Scope {
         root.query = ""
         root.infoText = ""
         root.confirmReset = false
-        root.layer = KB.SUPER
+        root.kbLayer = KB.SUPER
         KeybindService.refresh()
         root.open = true
     }
@@ -113,7 +113,7 @@ Scope {
                 root.offer(tap)
             return
         }
-        root.layer = root.layer ^ bit
+        root.kbLayer = root.kbLayer ^ bit
         root.refusal = ""
     }
 
@@ -124,7 +124,7 @@ Scope {
         const r = KeybindService.row(id)
         if (r !== null) {
             if (r.combos.length > 0)
-                root.layer = r.combos[0].mods
+                root.kbLayer = r.combos[0].mods
             root.group = r.group
         }
         stage.forceActiveFocus()
@@ -175,7 +175,7 @@ Scope {
         const t = KeybindService.conflict(combo, row.id)
         if (t === null) {
             KeybindService.setKeys(row.id, combo, null)
-            root.layer = combo.mods
+            root.kbLayer = combo.mods
             root.cancelCapture()
         } else {
             root.wanted = combo
@@ -191,13 +191,13 @@ Scope {
         if (row === null || root.wanted === null)
             return
         KeybindService.setKeys(row.id, root.wanted, root.taken)
-        root.layer = root.wanted.mods
+        root.kbLayer = root.wanted.mods
         root.cancelCapture()
     }
 
     // A board key was clicked. `entry` is what is on it right now (or undefined).
     function boardKey(key, entry) {
-        const combo = { mods: root.layer, key: key.id }
+        const combo = { mods: root.kbLayer, key: key.id }
         if (root.capturing) {
             if (root.tapAction) {
                 root.refuse("This one opens on a modifier tapped alone. Click Super, Alt or Ctrl.")
@@ -575,7 +575,7 @@ Scope {
                                                 ringWidth: 5
                                                 label: modelData[0]
                                                 labelSize: 14
-                                                active: (root.layer & modelData[1]) !== 0
+                                                active: (root.kbLayer & modelData[1]) !== 0
                                                 fill: active ? root.mt.accentCyan : root.mt.pSurface
                                                 ink: active ? root.mt.colBorder : root.mt.pInk
                                                 onClicked: root.toggleMod(modelData[1])

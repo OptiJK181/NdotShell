@@ -178,7 +178,7 @@ PanelWindow {
     WlrLayershell.layer: (chrome.raised || WallpaperService.restacking) ? WlrLayer.Bottom : WlrLayer.Background
     WlrLayershell.namespace: "ndotshell-ai-widget"
     // The ask field types here, so the card may take the keyboard on a click.
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    WlrLayershell.keyboardFocus: (EditMode.active && EditMode.editTarget !== "aiwidget") || !keys.wanted ? WlrKeyboardFocus.None : WlrKeyboardFocus.OnDemand
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
@@ -432,5 +432,10 @@ PanelWindow {
                 }
             }
         }
+    }
+
+    // Asks for the keyboard only under the pointer or while typing (issue #72).
+    KeysOnPoint {
+        id: keys
     }
 }

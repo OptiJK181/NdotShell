@@ -190,4 +190,8 @@ nothing else to see
 
 **GPL-3.0** · hecho con ❤️ para Hyprland + Quickshell
 
+<!-- plugin-list -->
+<!-- [masshirodev/ndotshell-tailscale](https://github.com/masshirodev/ndotshell-tailscale) -->
+<!-- /plugin-list -->
+
 </div>

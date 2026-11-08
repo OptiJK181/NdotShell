@@ -89,7 +89,8 @@ function makeContext(phase) {
     const scope = { root, LockState: { phase }, armTimer: timer,
         rebootAction: { set running(v) { log.push("reboot"); } },
         powerOffAction: { set running(v) { log.push("poweroff"); } },
-        sleepAction: { set running(v) { log.push("sleep"); } } };
+        sleepAction: { set running(v) { log.push("sleep"); } },
+        stopFp: () => {} };
     const names = Object.keys(scope);
     const bind = f => (...a) => f(...names.map(n => scope[n]), ...a);
     root.powerPress = bind(fn(context, "powerPress", ...names));

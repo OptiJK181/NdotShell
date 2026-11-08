@@ -48,6 +48,7 @@ function make(screens) {
     const saver = { save: p => log.deskSaves.push(p) }, screensSaver = { saveAll() {} };
     // The real code refers to these as free identifiers (ids in the QML file).
     const ids = { saver, screensSaver,
+        HookService: { emit: () => {} },
         lockSaver: { save: p => log.lockSaves.push(p) },
         lockScreensSaver: { saveAll: () => log.lockScreenSaves++ },
         SettingsService: { set: (k, v) => { settings[k] = v; if (k === "wallpaper.perMonitor") root.__perChanged(); if (k === "wallpaper.separateLock") root.__lockChanged(); } } };

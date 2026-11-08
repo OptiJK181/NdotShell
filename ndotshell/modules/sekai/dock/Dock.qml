@@ -1464,9 +1464,9 @@ PanelWindow {
                           || dockWindow.toolOpen === "files" || dockWindow.toolOpen === "shelf") ? WlrLayer.Top : WlrLayer.Bottom
     WlrLayershell.namespace: "ndotshell-dock"
     // Rename and custom timer fields need typing; the Files stack listens for Esc / Backspace.
-    WlrLayershell.keyboardFocus: (dockWindow.folderOpen || dockWindow.toolOpen === "files"
-        || (dockWindow.toolOpen === "timer" && timerCard.tab === "timer"))
-        ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: (dockWindow.folderOpen
+        || (dockWindow.toolOpen === "timer" && timerCard.tab === "timer")
+        || dockWindow.toolOpen === "files") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     // The window itself runs the whole length of its edge and is transparent, so
     // without this the empty strip on either side of the pill would swallow clicks

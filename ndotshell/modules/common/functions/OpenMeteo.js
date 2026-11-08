@@ -284,7 +284,7 @@ function buildReading(data, opts) {
         if (j >= times.length)
             break;
         var hh = parseInt(String(times[j]).slice(11, 13), 10) || 0;
-        var use24h = !opts || opts.use24h === true;
+        var use24h = !opts || opts.use24h !== false;
         hours.push({
             label: use24h ? pad(hh) + ":00" : (hh % 12 || 12) + (hh < 12 ? " AM" : " PM"),
             iconName: iconFor(at(hourly.weather_code, j), at(hourly.is_day, j) === 0),

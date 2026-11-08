@@ -57,7 +57,7 @@ need_key() {
 }
 
 case "$provider" in
-openai|nvidia|openrouter|groq|deepseek|mistral|lmstudio)
+openai|nvidia|openrouter|groq|deepseek|mistral|lmstudio|glm)
     # One wire for every OpenAI-shaped provider. LM Studio is local and
     # serves without auth; the rest want a key.
     case "$provider" in

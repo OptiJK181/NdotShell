@@ -32,7 +32,7 @@ short_err() {
 }
 
 case "$provider" in
-openai|nvidia|openrouter|groq|deepseek|mistral|lmstudio)
+openai|nvidia|openrouter|groq|deepseek|mistral|lmstudio|glm)
     case "$provider" in
     lmstudio) ;;
     *) [ -n "$key" ] || emit_err "Falta la API key" ;;
@@ -80,7 +80,7 @@ if [ "$rc" -ne 0 ]; then
 fi
 
 case "$provider" in
-openai|anthropic|nvidia|openrouter|groq|deepseek|mistral|lmstudio)
+openai|anthropic|nvidia|openrouter|groq|deepseek|mistral|lmstudio|glm)
     n=$(printf '%s' "$body" | jq -r '(.data // .models // []) | length' 2>/dev/null || echo 0)
     emit_ok "HTTP $code · $n modelos"
     ;;

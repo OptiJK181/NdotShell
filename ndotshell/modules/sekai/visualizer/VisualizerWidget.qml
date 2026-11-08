@@ -117,15 +117,15 @@ PanelWindow {
     // pop-in overshoot and the name tag, and only Edit Desktop (and dragging on an unlocked desktop)
     // gets the full screen back. Everything inside still lives in screen coordinates: `shifter`
     // slides the whole stage by the window's own position, so the card is drawn where it always was.
-    readonly property bool compact: !EditMode.active && !win.gliding && EditMode.screenName === ""
+    readonly property bool compact: !win.isBand && !EditMode.active && !win.gliding && EditMode.screenName === ""
         && EditMode.compactWindows && !EditMode.desktopDragAllowed && win.fullW > 0 && win.placed
     readonly property real boxPad: Math.ceil((0.12 * Math.max(card.width, card.height) + 16) * win.uiScale)
     readonly property real boxX: win.compact ? Math.max(0, Math.floor(card.x * win.uiScale - win.boxPad)) : 0
     readonly property real boxY: win.compact ? Math.max(0, Math.floor(card.y * win.uiScale - win.boxPad)) : 0
-    readonly property real boxW: Math.max(1, Math.min(win.fullW,
-        Math.ceil((card.x + card.width) * win.uiScale + win.boxPad)) - win.boxX)
-    readonly property real boxH: Math.max(1, Math.min(win.fullH,
-        Math.ceil((card.y + card.height) * win.uiScale + win.boxPad)) - win.boxY)
+    readonly property real boxW: win.compact ? Math.max(1, Math.min(win.fullW,
+        Math.ceil((card.x + card.width) * win.uiScale + win.boxPad)) - win.boxX) : win.fullW
+    readonly property real boxH: win.compact ? Math.max(1, Math.min(win.fullH,
+        Math.ceil((card.y + card.height) * win.uiScale + win.boxPad)) - win.boxY) : win.fullH
 
     // On / off: pop in with a little overshoot, swallowed on the way out (the
     // same two fixed animations as ClockWidget.qml; see the reasoning there).
@@ -241,8 +241,8 @@ PanelWindow {
         top: win.boxY
     }
 
-    implicitWidth: win.boxW
-    implicitHeight: win.boxH
+    implicitWidth: win.compact ? win.boxW : win.fullW
+    implicitHeight: win.compact ? win.boxH : win.fullH
 
     // Only the card takes clicks, and only while it can be moved; the rest of
     // the screen falls through. The hover buttons sit half outside the card's

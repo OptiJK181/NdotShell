@@ -44,7 +44,7 @@ ok(!/ComponentActivation\.\w+Active\s*=/.test(shell), "shell.qml never writes a 
 for (const f of ["services/ActivationEntry.qml", "modules/sekai/overview/OverviewEntry.qml"]) {
     ok(!/ComponentActivation\.\w+Active\s*=/.test(read(f)), `${f} writes only through setActive`);
 }
-for (const m of [...shell.matchAll(/name: "(\w+)"/g)]) ok(names.includes(m[1]), `entry name ${m[1]} is in the registry`);
+for (const m of [...shell.matchAll(/ActivationEntry\s*\{[^}]*name:\s*"(\w+)"/g)]) ok(names.includes(m[1]), `entry name ${m[1]} is in the registry`);
 
 // every ipc target once
 const targets = {};

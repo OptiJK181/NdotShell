@@ -25,10 +25,12 @@ const other = {
     "modules/sekai/overview/Overview.qml:viewport": "not a Flickable; its handler calls Theme.wheelPx",
     "modules/sekai/settings/SettingsPage.qml:chipStrip": "sideways row; its handler calls Theme.wheelPx(event, true)",
     "modules/sekai/editMode/EditThemeBoard.qml:flick": "sideways row; its handler calls Theme.wheelPx(event, true)",
+    "modules/sekai/editMode/EditMatugenControls.qml:flick": "sideways row; its handler calls Theme.wheelPx(event, true)",
     "modules/sekai/editMode/EditPresetBoard.qml:flick": "sideways row; its handler calls Theme.wheelPx(event, true)",
     "modules/sekai/editMode/EditTray.qml:shelf": "sideways row; its handler calls Theme.wheelPx(event, true)",
     "modules/sekai/palette/PaletteTool.qml:favFlick": "sideways row; its handler calls Theme.wheelPx(event, true)",
     "modules/sekai/desktopWidgets/PaletteWidget.qml:favFlick": "sideways row; its handler calls Theme.wheelPx(event, true)",
+    "modules/sekai/dock/DockShelfCard.qml:shelves": "stepped per shelf; its own handler calls Theme.wheelPx",
 }
 
 // 1. every view has a WheelScroll (or a reason it does not)
@@ -59,7 +61,7 @@ for (const f of files) {
     while ((m = re.exec(c))) {
         const body = m[1]
         if (/contentX|contentY|scrollBy/.test(body))
-            assert.ok(/Theme\.wheelPx/.test(body), rel + ": a wheel handler scrolls without Theme.wheelPx")
+            assert.ok(/(Theme|mt)\.wheelPx/.test(body), rel + ": a wheel handler scrolls without Theme.wheelPx")
     }
 }
 for (const rel of ["modules/sekai/desktopWidgets/StickyNote.qml"])

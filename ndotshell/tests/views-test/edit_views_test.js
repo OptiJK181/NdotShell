@@ -9,12 +9,12 @@ const S = fs.readFileSync(root + 'services/SettingsService.qml', 'utf8')
 const Q = fs.readFileSync(root + 'modules/sekai/settings/SettingsPageQuick.qml', 'utf8')
 const H = fs.readFileSync(root + 'modules/sekai/settings/SettingsPageHyprland.qml', 'utf8')
 
-// six tabs, three per row: the block is full
+// seven tabs (including TAREAS for side drawers + island)
 const keys = T.match(/TabKey \{\s*icon: "[^"]+"\s*label: "[^"]+"/g) || []
-assert.strictEqual(keys.length, 6, 'six tab keys')
+assert.strictEqual(keys.length, 7, 'seven tab keys')
 assert.deepStrictEqual(keys.map(k => k.match(/label: "([^"]+)"/)[1]),
-    ['WIDGETS', 'BAR', 'DOCK', 'VIEWS', 'THEME', 'PRESETS'], 'the order of the tabs')
-assert.ok(/columns: 3/.test(T), 'still three columns, so six keys make two full rows')
+    ['WIDGETS', 'BAR', 'DOCK', 'VIEWS', 'TAREAS', 'THEME', 'PRESETS'], 'the order of the tabs')
+assert.ok(/columns: 3/.test(T), 'grid columns')
 assert.ok(/onActivated: \{\s*EditMode\.select\(""\)\s*win\.tab = "views"/.test(T), 'the key opens the tab and lets go of the widget being edited')
 assert.ok(/EditViewsBoard \{\s*visible: win\.tab === "views"/.test(T), 'the board shows on its tab only')
 assert.ok(/win\.tab === "views"\s*\? "[^"]+"/.test(T), 'the heading has a subtitle for it')

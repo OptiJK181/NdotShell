@@ -26,5 +26,5 @@ for (const f of fs.readdirSync(dir).filter(f => f.endsWith(".qml"))) {
     assert.ok(/KeysOnPoint \{\s*id: keys/.test(src), f + " has a KeysOnPoint named keys")
     n++
 }
-assert.strictEqual(n, 4, "the four widgets that take the keyboard (to-do, calendar, palette, notes)")
+assert.strictEqual(n, 5, "the five widgets that take the keyboard (to-do, calendar, palette, notes, ai)")
 console.log("keys_on_point: all passed (" + n + " widgets)")

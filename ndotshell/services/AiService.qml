@@ -69,6 +69,12 @@ Singleton {
             baseUrl: "https://api.deepseek.com/v1",
             model: "deepseek-chat"
         },
+        glm: {
+            label: "ChatGLM / Zhipu AI",
+            hint: "open.bigmodel.cn · glm-4-flash (gratis) / glm-4",
+            baseUrl: "https://open.bigmodel.cn/api/paas/v4",
+            model: "glm-4-flash"
+        },
         mistral: {
             label: "Mistral",
             hint: "La Plateforme",
@@ -142,12 +148,6 @@ Singleton {
 
     // ===== surfaces =====
     property bool drawerOpen: false
-    property bool orbOpen: false
-    property bool orbVisible: true
-    // Where the desktop orb sits (real pixels). -1 = never moved: the orb
-    // picks a spot bottom-right on its monitor.
-    property real orbX: -1
-    property real orbY: -1
 
     // ===== derived =====
     // opencode and LM Studio are local: no key. Everything else wants one.
@@ -204,9 +204,6 @@ Singleton {
             temperature: root.temperature,
             maxTokens: root.maxTokens,
             agentMode: root.agentMode,
-            orbVisible: root.orbVisible,
-            orbX: root.orbX,
-            orbY: root.orbY,
             messages: root.messages.slice(-60)
         }
     }
@@ -226,9 +223,6 @@ Singleton {
             if (typeof j.agentMode === "boolean") root.agentMode = j.agentMode
             if (typeof j.temperature === "number") root.temperature = j.temperature
             if (typeof j.maxTokens === "number") root.maxTokens = j.maxTokens
-            if (typeof j.orbVisible === "boolean") root.orbVisible = j.orbVisible
-            if (typeof j.orbX === "number") root.orbX = j.orbX
-            if (typeof j.orbY === "number") root.orbY = j.orbY
             if (Array.isArray(j.messages)) {
                 root.messages = j.messages
                     .filter(m => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
@@ -341,7 +335,17 @@ Singleton {
             root.error = ""
             root.streamingText = ""
             // The script only needs role+content; keep the payload small.
-            const wire = root.messages.map(m => ({ role: m.role, content: m.content }))
+            // Sanitize: collapse consecutive same-role messages so APIs like GLM/Claude never fail with 400.
+            const wire = []
+            for (let i = 0; i < root.messages.length; i++) {
+                const m = root.messages[i]
+                if (!m || typeof m.content !== "string" || m.content.trim() === "") continue
+                if (wire.length > 0 && wire[wire.length - 1].role === m.role) {
+                    wire[wire.length - 1].content += "\n\n" + m.content.trim()
+                } else {
+                    wire.push({ role: m.role, content: m.content.trim() })
+                }
+            }
             request.write(JSON.stringify(wire) + "\n")
         }
         onExited: (code, status) => {
@@ -564,20 +568,6 @@ Singleton {
     function toggle() { root.drawerOpen = !root.drawerOpen }
     function open() { root.drawerOpen = true }
     function close() { root.drawerOpen = false }
-    // orbOpen: the desktop orb expanded into the chat card.
-    function toggleOrb() { root.orbOpen = !root.orbOpen }
-    // orbVisible: whether the orb exists on the desktop at all.
-    function toggleOrbVisible() {
-        root.orbVisible = !root.orbVisible
-        if (!root.orbVisible) root.orbOpen = false
-        root.scheduleSave()
-    }
-
-    function setOrbPos(x, y) {
-        root.orbX = Math.round(x)
-        root.orbY = Math.round(y)
-        root.scheduleSave()
-    }
 
     function copyCommand() {
         Quickshell.execDetached(["wl-copy", "qs -c ndotshell ipc call ai ask \"¿qué puedo hacer con NdotShell?\""])

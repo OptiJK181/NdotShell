@@ -211,7 +211,7 @@ PanelWindow {
     readonly property bool live: win.want || win.reveal > 0.001
 
     // The player is read while the widget is switched on and not suspended by Focus Mode.
-    readonly property bool working: win.live || (win.switchedOn && !gate.suspended)
+    readonly property bool working: win.switchedOn && !gate.suspended
 
     // Not mapped while the widget is off: a transparent layer that is only sitting there
     // still costs the compositor a blend on every frame.
@@ -247,6 +247,7 @@ PanelWindow {
 
     Item {
         id: cardMask
+        readonly property bool grab: EditMode.desktopDragAllowed || EditMode.active || chrome.selected
         readonly property real m: stage.editing ? 38 : 0
         readonly property real k: win.uiScale * stage.scale
         readonly property real x1: shifter.x + stage.x + (card.x + card.width + m) * k
@@ -630,9 +631,10 @@ PanelWindow {
 
     // Edit Desktop's shelf shows the card as it really looks (EditPreview.qml).
     EditPreview {
-        widgetId: win.clone ? "" : "lyrics"
+        widgetId: "lyrics"
         target: card
         pixelRatio: win.uiScale
+        enabled: !win.clone
     }
 
     // ===== Edit Desktop =====

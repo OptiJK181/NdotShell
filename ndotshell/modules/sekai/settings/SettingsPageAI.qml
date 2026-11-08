@@ -52,6 +52,7 @@ SettingsPage {
                 { id: "openrouter", label: "OpenRouter", icon: "route" },
                 { id: "groq", label: "Groq", icon: "bolt" },
                 { id: "deepseek", label: "DeepSeek", icon: "soundwave" },
+                { id: "glm", label: "ChatGLM / Zhipu", icon: "stars" },
                 { id: "mistral", label: "Mistral", icon: "wind" },
                 { id: "ollama", label: "Ollama", icon: "monitor" },
                 { id: "lmstudio", label: "LM Studio", icon: "window-frame" }
@@ -65,6 +66,7 @@ SettingsPage {
             sublabel: {
                 const p = AiService.provider
                 if (p === "anthropic") return "api.anthropic.com"
+                if (p === "glm") return "open.bigmodel.cn/api/paas/v4"
                 if (p === "ollama") return "127.0.0.1:11434"
                 if (p === "lmstudio") return "127.0.0.1:1234/v1"
                 return "Termina en /v1"

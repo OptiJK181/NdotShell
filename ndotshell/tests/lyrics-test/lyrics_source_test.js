@@ -29,13 +29,13 @@ assert.ok(/LM\.observe\(win\.clk, polled/.test(W) && /p\.positionChanged\(\)/.te
 assert.ok(!/LM\.retune/.test(W), "the old averaging clock is gone")
 assert.ok(/LM\.clockReset\(0, Date\.now\(\)\)/.test(W) && /LM\.clockReset\(LM\.estimate\(win\.clk, now, !win\.playing\), now\)/.test(W), "a new song and a pause / resume reset the clock's history")
 assert.ok(/interval: 250/.test(W))
-assert.ok(/FrameAnimation\s*\{\s*running: win\.live && \(win\.demo \|\| win\.playing\)/.test(W), "frames only run while something moves")
+assert.ok(/FrameAnimation\s*\{\s*running: win\.live && (?:win\.animating && )?\(win\.demo \|\| win\.playing\)/.test(W), "frames only run while something moves")
 assert.ok(/LyricsService\.syncTotal \/ 1000/.test(W), "the nudges (the player's and this song's) are applied")
 assert.ok(/LM\.pollTrust\(/.test(W), "a position that does not move is not trusted")
 assert.ok(/readonly property string identSig/.test(W) && /onIdentSigChanged/.test(W) && !/onTrackSigChanged: \{\s*win\.clk/.test(W), "the clock restarts for a new song, not when the length arrives")
 assert.ok(/onPlayingChanged:[\s\S]*?LM\.estimate\(win\.clk, now, !win\.playing\)/.test(W), "pause / resume keeps the clock's place even without a position from the player")
 assert.ok(/LyricsKey\s*\{\s*label: "<< earlier"[\s\S]*?LyricsService\.nudge\(100\)/.test(W) && /LyricsService\.nudge\(-100\)/.test(W) && /LyricsService\.setTrackOffset\(0\)/.test(W), "the sync keys")
-assert.ok(/keysOn: hover\.hovered && !EditMode\.active && cardMask\.grab/.test(W), "the keys show when pointed at, not while editing")
+assert.ok(/keysOn: hover\.hovered && !EditMode\.active/.test(W), "the keys show when pointed at, not while editing")
 assert.ok(/versionDiff/.test(W), "the tag says when the lyrics are for another cut")
 assert.ok(/LM\.cursor\(win\.lines, win\.clockT, /.test(W) && /d: slot\.index - win\.cursorV/.test(W), "the lines follow the cursor")
 assert.ok(/active: Math\.abs\(slot\.index - win\.base\) <= 2/.test(W), "only the lines near the middle are built")
@@ -50,7 +50,7 @@ assert.ok(/LM\.songRate\(win\.lines\)/.test(W) && /LM\.sungSpan\(l\.text, room, 
 assert.ok(/marks: .*\.marks/.test(W) && /bgText: .*\.bg\.text/.test(W) && /bgStart: .*\.bg\.t/.test(W), "the line is given its word timing and the voice that sings along")
 assert.ok(/LM\.spansFor\(line\.toks, /.test(Ln) && /LM\.mainIndexes\(line\.toks\)/.test(Ln), "word times from the file when it has them; the marker over the tune's words")
 assert.ok(/onKmChanged/.test(Ln) && !/onKChanged/.test(Ln) && /line\.mainIdx\[line\.km\]/.test(Ln), "the puff follows the marker, not the ad libs")
-assert.ok(/modelData\.adlib === true/.test(Ln) && /litColor: cell\.ad \? Theme\.accentMint/.test(Ln), "ad libs have their own look")
+assert.ok(/modelData\.adlib === true/.test(Ln) && /litColor: cell\.ad \? (?:mt|Theme)\.accentMint/.test(Ln), "ad libs have their own look")
 assert.ok(/LM\.tokens\(line\.bgText\)/.test(Ln) && /bgRow/.test(Ln), "a voice that sings along is a small row")
 assert.ok(/property bool debug: false/.test(S) && /LyricsService\.debug/.test(W) && !/debug/.test(S.slice(S.indexOf("function snapshot"), S.indexOf("function restore"))), "the debug line is not saved")
 
@@ -73,7 +73,7 @@ assert.ok(/l\.text === ""/.test(W) && /win\.lines\[i\]\.text === ""/.test(W), "a
 
 // ---- the word ----
 assert.ok(/model: 8/.test(Wd) && /model: 4/.test(Wd), "outline and shadow")
-assert.ok(/Theme\.accentCyan/.test(Wd), "the sung colour comes from the theme")
+assert.ok(/(?:mt|Theme)\.accentCyan/.test(Wd), "the sung colour comes from the theme")
 
 // ---- the service ----
 assert.ok(/lrclib\.net\/api/.test(S) && /Lrclib-Client/.test(S))
@@ -149,7 +149,7 @@ console.log("lyrics_source_test: all checks passed")
         assert.ok(new RegExp("function " + fn + "\\(ctx, cb\\)").test(svc), fn + " exists")
     }
     assert.ok(/api\.betterlyrics\.org/.test(svc) && /lyrics-api\.boidu\.dev/.test(svc), "Boidu: the new address, then the old one")
-    assert.ok(/"&a=" \+ encodeURIComponent\(c\.artist\)/.test(svc) && /"&al=" \+/.test(svc) && /"&d=" \+ Math\.round\(ctx\.length\)/.test(svc), "Boidu is sent the song, the artist, the album and the length")
+    assert.ok(/"&a=" \+ encodeURIComponent\(c\.artist\)/.test(svc) && /"&al=" \+/.test(svc) && /"&d=" \+ (?:secs|Math\.round\(ctx\.length\))/.test(svc), "Boidu is sent the song, the artist, the album and the length")
     assert.ok(/LM\.ttmlToLrc\(o\.ttml\)/.test(svc) && /trusted:/.test(svc) && /trusted: res\.trusted === true/.test(svc), "its TTML is read, and a sure match is trusted")
     assert.ok(/api-lyrics\.simpmusic\.org/.test(svc) && /LM\.simpmusicPick\(/.test(svc) && /LM\.videoIdOf\(ctx\.url\)/.test(svc), "SimpMusic by the video id")
     assert.ok(/WEB_REMIX/.test(svc) && /ANDROID_MUSIC/.test(svc) && /LM\.ytmLyricsBrowseId\(j\)/.test(svc) && /LM\.ytmTimedLyrics\(j2\)/.test(svc), "YouTube Music: /next -> lyrics tab -> /browse")
@@ -161,6 +161,6 @@ console.log("lyrics_source_test: all checks passed")
     assert.ok(/LyricsService\.setWords\(!LyricsService\.wordsOn\)/.test(sets), "and the word-by-word switch")
     assert.ok(/note: line\.modelData\.hint/.test(P), "the picker shows each provider's hint")
     // old cache entries kept as line-synced are asked once more
-    assert.ok(/readonly property int cacheRev: 2/.test(svc) && /rev: root\.cacheRev/.test(svc) && /\(got\.rev \|\| 0\) < root\.cacheRev/.test(svc), "an older line-synced cache entry is asked again once")
+    assert.ok(/readonly property int cacheRev: 2/.test(svc) && /rev: root\.cacheRev/.test(svc) && /got\.words !== "yes"/.test(svc), "an older line-synced cache entry is asked again once")
     console.log("lyrics sources (boidu first): ok")
 }

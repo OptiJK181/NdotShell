@@ -235,6 +235,8 @@ Item {
                 SekaiScrollBar {}
             }
 
+            WheelScroll { scroller: list }
+
             Text {
                 visible: root.listModel.length === 0
                 anchors.centerIn: parent

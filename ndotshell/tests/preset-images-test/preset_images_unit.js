@@ -2,6 +2,8 @@
 // own: the functions are cut out of the .qml text and run against fakes.
 const fs = require("fs")
 const assert = require("assert")
+const framingSrc = fs.readFileSync(__dirname + "/../../modules/common/functions/Framing.js", "utf8").replace(".pragma library", "")
+const FR = new Function("module", framingSrc + "\nreturn module.exports")({ exports: {} })
 const src = fs.readFileSync(process.argv[2] || require("path").join(__dirname, "..", "..", "services", "DesktopPresetService.qml"), "utf8")
 
 function grab(name) {
@@ -14,11 +16,14 @@ function grab(name) {
 const calls = { clear: [], exec: [], assign: [] }
 const PanelImages = {
     loaded: true, avatarPath: "", bannerPath: "",
+    framings: {},
+    framingFor(k) { return this.framings[k] || { zoom: 1, panX: 0, panY: 0 } },
+    setFraming(k, f) { this.framings[k] = f },
     clear(k) { calls.clear.push(k); this[k + "Path"] = "" },
     assign(k, p) { calls.assign.push([k, p]) }
 }
 const imager = { exec(a) { calls.exec.push(a) } }
-const root = { script: "/s/preset-state.sh" }
+const root = { script: "/s/preset-state.sh", pendingFraming: {} }
 const TodoService = { size: "full" }
 for (const n of ["baseName", "imageEntry", "stable", "digestOf", "isCurrent", "wearImages", "variantKey"])
     root[n] = eval("(" + grab(n) + ")")
@@ -91,13 +96,14 @@ assert.deepStrictEqual([calls.clear, calls.exec], [[], []])
 function live() {
     const now = capture()
     const out = {}
-    for (const ni of [false, true]) for (const nd of [false, true]) for (const nf of [false, true]) for (const np of [false, true]) for (const no of [false, true]) {
+    for (const ni of [false, true]) for (const nd of [false, true]) for (const nf of [false, true]) for (const np of [false, true]) for (const no of [false, true]) for (const nl of [false, true]) {
         const r = Object.assign({}, now)
         if (ni) delete r.images
         if (nd) delete r.dock
         if (np) delete r.phone
         if (no) delete r.overview
-        out[root.variantKey(ni, nd, nf, np, no)] = root.stable(r)
+        if (nl) delete r.lock
+        out[root.variantKey(ni, nd, nf, np, no, nl)] = root.stable(r)
     }
     return out
 }

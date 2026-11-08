@@ -291,6 +291,8 @@ Item {
         }
     }
 
+    WheelScroll { scroller: list }
+
     // Empty conversation: what this thing is for, and a few openers.
     Item {
         anchors.fill: list

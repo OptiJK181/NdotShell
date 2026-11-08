@@ -91,6 +91,8 @@ Item {
             }
         }
 
+        WheelScroll { scroller: flick }
+
         // Empty state
         Item {
             width: parent.width

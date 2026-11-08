@@ -22,7 +22,7 @@ Item {
     // This monitor's theme: Theme.of() gives the shell's own unless the monitor has one.
     readonly property var mt: Theme.of(QsWindow.window)
 
-    readonly property var map: KL.layerMap(KeybindService.binds, KeybindService.rows, root.panel.layer)
+    readonly property var map: KL.layerMap(KeybindService.binds, KeybindService.rows, root.panel.kbLayer)
     readonly property real colW: root.width / KL.COLS
     readonly property real keyH: 62
     readonly property real pitch: 76
@@ -53,7 +53,7 @@ Item {
                     required property var modelData
 
                     readonly property bool isMod: modelData.mod !== 0
-                    readonly property bool modOn: isMod && (root.panel.layer & modelData.mod) !== 0
+                    readonly property bool modOn: isMod && (root.panel.kbLayer & modelData.mod) !== 0
                     readonly property var entry: modelData.bindable ? KL.hit(root.map, modelData) : undefined
                     readonly property bool plain: isMod ? !modOn : entry === undefined
 

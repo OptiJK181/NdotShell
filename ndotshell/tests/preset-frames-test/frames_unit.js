@@ -56,7 +56,7 @@ const PresetWidgets = {
         TodoService, NotesService, ImageService, DesktopPresetService: root
     })
 }
-const settings = { "quick.flat": false, "panel.hotEdge": true, "panel.hotDwell": 140, "panel.typeToSearch": true,
+const settings = { "quick.flat": false, "panel.hotEdge": true, "panel.hotDwell": 140, "panel.hotPeek": false, "panel.typeToSearch": true,
     "overview.style": "board", "overview.position": "center", "overview.workspaces": 5,
     "overview.layout": "", "overview.scale": 0, "overview.gap": -1, "lock.style": "gacha" }
 let applied = 0
@@ -144,11 +144,11 @@ assert.strictEqual(root.isCurrent(noSize), true)
 
 // ---- the phone's style and settings
 const phoneKeys = () => Object.fromEntries(Object.entries(settings).filter(([k]) => !k.startsWith("overview.") && k !== "lock.style"))
-assert.deepStrictEqual(root.phonePart(), { flat: false, hotEdge: true, hotDwell: 140, typeToSearch: true })
-root.wearPhone({ flat: true, hotEdge: false, hotDwell: 5000, typeToSearch: false })
-assert.deepStrictEqual(phoneKeys(), { "quick.flat": true, "panel.hotEdge": false, "panel.hotDwell": 800, "panel.typeToSearch": false })  // delay clamped to 40..800
+assert.deepStrictEqual(root.phonePart(), { flat: false, hotEdge: true, hotDwell: 140, hotPeek: false, typeToSearch: true })
+root.wearPhone({ flat: true, hotEdge: false, hotDwell: 5000, hotPeek: true, typeToSearch: false })
+assert.deepStrictEqual(phoneKeys(), { "quick.flat": true, "panel.hotEdge": false, "panel.hotDwell": 800, "panel.hotPeek": true, "panel.typeToSearch": false })  // delay clamped to 40..800
 root.wearPhone(undefined); root.wearPhone({ flat: "yes", hotDwell: "9" })                  // a preset without the part, or junk, changes nothing
-assert.deepStrictEqual(phoneKeys(), { "quick.flat": true, "panel.hotEdge": false, "panel.hotDwell": 800, "panel.typeToSearch": false })
+assert.deepStrictEqual(phoneKeys(), { "quick.flat": true, "panel.hotEdge": false, "panel.hotDwell": 800, "panel.hotPeek": true, "panel.typeToSearch": false })
 root.wearPhone({ hotDwell: 10 }); assert.strictEqual(settings["panel.hotDwell"], 40)
 const nowP = () => Object.assign(now(), { phone: root.phonePart() })
 root.liveDigests = liveDigests(nowP())
@@ -208,7 +208,7 @@ assert.ok(svcSrc.includes("root.wearOverview(d.overview)"), "wear must put the o
 assert.ok(svcSrc.slice(svcSrc.indexOf("readonly property var keepPrefix"), svcSrc.indexOf("// True for a Settings Panel key")).includes('"overview."'),
     "overview. must stay in keepPrefix (the overview part carries it)")
 const keepBlock = svcSrc.slice(svcSrc.indexOf("readonly property var keepExact"), svcSrc.indexOf("readonly property var keepPrefix"))
-for (const k of ["quick.flat", "panel.hotEdge", "panel.hotDwell", "panel.typeToSearch", "lock.style"])
+for (const k of ["quick.flat", "panel.hotEdge", "panel.hotDwell", "panel.hotPeek", "panel.typeToSearch", "lock.style"])
     assert.ok(keepBlock.includes('"' + k + '"'), k + " must stay in keepExact (the phone part carries it)")
 const regText = reg.text
 assert.ok(/size:\s*TodoService\.size/.test(regText), "the to-do's entry must capture its size")

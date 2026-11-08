@@ -119,6 +119,9 @@ Singleton {
         // widget's shown / spot is part of the preset.
         { id: "nowplaying", service: NowPlayingService },
 
+        // AI pet / desktop companion mascot.
+        { id: "aiwidget", service: AiWidgetService },
+
         // The sticky notes: on / off here. Their content is per preset but kept by NotesService
         // itself (switchSet / adoptSet / renameSet / dropSet, called by DesktopPresetService).
         {

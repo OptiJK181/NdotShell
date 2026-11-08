@@ -2,6 +2,10 @@
 // (as VisualizerEngine.qml does) and prints what the chart would show.
 //   node chart_test.js frames.jsonl
 const fs = require('fs')
+if (!process.argv[2]) {
+    console.log('usage: node chart_test.js <frames.jsonl>')
+    process.exit(0)
+}
 const src = fs.readFileSync(__dirname + '/../../modules/sekai/visualizer/ChartMath.js', 'utf8').replace('.pragma library', '')
 const M = {}
 new Function('M', src + ';M.create=create;M.stepLive=stepLive;')(M)
