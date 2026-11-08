@@ -216,7 +216,7 @@ PanelWindow {
                 }
 
                 IslandKey {
-                    icon: "smart_toy"
+                    icon: "stars"
                     accent: AiService.busy || AiService.drawerOpen
                     onClicked: {
                         SideMenuService.islandOpen = false

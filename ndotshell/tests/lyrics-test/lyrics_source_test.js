@@ -20,7 +20,7 @@ assert.ok(/WlrLayershell\.namespace: "ndotshell-lyrics"/.test(W))
 assert.ok(/WlrLayershell\.keyboardFocus: WlrKeyboardFocus\.None/.test(W), "it never takes the keyboard")
 assert.ok(/FocusGate\s*\{[^}]*widgetId: "lyrics"/.test(W), "Focus Mode hides it")
 assert.ok(/mask: Region/.test(W) && /EditMode\.desktopDragAllowed \|\| EditMode\.active \|\| chrome\.selected/.test(W), "clicks fall through while Lock all is on")
-assert.ok(/EditChrome\s*\{[^}]*widgetId: "lyrics"/.test(W) && /EditPreview\s*\{[^}]*widgetId: "lyrics"/.test(W), "Edit Desktop knows it")
+assert.ok(/EditChrome\s*\{[^}]*widgetId: "lyrics"/.test(W) && /EditPreview\s*\{[^}]*widgetId:\s*(win\.clone \? "" : )?"lyrics"/.test(W), "Edit Desktop knows it")
 assert.ok(/visible: LyricsService\.loaded && \(win\.live \|\| EditMode\.active\)/.test(W), "not mapped while it is off")
 assert.ok(/readonly property bool want: win\.switchedOn && gate\.show && \(win\.present \|\| win\.demo\)/.test(W), "it goes away when nothing is playing")
 

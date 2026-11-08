@@ -631,10 +631,9 @@ PanelWindow {
 
     // Edit Desktop's shelf shows the card as it really looks (EditPreview.qml).
     EditPreview {
-        widgetId: "lyrics"
+        widgetId: win.clone ? "" : "lyrics"
         target: card
         pixelRatio: win.uiScale
-        enabled: !win.clone
     }
 
     // ===== Edit Desktop =====
