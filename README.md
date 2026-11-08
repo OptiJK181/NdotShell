@@ -33,6 +33,7 @@ Un Quickshell desktop que se siente como un **teléfono Nothing**: la barra es u
 | ● **SCREEN RECORDER** | pantalla, ventana o región, con/sin audio |
 | ● **6 CANALES** | red · mono · amber · lime · blue · violet |
 | ● **WALLPAPER DINÁMICO** | cambia por hora del día con transición suave |
+| ● **RYOKU SERVICES** | Hub, Ryotunes y temas desde Ajustes — sin duplicar barras |
 | ● **ACTUALIZACIONES** | stable / dev desde tu propio repo, sin reinstalar |
 
 ---
@@ -42,6 +43,8 @@ Un Quickshell desktop que se siente como un **teléfono Nothing**: la barra es u
 ![NdotShell demo](docs/screenshots/demo.gif)
 
 *Doble toque → drawers gelatinosos (Gaming / Focus), Dynamic Island y dock de Música — rebote OutElastic conectado a la esquina.*
+
+🎬 **Video vertical (TikTok / Reels):** [docs/screenshots/tiktok.mp4](docs/screenshots/tiktok.mp4) — 19 s, 1080×1920. Copy y checklist en [TIKTOK-POST.md](TIKTOK-POST.md).
 
 <details>
 <summary><b>Más capturas</b></summary>
