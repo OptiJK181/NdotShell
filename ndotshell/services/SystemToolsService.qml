@@ -55,23 +55,47 @@ Singleton {
     }
 
     function startDaemon() {
+        // SOLO transeúnte: el daemon respawnea la shell de ryoku (bar+dock
+        // duplicado con NdotShell). Se usa dentro de openHubGui() y se mata.
         Quickshell.execDetached(["sh", "-c",
             "S=\"$XDG_RUNTIME_DIR/ryoku-shell.sock\"; " +
             "if ! [ -S \"$S\" ]; then setsid ryoku-shell daemon >/dev/null 2>&1 < /dev/null & " +
             "i=0; while ! [ -S \"$S\" ] && [ $i -lt 20 ]; do sleep 0.15; i=$((i+1)); done; fi"])
-        Qt.callLater(() => { delayProbe.restart() })
+        delayProbe.restart()
     }
 
-    function stopDaemon() {
-        // [r] trick: el patrón no matchea el propio sh -c que lo ejecuta
+    function cleanupRyoku() {
+        // mata daemon + watcher + la shell de ryoku si alguien la dejó
+        // corriendo — NdotShell ya trae su propia bar y dock.
+        // pgrep -x (nombre exacto) en vez de pkill -f para NO auto-machearnos.
         Quickshell.execDetached(["sh", "-c",
-            "pkill -f \"[r]yoku-shell daemon\" 2>/dev/null; sleep 0.3; true"])
-        Qt.callLater(() => { delayProbe.restart() })
+            "D=\"ryoku-shell\"; " +
+            "for p in $(pgrep -x \"$D\"); do kill $p 2>/dev/null; done; " +
+            "pkill -f \"wm-hyprland watc[h]\" 2>/dev/null; " +
+            "sleep 0.5; qs kill -c shell 2>/dev/null; " +
+            "for p in $(pgrep -x \"$D\"); do kill $p 2>/dev/null; done; exit 0"])
+        delayProbe.restart()
     }
 
-    function toggleDaemon() {
-        if (root.shellDaemon) root.stopDaemon()
-        else root.startDaemon()
+    function openHubGui() {
+        // Hub GUI con daemon TRANSEÚNTE: levanta el daemon SOLO para abrir
+        // el hub (nace con backend completo) y lo mata al terminar, junto
+        // con la shell de ryoku que el daemon spawnea y respawnea.
+        // OJO: indirección D="ryoku-shell" — el texto literal en el setsid
+        // haría que el kill posterior auto-macheara este propio sh -c.
+        Quickshell.execDetached(["sh", "-c",
+            "S=\"$XDG_RUNTIME_DIR/ryoku-shell.sock\"; D=\"ryoku-shell\"; spawned=0; DPID=; " +
+            "if ! \"$D\" status 2>/dev/null | grep -q running; then " +
+            "spawned=1; setsid \"$D\" daemon >/dev/null 2>&1 < /dev/null & DPID=$!; " +
+            "i=0; while ! [ -S \"$S\" ] && [ $i -lt 20 ]; do sleep 0.15; i=$((i+1)); done; fi; " +
+            "\"$D\" hub open >/dev/null 2>&1 || " +
+            "qs -p /usr/share/ryoku/config/quickshell/hub/shell.qml >/dev/null 2>&1; " +
+            "sleep 2; " +
+            "if [ $spawned -eq 1 ]; then " +
+            "kill $DPID 2>/dev/null; " +
+            "for p in $(pgrep -x \"$D\"); do kill $p 2>/dev/null; done; " +
+            "pkill -f \"wm-hyprland watc[h]\" 2>/dev/null; " +
+            "sleep 0.5; qs kill -c shell 2>/dev/null; fi; exit 0"])
     }
 
     function fetchBarWidgets() {
@@ -129,12 +153,15 @@ Singleton {
     }
 
     function listRyokuPlugins() {
-        if (!root.ryokuInstalled) return
-        prober2.exec(["sh", "-c", "ryoku plugin list 2>&1 | head -30"])
+        if (!root.hubInstalled) return
+        prober2.exec(["sh", "-c",
+            "ryoku-hub desktop plugins list 2>/dev/null | " +
+            "jq -r '.plugins[] | \"\\(.name) [\\(.status)]\"' 2>/dev/null | head -12"])
     }
 
     function openHub() {
-        Quickshell.execDetached(["sh", "-c", "ryoku-shell hub open >/dev/null 2>&1 &"])
+        // la tarjeta de Ryostore usa este alias — mismo camino seguro
+        openHubGui()
     }
 
     function openStore() {
@@ -146,19 +173,6 @@ Singleton {
     function openRyotunes() {
         // ryotunes pide a ryotunesd mostrar el cliente nativo
         Quickshell.execDetached(["sh", "-c", "command -v ryotunes >/dev/null 2>&1 && ryotunes >/dev/null 2>&1 &"])
-    }
-
-    function openHubGui() {
-        // Hub GUI: levanta el daemon ryoku-shell si no está vivo (solo es
-        // IPC, no abre ventanas propias), espera el socket y abre el hub.
-        // Si todo lo demás falla, lanza el config directo con qs -p.
-        Quickshell.execDetached(["sh", "-c",
-            "S=\"$XDG_RUNTIME_DIR/ryoku-shell.sock\"; " +
-            "if ! [ -S \"$S\" ]; then " +
-            "setsid ryoku-shell daemon >/dev/null 2>&1 < /dev/null & " +
-            "i=0; while ! [ -S \"$S\" ] && [ $i -lt 20 ]; do sleep 0.15; i=$((i+1)); done; fi; " +
-            "ryoku-shell hub open >/dev/null 2>&1 || " +
-            "qs -p /usr/share/ryoku/config/quickshell/hub/shell.qml >/dev/null 2>&1"])
     }
 
     function hubCli() {

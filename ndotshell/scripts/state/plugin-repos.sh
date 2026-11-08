@@ -41,7 +41,7 @@ lockfile="$config/plugins-lock.json"
 listcache="$cache/plugins-list.json"
 # The reviewed list: plugins.json at the root of the NdotShell repository. A fork, or a test,
 # can point elsewhere (a URL, or a file:// path).
-listurl="${NDOTSHELL_PLUGIN_LIST:-https://raw.githubusercontent.com/Blapples/SekaiPop/main/plugins.json}"
+listurl="${NDOTSHELL_PLUGIN_LIST:-https://raw.githubusercontent.com/OptiJK181/NdotShell/main/plugins.json}"
 
 export GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=/bin/true SSH_ASKPASS=/bin/true
 export GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=15"

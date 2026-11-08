@@ -504,14 +504,13 @@ SettingsPage {
     SectionCard {
         title: "Ryoku Services"
 
-        SettingToggle {
+        SettingAction {
             icon: "bolt"
-            label: "Daemon ryoku-shell"
+            label: "Shell de Ryoku (daemon)"
             detail: SystemToolsService.shellDaemon
-                ? "vivo · IPC en ryoku-shell.sock"
-                : "detenido · NdotShell funciona sin él"
-            checked: SystemToolsService.shellDaemon
-            onToggled: SystemToolsService.toggleDaemon()
+                ? "ACTIVA — duplica tu bar · toca para limpiar"
+                : "detenido · toca para limpiar restos si algo quedó vivo"
+            onActivated: SystemToolsService.cleanupRyoku()
         }
 
         SettingAction {
