@@ -152,6 +152,15 @@ HAVE_CFG=0; [ -f "$HYPR_DEST/hyprland.lua" ] || [ -f "$HYPR_DEST/hyprland.conf" 
 SRC_HYPR="$HERE/hypr"
 [ -d "$SRC_HYPR" ] || { [ "$HYPR" = skip ] || [ "$HYPR" = merge ] || { echo "The preconfigured Hyprland files are missing ($SRC_HYPR)." >&2; exit 1; }; }
 
+# Ryoku Hub: helper + override del .desktop para que el app launcher
+# abra el hub SIN spawnear la desktop de ryoku (2 barras con ndotshell)
+if have ryoku-shell; then
+    mkdir -p "$HOME/.local/bin" "$HOME/.local/share/applications"
+    install -m 755 "$HERE/ndotshell/scripts/system/ryoku-hub-open.sh" "$HOME/.local/bin/ryoku-hub-open"
+    install -m 644 "$HERE/ndotshell/applications/ryoku-hub.desktop" "$HOME/.local/share/applications/ryoku-hub.desktop"
+    ok "Ryoku Hub helper + launcher override instalados"
+fi
+
 if [ "$HYPR" = auto ]; then
     HYPR=full
     if [ "$HAVE_CFG" = 1 ]; then

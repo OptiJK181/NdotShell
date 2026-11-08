@@ -78,24 +78,16 @@ Singleton {
     }
 
     function openHubGui() {
-        // Hub GUI con daemon TRANSEÚNTE: levanta el daemon SOLO para abrir
-        // el hub (nace con backend completo) y lo mata al terminar, junto
-        // con la shell de ryoku que el daemon spawnea y respawnea.
-        // OJO: indirección D="ryoku-shell" — el texto literal en el setsid
-        // haría que el kill posterior auto-macheara este propio sh -c.
+        // Helper único (~/.local/bin/ryoku-hub-open): daemon TRANSEÚNTE.
+        // El mismo script que ejecuta el app launcher vía la entrada
+        // .desktop override. Antes de ejecutarlo, se auto-sincroniza
+        // desde el config dir instalado (así las updates lo refrescan).
         Quickshell.execDetached(["sh", "-c",
-            "S=\"$XDG_RUNTIME_DIR/ryoku-shell.sock\"; D=\"ryoku-shell\"; spawned=0; DPID=; " +
-            "if ! \"$D\" status 2>/dev/null | grep -q running; then " +
-            "spawned=1; setsid \"$D\" daemon >/dev/null 2>&1 < /dev/null & DPID=$!; " +
-            "i=0; while ! [ -S \"$S\" ] && [ $i -lt 20 ]; do sleep 0.15; i=$((i+1)); done; fi; " +
-            "\"$D\" hub open >/dev/null 2>&1 || " +
-            "qs -p /usr/share/ryoku/config/quickshell/hub/shell.qml >/dev/null 2>&1; " +
-            "sleep 2; " +
-            "if [ $spawned -eq 1 ]; then " +
-            "kill $DPID 2>/dev/null; " +
-            "for p in $(pgrep -x \"$D\"); do kill $p 2>/dev/null; done; " +
-            "pkill -f \"wm-hyprland watc[h]\" 2>/dev/null; " +
-            "sleep 0.5; qs kill -c shell 2>/dev/null; fi; exit 0"])
+            "mkdir -p \"$HOME/.local/bin\"; " +
+            "SRC=\"$HOME/.config/quickshell/ndotshell/scripts/system/ryoku-hub-open.sh\"; " +
+            "if [ -f \"$SRC\" ]; then cp \"$SRC\" \"$HOME/.local/bin/ryoku-hub-open\"; " +
+            "chmod +x \"$HOME/.local/bin/ryoku-hub-open\"; fi; " +
+            "exec \"$HOME/.local/bin/ryoku-hub-open\""])
     }
 
     function fetchBarWidgets() {
