@@ -518,7 +518,7 @@ SettingsPage {
             label: SystemToolsService.hubInstalled ? "Ryoku Hub" : "Ryoku Hub no detectado"
             detail: SystemToolsService.hubRashin
                 ? (SystemToolsService.ryokuRelease !== "" ? SystemToolsService.ryokuRelease + " · rashin OK" : "rashin (temas) activo")
-                : "ryoku-shell hub open"
+                : "abre con o sin daemon ryoku-shell"
             onActivated: SystemToolsService.openHubGui()
         }
 

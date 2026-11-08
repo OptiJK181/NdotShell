@@ -100,9 +100,12 @@ Singleton {
     }
 
     function openHubGui() {
-        // el Hub GUI vive en ryoku-shell (el daemon de la bar/dock de Ryoku)
+        // Hub GUI: si el daemon ryoku-shell está vivo lo usa; si no,
+        // lanza el config del hub DIRECTO con qs (sin necesidad de daemon).
         Quickshell.execDetached(["sh", "-c",
-            "command -v ryoku-shell >/dev/null 2>&1 && ryoku-shell hub open >/dev/null 2>&1 &"])
+            "if [ -S \"$XDG_RUNTIME_DIR/ryoku-shell.sock\" ]; then " +
+            "ryoku-shell hub open >/dev/null 2>&1; else " +
+            "qs -p /usr/share/ryoku/config/quickshell/hub/shell.qml >/dev/null 2>&1 & fi"])
     }
 
     function hubCli() {
