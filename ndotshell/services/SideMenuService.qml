@@ -28,12 +28,6 @@ Singleton {
     // visible (keybind Super + Shift + D, o ipc call island toggle).
     property bool islandOpen: false
 
-    function toggleIsland() {
-        if (!SettingsService.flag("side.island"))
-            return
-        root.islandOpen = !root.islandOpen
-    }
-
     // ===== Music dock: doble toque en la esquina inferior derecha =====
     property bool musicOpen: false
 
@@ -96,8 +90,20 @@ Singleton {
     function show(name) {
         if (name !== "gaming" && name !== "work") return
         if (root.pinned !== "" && root.pinned !== name) root.pinned = ""
+        root.islandOpen = false
+        root.musicOpen = false
         root.open = name
     }
+
+    function toggleIsland() {
+        if (!SettingsService.flag("side.island"))
+            return
+        root.open = ""
+        root.pinned = ""
+        root.musicOpen = false
+        root.islandOpen = !root.islandOpen
+    }
+
 
     function hide() {
         root.open = ""

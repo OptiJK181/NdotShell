@@ -42,7 +42,6 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: SideMenuService.islandOpen
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-
     mask: Region { item: card }
 
     Item {
@@ -64,7 +63,12 @@ PanelWindow {
 
         // slab
         Rectangle {
-            anchors.fill: parent
+            // abajo-derecha: desde el 55% de la pantalla
+        x: 0
+        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
+        width: Math.round(win.cardW * win.uiScale)
+        height: Math.round(480 * win.uiScale)
+        opacity: win.openAnim
             radius: 26 * win.uiScale
             color: mt.nbSurface
             border.width: 1
@@ -82,7 +86,12 @@ PanelWindow {
         }
 
         Column {
-            anchors.fill: parent
+            // abajo-derecha: desde el 55% de la pantalla
+        x: 0
+        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
+        width: Math.round(win.cardW * win.uiScale)
+        height: Math.round(480 * win.uiScale)
+        opacity: win.openAnim
             anchors.topMargin: 18 * win.uiScale
             anchors.bottomMargin: 16 * win.uiScale
             anchors.leftMargin: 12 * win.uiScale
@@ -97,10 +106,20 @@ PanelWindow {
 
                 // disco de acento girando (arco 270°)
                 Item {
-                    anchors.fill: parent
+                    // abajo-derecha: desde el 55% de la pantalla
+        x: 0
+        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
+        width: Math.round(win.cardW * win.uiScale)
+        height: Math.round(480 * win.uiScale)
+        opacity: win.openAnim
 
                     Canvas {
-                        anchors.fill: parent
+                        // abajo-derecha: desde el 55% de la pantalla
+        x: 0
+        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
+        width: Math.round(win.cardW * win.uiScale)
+        height: Math.round(480 * win.uiScale)
+        opacity: win.openAnim
                         onPaint: {
                             const ctx = getContext("2d")
                             ctx.clearRect(0, 0, width, height)
@@ -124,7 +143,12 @@ PanelWindow {
 
                 // satélite en órbita contraria
                 Item {
-                    anchors.fill: parent
+                    // abajo-derecha: desde el 55% de la pantalla
+        x: 0
+        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
+        width: Math.round(win.cardW * win.uiScale)
+        height: Math.round(480 * win.uiScale)
+        opacity: win.openAnim
 
                     Rectangle {
                         x: parent.width / 2 - 3 * win.uiScale
@@ -252,7 +276,12 @@ PanelWindow {
 
         MouseArea {
             id: keyMa
-            anchors.fill: parent
+            // abajo-derecha: desde el 55% de la pantalla
+        x: 0
+        y: Math.round(parent.height * 0.55 - (1 - win.openAnim) * 30 * win.uiScale)
+        width: Math.round(win.cardW * win.uiScale)
+        height: Math.round(480 * win.uiScale)
+        opacity: win.openAnim
             cursorShape: Qt.PointingHandCursor
             onClicked: parent.clicked()
         }

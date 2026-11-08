@@ -19,8 +19,10 @@ PanelWindow {
     readonly property var mt: Theme.of(screen)
     readonly property real uiScale: ShellScale.forScreen(screen)
 
-    anchors { top: true; bottom: true; right: true }
+    // window = card EXACTO (sin mask): los botones reciben el clic seguro
+    anchors { bottom: true; right: true }
     implicitWidth: Math.round(cardW * win.uiScale)
+    implicitHeight: Math.round(screen.height - win.topPad)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
@@ -46,8 +48,6 @@ PanelWindow {
     WlrLayershell.keyboardFocus: SideMenuService.open === "gaming"
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    mask: Region { item: card }
-
     // driver de stagger
     Item {
         id: driver
@@ -61,15 +61,13 @@ PanelWindow {
     Item {
         id: card
 
-        // pegado a la esquina SIEMPRE: el wobble gelatinoso es scale desde
-        // el borde, nunca desplazamiento — así el slab no se separa
-        x: Math.round(win.width - win.cardW * win.uiScale)
+        // gelatinoso que NO se despega: el borde derecho está SIEMPRE en
+        // win.width (x fijo); el rebote es squash del width con OutBack —
+        // el panel se estira hacia adentro, nunca se separa de la esquina
+        x: Math.round(win.width - parent.width * win.uiScale * win.slide)
         y: Math.round(win.topPad)
-        width: Math.round(win.cardW * win.uiScale)
+        width: Math.round(parent.width * win.uiScale * win.slide)
         height: Math.round(parent.height - win.topPad)
-        transformOrigin: Item.Right
-
-        scale: win.slide
         opacity: Math.min(1, win.slide * 2.5)
 
         HoverHandler { id: cardHover }

@@ -40,7 +40,6 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: SideMenuService.musicOpen
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-
     mask: Region { item: card }
 
     Item {

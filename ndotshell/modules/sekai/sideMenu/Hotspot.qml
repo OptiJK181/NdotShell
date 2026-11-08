@@ -28,16 +28,19 @@ PanelWindow {
     readonly property real barPad: SettingsService.flag("bar.visible")
         ? BarPositionService.thicknessFor("top") : 0
 
-    anchors { top: true; bottom: true; right: atRight; left: !atRight }
-    // sin esto, Quickshell pinta el fondo de la window BLANCO (la hitbox
-    // blanca de las esquinas que viste)
+    // window EXACTO a la franja (sin mask): input solo donde se ve
+    anchors { bottom: zone !== "corner"; top: topZone; right: atRight; left: !atRight }
+    // sin esto, Quickshell pinta el fondo de la window BLANCO
     color: "transparent"
     implicitWidth: Math.round(10 * win.uiScale)
-
-    // geometría de la zona (coordenadas del window, top = 0)
+    implicitHeight: Math.round(zoneH * win.uiScale)
+    // posición vertical de la zona: corner arriba (bajo barra), mid al
+    // 42% de la pantalla, music abajo
     readonly property real zoneTop: topZone ? barPad
         : (zone === "mid" ? screen.height * 0.42
-                          : screen.height - barPad - 210 * win.uiScale)
+                          : screen.height - barPad - zoneH)
+
+    // geometría de la zona
     readonly property real zoneH: topZone ? 210 * win.uiScale
         : (zone === "mid" ? 190 * win.uiScale : 210 * win.uiScale)
 

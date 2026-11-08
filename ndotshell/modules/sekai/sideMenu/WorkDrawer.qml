@@ -17,8 +17,9 @@ PanelWindow {
     readonly property var mt: Theme.of(screen)
     readonly property real uiScale: ShellScale.forScreen(screen)
 
-    anchors { top: true; bottom: true; left: true }
-    implicitWidth: Math.round(cardW * win.uiScale)
+    // window = card EXACTO (sin mask)
+    anchors { bottom: true; left: true }
+    implicitHeight: Math.round(screen.height - win.topPad)
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
@@ -43,8 +44,6 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: SideMenuService.open === "work"
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-
-    mask: Region { item: card }
 
     // driver de stagger
     Item {

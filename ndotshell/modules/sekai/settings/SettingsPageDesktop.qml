@@ -425,6 +425,83 @@ SettingsPage {
     }
 
     SectionCard {
+        title: "Fastfetch"
+
+        SettingAction {
+            icon: "info-circle"
+            label: SystemToolsService.ffInstalled ? "Actualizar salida" : "Fastfetch no está instalado"
+            detail: SystemToolsService.ffInstalled ? "fastfetch --pipe" : "Instálalo con: sudo pacman -S fastfetch"
+            busy: SystemToolsService.ffBusy
+            onActivated: SystemToolsService.ffFetch()
+        }
+
+        SettingToggle {
+            icon: "brush"
+            label: "Config estilo Nothing"
+            detail: SystemToolsService.ffConfigWritten
+                ? "Escrito en ~/.config/fastfetch/config.jsonc"
+                : "Escribe un config.jsonc con acento rojo Ndot"
+            checked: SystemToolsService.ffConfigWritten
+            onToggled: SystemToolsService.writeNothingConfig()
+        }
+
+        Text {
+            visible: SystemToolsService.ffOutput !== ""
+            width: page.fullWidth
+            text: SystemToolsService.ffOutput
+            color: mt.pInkSub
+            font.family: "monospace"
+            font.pixelSize: 12
+            wrapMode: Text.WrapAnywhere
+        }
+    }
+
+    SectionCard {
+        title: "Ryostore (Ryoku Linux)"
+
+        SettingAction {
+            icon: "store"
+            label: SystemToolsService.ryostoreInstalled ? "Ryostore detectado" : "Ryostore no detectado"
+            detail: SystemToolsService.ryokuInstalled
+                ? (SystemToolsService.ryokuVersion !== "" ? SystemToolsService.ryokuVersion : "Ryoku Linux presente")
+                : "Ryoku no está en el PATH"
+            onActivated: SystemToolsService.openStore()
+        }
+
+        SettingAction {
+            icon: "tuning"
+            label: "Abrir Ryoku Hub"
+            detail: "ryoku-shell hub open"
+            onActivated: SystemToolsService.openHub()
+        }
+
+        SettingAction {
+            icon: "list"
+            label: "Ver plugins de Ryoku"
+            detail: SystemToolsService.pluginList !== "" ? SystemToolsService.pluginList.split("\n").length + " plugins" : "ryoku plugin list"
+            onActivated: SystemToolsService.listRyokuPlugins()
+        }
+
+        Text {
+            visible: SystemToolsService.pluginList !== ""
+            width: page.fullWidth
+            text: SystemToolsService.pluginList
+            color: mt.pInkSub
+            font.family: "monospace"
+            font.pixelSize: 12
+        }
+
+        Text {
+            width: page.fullWidth
+            wrapMode: Text.WordWrap
+            text: "NdotShell corre junto a Ryoku sin pelear: usa sus propios directorios (~/.config/ndotshell, ~/.local/state/ndotshell) y su propio comando (qs -c ndotshell). Cambia entre shells con: shell-use ndotshell | sekaipop."
+            color: mt.pInkSub
+            font.family: mt.fontFamily
+            font.pixelSize: 13
+        }
+    }
+
+    SectionCard {
         title: "Widgets"
 
         SettingChoice {
