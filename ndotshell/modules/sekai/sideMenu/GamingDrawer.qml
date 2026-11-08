@@ -61,29 +61,19 @@ PanelWindow {
     Item {
         id: card
 
-        x: Math.round(win.width - win.cardW * win.uiScale * win.slide)
+        // pegado a la esquina SIEMPRE: el wobble gelatinoso es scale desde
+        // el borde, nunca desplazamiento — así el slab no se separa
+        x: Math.round(win.width - win.cardW * win.uiScale)
         y: Math.round(win.topPad)
         width: Math.round(win.cardW * win.uiScale)
         height: Math.round(parent.height - win.topPad)
         transformOrigin: Item.Right
 
+        scale: win.slide
+        opacity: Math.min(1, win.slide * 2.5)
+
         HoverHandler { id: cardHover }
 
-        // gelatinous squash & stretch: the card wobbles once per open/close
-        SequentialAnimation {
-            id: jelly
-            NumberAnimation { target: card; property: "scale"; to: 1.045; duration: 130; easing.type: Easing.OutQuad }
-            NumberAnimation { target: card; property: "scale"; to: 0.972; duration: 170; easing.type: Easing.InOutQuad }
-            NumberAnimation { target: card; property: "scale"; to: 1.014; duration: 130; easing.type: Easing.OutQuad }
-            NumberAnimation { target: card; property: "scale"; to: 1.0; duration: 150; easing.type: Easing.OutQuad }
-        }
-        Connections {
-            target: SideMenuService
-            function onOpenChanged() {
-                if (SideMenuService.open === "gaming")
-                    jelly.restart()
-            }
-        }
         Binding { target: SideMenuService; property: "cardHovered"; value: cardHover.hovered }
 
         focus: SideMenuService.open === "gaming"

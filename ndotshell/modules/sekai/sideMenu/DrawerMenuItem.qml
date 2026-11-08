@@ -47,7 +47,9 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         height: root.height + 8 * root.s
         radius: 3 * root.s
-        color: root.lit ? "#f5f5f5" : "transparent"
+        color: root.lit ? Qt.alpha(root.accentColor, 0.16) : "transparent"
+        border.width: root.lit ? 1 : 0
+        border.color: Qt.alpha(root.accentColor, 0.55)
         rotation: -3
         opacity: root.lit ? 1 : 0
         x: root.lit ? 0 : -22 * root.s

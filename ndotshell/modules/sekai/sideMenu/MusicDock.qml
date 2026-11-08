@@ -47,11 +47,14 @@ PanelWindow {
         id: card
 
         // de la parte baja (con margen) hasta media pantalla
-        x: Math.round(win.width - win.cardW * win.uiScale * win.openAnim
-                      - (1 - win.openAnim) * 4 * win.uiScale)
+        // pegada a la esquina inferior derecha; rebote por scale
+        x: Math.round(win.width - win.cardW * win.uiScale)
         y: Math.round(parent.height * 0.40)
         width: Math.round(win.cardW * win.uiScale)
         height: Math.round(parent.height * 0.52)
+        scale: win.openAnim
+        opacity: Math.min(1, win.openAnim * 2)
+        transformOrigin: Item.Right
 
         HoverHandler { id: cardHover }
 
