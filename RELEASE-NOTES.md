@@ -1,24 +1,37 @@
-# 🫧 2.0.1 — Rebote conectado a la esquina + adiós bloque blanco
+# 🫧 2.0.2 — La hitbox blanca era el fondo del hotspot + zonas funcionales
 
-## 🐛 Lo que reportaste
+## 🐛 Lo que viste: "es la hitbox del botón brooo"
 
-- **"Se renderiza algo blanco"**: la cuña de selección era blanca sólida
-  (#f5f5f5) — ahora es **tinte del acento al 16 %** con borde de acento
-  al 55 %. La selección sigue animada (cuña inclinada + palabra roja)
-  pero ya no hay bloque blanco de render.
-- **"Que reboten pero conectado a la esquina, se ve raro"**: los paneles
-  rebotaban **desplazándose**, así que durante el wobble el slab se
-  separaba de la esquina y se veía flotando. Ahora el card está **pegado
-  a su esquina SIEMPRE** y el rebote gelatinoso es **scale con origen en
-  el borde**: se estira y menea sin despegarse ni un píxel. Verificado
-  frame a frame (47/47 columnas tocando el borde durante el rebote).
-- La Dynamic Island y el Dock de música usan el mismo tratamiento:
-  pegadas al borde derecho, rebote por scale, fade al entrar.
-- Fix: `transformOrigin` duplicado en WorkDrawer.
+Exacto. El `PanelWindow` de los hotspots **no tenía `color: "transparent"`** —
+Quickshell pinta el fondo de la ventana **BLANCO por defecto**, y la hitbox
+se veía como franja blanca en las esquinas donde tocas. Ahora es
+transparente: **0 blancos** en las 4 zonas (verificado por píxel).
+
+## 🐛 Y los botones que no respondían
+
+Los hotspots de **isla** (mid) y **música** (bottom) eran ventanas de
+**altura 0** — sin input, el doble toque nunca podía funcionar. Además los
+hotspots no tenían máscara, así que sus ventanas completas podían comerse
+clics del borde.
+
+Ahora: **windows de borde completo con `mask: Region { item: ma }`** — la
+entrada vive SOLO en la franja de 10 px de cada zona; todo lo demás (barra,
+ventanas, widgets) recibe sus clics normal.
+
+## 🖐️ Zonas de doble toque (todas funcionales)
+
+| Zona | Abre |
+|---|---|
+| esquina superior derecha ×2 | Panel GAMING |
+| esquina superior izquierda ×2 | Panel FOCUS |
+| lateral derecho, al medio ×2 | Isla (agujero negro) |
+| esquina inferior derecha ×2 | **Dock de música** 🎶 |
 
 ## ✅ Verificación
 
-- **0 errores** en el log
-- Tests: settings 183 defaults · welcome · update-check · update-notify ·
-  phone-wallpaper · click-away · power-press — **todo verde**
-- Frames del rebote analizados: el slab toca la esquina en todo momento
+- 0 blancos en las 4 zonas (píxel)
+- 0 errores en el log
+- Capas correctas: 4 hotspots 10×1080 con máscara de zona, isla oculta
+  hasta keybind, dock oculto hasta doble toque
+- Tests: settings 183 · welcome · update-check · update-notify ·
+  phone-wallpaper · click-away · power-press — verdes
