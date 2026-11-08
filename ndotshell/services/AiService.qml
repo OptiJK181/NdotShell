@@ -534,7 +534,7 @@ Singleton {
         onTriggered: root.moodOverride = ""
     }
 
-    readonly property var moodNames: ["neutral", "happy", "sad", "curious", "ouch", "thinking", "talking", "startle", "sleepy"]
+    readonly property var moodNames: ["neutral", "happy", "sad", "curious", "angry", "thinking", "talking", "startle", "sleepy"]
 
     // A tiny word read of the reply: sorry-stuff hurts it, exclamations and
     // good news cheer it up, questions make it curious.
@@ -555,7 +555,7 @@ Singleton {
     }
 
     readonly property string faceMood: moodOverride !== "" ? moodOverride
-        : (error !== "" ? "ouch"
+        : (error !== "" ? "angry"
         : (streamingText !== "" ? "talking"
         : (busy ? "thinking"
         : moodFromText(lastAssistant ? lastAssistant.content : ""))))

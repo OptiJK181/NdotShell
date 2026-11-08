@@ -1,13 +1,13 @@
 # 🎂 3.0.0 — Aniversario (13 de noviembre)
 
 > Borrador de notas para la release del 13 de noviembre. Publicar con:
-> `git tag v3.0.0 && git push fork v3.0.0 && gh release create v3.0.0 --title "3.0.0 — Aniversario: el gatito que ayuda de verdad" --notes-file docs/RELEASE-ANIVERSARIO.md`
+> `git tag v3.0.0 && git push fork v3.0.0 && gh release create v3.0.0 --title "3.0.0 — Aniversario: dos bolitas con sentimientos" --notes-file docs/RELEASE-ANIVERSARIO.md`
 
-## 🐱 El gatito, versión linda
+## 👀 Dos bolitas con sentimientos
 
-La carita ahora es un **gatito** de verdad: orejitas de matriz de puntos que se levantan cuando está feliz, ojos redondos con brillito que te siguen, bigotes, naricita roja y boquita ω que se ríe cuando la respuesta es buena y se pone triste (con lagrimita) cuando no pudo ayudarte. Parpadea aplastándose los ojitos, y si lo ignoras 45 segundos se duerme respirando despacito.
+La carita quedó simple y linda: **dos bolitas** redondas que te siguen, parpadean, y se cambian de cara según la respuesta — **feliz** `^ ^` con brinco gelatinoso, **enojado** (un párpado corta cada bola), **triste** (caídas, con lagrimita), **dormido** (líneas cerradas con zZ flotando) y **sorprendido** cuando la tocas. Un error la pone enojada.
 
-Y cuesta menos que antes: todos sus relojes se detienen cuando Focus Mode esconde la card.
+Y cuesta menos que nunca: todos sus relojes se detienen cuando Focus Mode esconde la card.
 
 ## ⚡ La IA te ayuda con la compu
 

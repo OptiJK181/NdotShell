@@ -3,21 +3,23 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
-// AiFace — the kitten card. The Now Playing widget's clothes (Pill housing,
-// header with a breathing red dot, THINKING / TYPING / ERROR / IDLE banner,
-// dancing bars) around a little cat: dot-matrix ears, big round eyes with a
-// highlight, whiskers and a tiny ω mouth. The eyes follow the pointer, blink
-// by squashing, and wear the mood the reply leaves behind — happy arcs ^ ^
-// with perked ears, droopy eyes and a falling tear when it could not help,
-// X-eyes on an error, squinted shut in sleep. The words arrive where the
-// track title would sit, in fontDisplay (Ndot 55 on the Nothing theme), and
-// under them the ask row: type and Enter sends the question from the card.
+// AiFace — two little balls with feelings. The card keeps the Now Playing
+// widget's clothes (Pill housing, header with a breathing red dot,
+// THINKING / TYPING / ERROR / IDLE banner, dancing bars), and the face is
+// just two round eyes that follow the pointer, blink, and wear the mood the
+// reply leaves behind: normal, happy (^ ^ with a bounce), angry (a lid cuts
+// each ball), sad (droopy, with a falling tear), asleep (shut lines with
+// drifting z's), startled (wide). The words arrive where the track title
+// would sit, in fontDisplay (Ndot 55 on the Nothing theme), and under them
+// the ask row: type and Enter sends the question from the card. A reply may
+// carry one ```run``` block — it shows up as the red Ejecutar key; nothing
+// runs until it is pressed.
 //
 // Everything here is design pixels: the widget (AiWidget.qml) hosts this
 // inside a ScaleHost and owns the window, the drag and the chat drawer. The
 // mood is AiService's business (faceMood); `ipc call ai face happy` pins one.
 // When `active` is false (Focus Mode hid the card) every timer stops: a
-// hidden kitten costs nothing.
+// hidden pet costs nothing.
 Item {
     id: face
 
@@ -32,7 +34,7 @@ Item {
 
     // ===== the card's size, in design pixels =====
     readonly property int cardW: 320
-    readonly property int cardH: 212
+    readonly property int cardH: 204
     readonly property int pad: 18
     readonly property color accent: mt.accentCyan // the Nothing red on the dot theme
 
@@ -49,7 +51,7 @@ Item {
     property int lookY: 0
     property var seq: []   // orbit / bounce points: [{x,y}, …]
     property int seqIndex: 0
-    property string eyeStyle: "open" // open | happy | sad | x | sleep | wide
+    property string eyeStyle: "open" // open | happy | angry | sad | sleep | wide
     property real runFlash: 0
 
     Timer {
@@ -59,7 +61,7 @@ Item {
     }
 
     readonly property string shownMood: dragging ? "happy"
-        : (pressed ? "startle"
+        : (pressed ? "wide"
         : (drowsy && mood === "neutral" && !hasPointer ? "sleepy" : mood))
     onShownMoodChanged: applyMood()
     Component.onCompleted: applyMood()
@@ -67,7 +69,7 @@ Item {
     // The banner, Now Playing style: what the model is up to right now.
     readonly property string banner: busy
         ? (streaming ? "TYPING" : "THINKING")
-        : (AiService.error !== "" ? "ERROR" : "IDLE")
+        : (AiService.error !== "" ? "ANGRY" : "IDLE")
 
     function applyMood() {
         seqIndex = 0
@@ -78,13 +80,13 @@ Item {
             eyeStyle = "open"
             seq = [{x: -1, y: -1}, {x: 0, y: -1}, {x: 1, y: -1}, {x: 1, y: 0},
                    {x: 1, y: 1}, {x: 0, y: 1}, {x: -1, y: 1}, {x: -1, y: 0}]
-            seqTimer.interval = 220
+            seqTimer.interval = 260
             break
         case "talking":
             // quick glances, the words are coming out
             eyeStyle = "open"
             seq = [{x: 0, y: 0}, {x: 0, y: -1}, {x: 0, y: 1}, {x: 0, y: -1}]
-            seqTimer.interval = 200
+            seqTimer.interval = 220
             break
         case "happy":
             eyeStyle = "happy"
@@ -102,8 +104,10 @@ Item {
             lookX = 1
             lookY = -1
             break
-        case "ouch":
-            eyeStyle = "x"
+        case "angry":
+            eyeStyle = "angry"
+            lookX = 0
+            lookY = 0
             break
         case "sleepy":
             eyeStyle = "sleep"
@@ -112,6 +116,7 @@ Item {
             break
         case "startle":
             eyeStyle = "wide"
+            wob = 1
             pop.restart()
             break
         default:
@@ -151,7 +156,7 @@ Item {
     function followPointer() {
         if (!following) return
         const cx = cardW / 2
-        const cy = cardH * 0.36
+        const cy = cardH * 0.38
         lookX = Math.max(-1, Math.min(1, Math.round((pointerX - cx) / (cardW / 2))))
         lookY = Math.max(-1, Math.min(1, Math.round((pointerY - cy) / (cardH / 2))))
     }
@@ -167,7 +172,7 @@ Item {
         if (t === "") return ""
         return t.length > 140 ? t.slice(0, 139) + "…" : t
     }
-    readonly property string headline: speech !== "" ? speech : "Miau. ¿En qué te ayudo?"
+    readonly property string headline: speech !== "" ? speech : "¿En qué te ayudo?"
     readonly property string pendingRun: AiService.lastRunBlocks.length > 0
         ? AiService.lastRunBlocks[AiService.lastRunBlocks.length - 1] : ""
 
@@ -175,7 +180,7 @@ Item {
     function sendQuestion() {
         const t = askInput.text.trim()
         if (t === "") return
-        if (face.busy) return   // the kitten is talking: keep your text
+        if (face.busy) return   // the pet is talking: keep your text
         AiService.send(t)
         askInput.text = ""
     }
@@ -191,7 +196,7 @@ Item {
         id: wanderTimer
         repeat: true
         running: face.active && face.shownMood === "neutral" && !face.following
-        interval: 2400
+        interval: 2600
         onTriggered: {
             if (Math.random() < 0.3) {
                 face.doBlink()
@@ -206,12 +211,12 @@ Item {
         id: blinkTimer
         repeat: true
         running: face.active && (face.shownMood === "neutral" || face.shownMood === "curious")
-        interval: 3600
+        interval: 3800
         onTriggered: face.doBlink()
     }
     Timer {
         id: blinkOffTimer
-        interval: 130
+        interval: 140
         onTriggered: face.blinking = false
     }
     Timer {
@@ -221,142 +226,112 @@ Item {
         onTriggered: face.drowsy = true
     }
 
-    // ===== one kitten eye: a round ball with a highlight, or its mood shape =====
-    component CatEye: Item {
+    // ===== one eye: a ball, or the shape its feeling wears =====
+    component Bolita: Item {
         id: eye
         property string style: "open"
+        property bool flip: false   // the right eye mirrors lids and arcs
         property int lookX: 0
         property int lookY: 0
         property color ink
         property color paper
 
-        readonly property bool round: style === "open" || style === "wide" || style === "sad"
-        readonly property bool squint: face.blinking && round
+        readonly property bool isBall: style === "open" || style === "wide" || style === "angry" || style === "sad"
+        readonly property bool squint: face.blinking && (style === "open" || style === "wide")
 
-        width: 22
+        width: 26
         height: 26
 
-        Item {
-            id: globe
-            anchors.centerIn: parent
-            width: 22
-            height: 26
+        // the ball — a plain round bolita, the whole face's heart
+        Rectangle {
+            id: ball
+            width: eye.style === "wide" ? 20 : 15
+            height: eye.squint ? 3.5 : (eye.style === "sad" ? 12 : width)
+            radius: eye.squint ? 1.75 : width / 2
+            color: eye.ink
+            visible: eye.isBall
+            x: (parent.width - width) / 2 + eye.lookX * 3
+            y: (parent.height - height) / 2 + eye.lookY * 2 + (eye.style === "sad" ? 5 : 0)
 
-            // the glance: the whole eye shifts a couple of pixels
-            transform: Translate {
-                x: eye.lookX * 2.5
-                y: eye.lookY * 2 + (eye.style === "sad" ? 3 : 0)
+            Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+            Behavior on height { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
+            Behavior on x { NumberAnimation { duration: 130; easing.type: Easing.OutQuad } }
+            Behavior on y { NumberAnimation { duration: 130; easing.type: Easing.OutQuad } }
+            Behavior on radius { NumberAnimation { duration: 90 } }
+        }
+
+        // the highlight that makes it alive
+        Rectangle {
+            width: eye.style === "wide" ? 5.5 : 4.5
+            height: width
+            radius: width / 2
+            color: eye.paper
+            visible: eye.style === "open" || eye.style === "wide"
+            opacity: eye.squint ? 0 : 0.95
+            x: (parent.width - width) / 2 + eye.lookX * 3 + 3.5
+            y: (parent.height - height) / 2 + eye.lookY * 2 - 4.5
+
+            Behavior on x { NumberAnimation { duration: 130; easing.type: Easing.OutQuad } }
+            Behavior on y { NumberAnimation { duration: 130; easing.type: Easing.OutQuad } }
+            Behavior on opacity { NumberAnimation { duration: 90 } }
+        }
+
+        // angry: a lid cuts each ball, slanting down towards the middle
+        Rectangle {
+            visible: eye.style === "angry"
+            width: 17
+            height: 6
+            radius: 3
+            color: eye.paper
+            rotation: eye.flip ? -14 : 14
+            x: (parent.width - width) / 2 + (eye.flip ? 4 : -4)
+            y: 1
+
+            Behavior on rotation { NumberAnimation { duration: 160; easing.type: Easing.OutBack } }
+        }
+
+        // happy: two little segments meeting up, ^ ^
+        Rectangle {
+            visible: eye.style === "happy"
+            x: 1; y: 9
+            width: 12; height: 3.5
+            radius: 1.75
+            rotation: eye.flip ? -24 : 24
+            color: eye.ink
+            antialiasing: true
+        }
+        Rectangle {
+            visible: eye.style === "happy"
+            x: 13; y: 9
+            width: 12; height: 3.5
+            radius: 1.75
+            rotation: eye.flip ? 24 : -24
+            color: eye.ink
+            antialiasing: true
+        }
+
+        // the tear, only while sad
+        Rectangle {
+            id: tear
+            visible: eye.style === "sad"
+            x: eye.flip ? 3 : 19
+            width: 4
+            height: 5.5
+            radius: 2
+            color: eye.paper
+            y: 18
+
+            SequentialAnimation on y {
+                running: tear.visible && face.active
+                loops: Animation.Infinite
+                NumberAnimation { to: 28; duration: 1100; easing.type: Easing.InQuad }
+                NumberAnimation { from: 18; to: 18; duration: 600 }
             }
-            scale: eye.style === "wide" ? 1.2 : 1
-
-            Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack } }
-
-            // the ball: squashes to a line for a blink
-            Rectangle {
-                anchors.centerIn: parent
-                width: 14
-                height: eye.squint ? 3 : 16
-                radius: eye.squint ? 1.5 : 7
-                color: eye.ink
-                visible: eye.round
-
-                Behavior on height { NumberAnimation { duration: 70 } }
-                Behavior on radius { NumberAnimation { duration: 70 } }
-            }
-
-            // the highlight that makes it alive
-            Rectangle {
-                anchors.centerIn: parent
-                anchors.horizontalCenterOffset: 3
-                anchors.verticalCenterOffset: -4
-                width: 4
-                height: 4
-                radius: 2
-                color: eye.paper
-                visible: eye.style === "open" || eye.style === "wide"
-                opacity: eye.squint ? 0 : 0.95
-            }
-
-            // happy: two little segments meeting up, ^ ^
-            Rectangle {
-                visible: eye.style === "happy"
-                x: 0; y: 11
-                width: 10; height: 3
-                radius: 1.5
-                rotation: 24
-                color: eye.ink
-                antialiasing: true
-            }
-            Rectangle {
-                visible: eye.style === "happy"
-                x: 12; y: 11
-                width: 10; height: 3
-                radius: 1.5
-                rotation: -24
-                color: eye.ink
-                antialiasing: true
-            }
-
-            // ouch: an X
-            Rectangle {
-                visible: eye.style === "x"
-                anchors.centerIn: parent
-                width: 15; height: 3
-                radius: 1.5
-                rotation: 45
-                color: eye.ink
-                antialiasing: true
-            }
-            Rectangle {
-                visible: eye.style === "x"
-                anchors.centerIn: parent
-                width: 15; height: 3
-                radius: 1.5
-                rotation: -45
-                color: eye.ink
-                antialiasing: true
-            }
-
-            // asleep: a shut lid, gently breathing
-            Rectangle {
-                visible: eye.style === "sleep"
-                anchors.centerIn: parent
-                width: 14; height: 3
-                radius: 1.5
-                color: eye.ink
-
-                SequentialAnimation on opacity {
-                    running: eye.style === "sleep" && face.active
-                    loops: Animation.Infinite
-                    NumberAnimation { to: 0.55; duration: 1400; easing.type: Easing.InOutSine }
-                    NumberAnimation { to: 1; duration: 1400; easing.type: Easing.InOutSine }
-                }
-            }
-
-            // the tear, only while sad
-            Rectangle {
-                id: tear
-                visible: eye.style === "sad"
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.horizontalCenterOffset: 8
-                width: 3.5
-                height: 5
-                radius: 1.75
-                color: eye.paper
-                y: 16
-
-                SequentialAnimation on y {
-                    running: tear.visible && face.active
-                    loops: Animation.Infinite
-                    NumberAnimation { to: 26; duration: 1100; easing.type: Easing.InQuad }
-                    NumberAnimation { from: 16; to: 16; duration: 500 }
-                }
-                SequentialAnimation on opacity {
-                    running: tear.visible && face.active
-                    loops: Animation.Infinite
-                    NumberAnimation { to: 0; duration: 1100 }
-                    NumberAnimation { to: 0.9; duration: 200 }
-                }
+            SequentialAnimation on opacity {
+                running: tear.visible && face.active
+                loops: Animation.Infinite
+                NumberAnimation { to: 0; duration: 1100 }
+                NumberAnimation { to: 0.9; duration: 200 }
             }
         }
     }
@@ -367,8 +342,9 @@ Item {
         anchors.fill: parent
 
         transformOrigin: Item.Center
-        scale: face.pressed ? 0.97 : 1
-        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
+        // one wobble knob: press squashes, the animations gelatinize it
+        property real wob: 0
+        scale: (face.pressed ? 0.96 : 1) * (1 + wob * 0.05)
         // leans towards the pointer
         rotation: face.following
             ? Math.max(-3, Math.min(3, (face.pointerX - face.cardW / 2) / face.cardW * 8)) : 0
@@ -389,7 +365,7 @@ Item {
             x: face.pad
             y: 12
             width: face.cardW - face.pad * 2
-            spacing: 6
+            spacing: 7
 
             // ===== header: dot + banner + bars · provider on the right =====
             Item {
@@ -471,131 +447,75 @@ Item {
                 }
             }
 
-            // ===== the kitten: ears, eyes, nose, whiskers, mouth =====
+            // ===== the face: just two bolitas (and a couple of z's asleep) =====
             Item {
                 width: parent.width
-                height: 66
+                height: 46
 
-                // the eye line sits here
-                readonly property real eyeY: 30
-                readonly property real eyeOff: 17
-
-                // dot-matrix ears; they perk when the kitten is happy
-                Repeater {
-                    model: [
-                        { xc: (parent.width / 2) - parent.eyeOff, tilt: -8 },
-                        { xc: (parent.width / 2) + parent.eyeOff, tilt: 8 }
-                    ]
-
-                    delegate: Item {
-                        required property var modelData
-                        x: modelData.xc - 9
-                        y: 1
-                        width: 18
-                        height: 17
-                        rotation: face.eyeStyle === "happy" ? modelData.tilt : 0
-
-                        Behavior on rotation { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
-
-                        Repeater {
-                            model: [{ r: 0, n: 1 }, { r: 1, n: 2 }, { r: 2, n: 3 }]
-
-                            delegate: Row {
-                                required property var modelData
-                                x: (parent.width - modelData.n * 4.5 - (modelData.n - 1) * 1.5) / 2
-                                y: modelData.r * 5.5
-                                spacing: 1.5
-
-                                Repeater {
-                                    model: modelData.n
-
-                                    delegate: Rectangle {
-                                        width: 4.5
-                                        height: 4.5
-                                        radius: 2.25
-                                        color: face.mt.ink
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                CatEye {
-                    x: (parent.width - width) / 2 - parent.eyeOff
-                    y: parent.eyeY
+                Bolita {
+                    x: (parent.width - width) / 2 - 29
+                    y: (parent.height - height) / 2
                     style: face.eyeStyle
+                    flip: false
                     lookX: face.lookOf(0).x
                     lookY: face.lookOf(0).y
                     ink: face.mt.ink
                     paper: face.mt.surface
                 }
-                CatEye {
-                    x: (parent.width - width) / 2 + parent.eyeOff - width
-                    y: parent.eyeY
+                Bolita {
+                    x: (parent.width - width) / 2 + 3
+                    y: (parent.height - height) / 2
                     style: face.eyeStyle
+                    flip: true
                     lookX: face.lookOf(1).x
                     lookY: face.lookOf(1).y
                     ink: face.mt.ink
                     paper: face.mt.surface
                 }
 
-                // the nose: one tiny accent dot
-                Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: parent.eyeY + 19
-                    width: 4.5
-                    height: 4
-                    radius: 2
-                    color: face.accent
-                }
+                // drifting z's, only asleep
+                Text {
+                    visible: face.eyeStyle === "sleep"
+                    x: parent.width / 2 + 34
+                    y: 2
+                    text: "z"
+                    color: face.mt.inkSub
+                    font.family: face.mt.fontDisplay
+                    font.pixelSize: 13
 
-                // the mouth: a little ω, wider when happy, a frown when sad
-                Item {
-                    id: mouth
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: parent.eyeY + 26
-                    width: 20
-                    height: 8
-
-                    scale: face.eyeStyle === "happy" ? 1.25 : 1
-                    Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
-
-                    Repeater {
-                        model: face.eyeStyle === "sad"
-                            ? [{x: -8, y: 4}, {x: -4, y: 1}, {x: 0, y: 1}, {x: 4, y: 1}, {x: 8, y: 4}]
-                            : [{x: -8, y: 1}, {x: -4, y: 4}, {x: 0, y: 1}, {x: 4, y: 4}, {x: 8, y: 1}]
-
-                        delegate: Rectangle {
-                            required property var modelData
-                            x: parent.width / 2 + modelData.x - 1.5
-                            y: modelData.y
-                            width: 3
-                            height: 3
-                            radius: 1.5
-                            color: face.mt.ink
-                        }
+                    SequentialAnimation on y {
+                        running: visible && face.active
+                        loops: Animation.Infinite
+                        NumberAnimation { to: -4; duration: 1600; easing.type: Easing.OutQuad }
+                        NumberAnimation { from: 6; to: 6; duration: 300 }
+                    }
+                    SequentialAnimation on opacity {
+                        running: visible && face.active
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0; duration: 1600 }
+                        NumberAnimation { to: 0.9; duration: 300 }
                     }
                 }
+                Text {
+                    visible: face.eyeStyle === "sleep"
+                    x: parent.width / 2 + 46
+                    y: 14
+                    text: "z"
+                    color: face.mt.inkSub
+                    font.family: face.mt.fontDisplay
+                    font.pixelSize: 9
 
-                // whiskers: three a side, quiet
-                Repeater {
-                    model: [
-                        { side: -1, y: -6 }, { side: -1, y: 0 }, { side: -1, y: 6 },
-                        { side: 1, y: -6 }, { side: 1, y: 0 }, { side: 1, y: 6 }
-                    ]
-
-                    delegate: Rectangle {
-                        required property var modelData
-                        x: modelData.side < 0
-                            ? (parent.width / 2) - parent.eyeOff - 24
-                            : (parent.width / 2) + parent.eyeOff + 11
-                        y: parent.eyeY + 8 + modelData.y
-                        width: 13
-                        height: 1.5
-                        radius: 0.75
-                        color: face.mt.inkSub
-                        opacity: 0.55
+                    SequentialAnimation on y {
+                        running: visible && face.active
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 4; duration: 1600; easing.type: Easing.OutQuad }
+                        NumberAnimation { from: 16; to: 16; duration: 300 }
+                    }
+                    SequentialAnimation on opacity {
+                        running: visible && face.active
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0; duration: 1600 }
+                        NumberAnimation { to: 0.7; duration: 300 }
                     }
                 }
             }
@@ -738,7 +658,7 @@ Item {
                     onPressed: askInput.forceActiveFocus()
                 }
 
-                // the red key: send (grey while the kitten is talking or the
+                // the red key: send (grey while the pet is talking or the
                 // field is empty)
                 Rectangle {
                     x: field.width + 8
@@ -767,16 +687,16 @@ Item {
             }
         }
 
-        // the happy bounce, and the startle pop
+        // the happy bounce, and the startle pop — one wobble knob, gelatinous
         SequentialAnimation {
             id: bounce
-            NumberAnimation { target: card; property: "scale"; to: 1.04; duration: 130; easing.type: Easing.OutQuad }
-            NumberAnimation { target: card; property: "scale"; to: 1; duration: 260; easing.type: Easing.OutBack }
+            NumberAnimation { target: card; property: "wob"; to: 1; duration: 110; easing.type: Easing.OutQuad }
+            NumberAnimation { target: card; property: "wob"; to: 0; duration: 480; easing.type: Easing.OutElastic; easing.amplitude: 1.2 }
         }
         SequentialAnimation {
             id: pop
-            NumberAnimation { target: card; property: "scale"; to: 1.06; duration: 90; easing.type: Easing.OutQuad }
-            NumberAnimation { target: card; property: "scale"; to: 1; duration: 300; easing.type: Easing.OutBack }
+            NumberAnimation { target: card; property: "wob"; to: 1.3; duration: 80; easing.type: Easing.OutQuad }
+            NumberAnimation { target: card; property: "wob"; to: 0; duration: 520; easing.type: Easing.OutElastic; easing.amplitude: 1.4 }
         }
     }
 }

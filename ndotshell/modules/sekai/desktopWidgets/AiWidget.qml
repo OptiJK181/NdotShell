@@ -7,12 +7,13 @@ import qs.modules.common.widgets
 import qs.modules.sekai.ai
 import qs.modules.sekai.editMode
 
-// The desktop AI pet: the face card (modules/sekai/ai/AiFace.qml) as a real
-// desktop widget, with the same drag, lock, scale, monitors, Edit Desktop and
-// Focus Mode as the Now Playing card, the clock and the weather card. Type a
-// question into the card and Enter sends it from the desktop itself; the
-// reply streams right back into the card. A double click (on the card, not
-// the field) opens the full chat drawer.
+// The desktop AI pet: the face card (modules/sekai/ai/AiFace.qml) — two
+// little balls with feelings — as a real desktop widget, with the same drag,
+// lock, scale, monitors, Edit Desktop and Focus Mode as the Now Playing
+// card, the clock and the weather card. Type a question into the card and
+// Enter sends it from the desktop itself; the reply streams right back into
+// the card. A double click (on the card, not the field) opens the full chat
+// drawer.
 //
 //   The card      the Pill housing, the header (red dot, THINKING / TYPING /
 //                 ERROR / IDLE, dancing bars, provider), the dot-matrix eyes,
@@ -105,7 +106,7 @@ PanelWindow {
 
     // ===== the card's own size, in design pixels (AiFace.qml draws it) =====
     readonly property int cardWidth: 320
-    readonly property int cardHeight: 212
+    readonly property int cardHeight: 204
     readonly property int pad: 18
 
     // ===== on / off =====

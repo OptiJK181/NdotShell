@@ -200,8 +200,8 @@ PanelWindow {
                 spacing: 16 * win.uiScale
 
                 Item {
-                    width: 100 * win.uiScale
-                    height: 100 * win.uiScale
+                    width: 92 * win.uiScale
+                    height: 92 * win.uiScale
                     anchors.verticalCenter: parent.verticalCenter
 
                     Rectangle {
@@ -279,7 +279,7 @@ PanelWindow {
 
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - 100 * win.uiScale - 16 * win.uiScale
+                    width: parent.width - 92 * win.uiScale - 16 * win.uiScale
                     spacing: 4 * win.uiScale
 
                     Text {
