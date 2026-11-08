@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.modules.common
+import qs.modules.common.widgets
 
 // A message's text, with ``` fenced code blocks drawn as real code cards.
 // A ```run``` block is special: the command the assistant proposes for the
