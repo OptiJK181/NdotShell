@@ -117,6 +117,12 @@ Singleton {
     property bool modelsLoading: false
     property string modelsError: ""
 
+    // ===== the desktop face's mood =====
+    // When the last reply landed (the pet keeps its speech bubble up for a
+    // while after) and an IPC-pinned mood that wins over the computed one.
+    property real lastReplyAt: 0
+    property string moodOverride: ""
+
     // ===== surfaces =====
     property bool drawerOpen: false
     property bool orbOpen: false
@@ -362,6 +368,7 @@ Singleton {
         if (!root.busy) return
         root.busy = false
         request.running = false
+        root.lastReplyAt = Date.now()
         if (err && err !== "") root.error = err
         const text = root.streamingText
         root.streamingText = ""
@@ -467,6 +474,48 @@ Singleton {
         }
         onExited: root.modelsLoading = false
     }
+
+    // ===== the desktop face =====
+    // What the pet shows: what the AI is doing first, and — once it answers —
+    // what it said. IPC can pin one for a while: `ipc call ai face happy`.
+    function setMood(mood, ms) {
+        if (root.moodNames.indexOf(mood) === -1) return
+        root.moodOverride = mood
+        moodClear.interval = ms && ms > 0 ? ms : 8000
+        moodClear.restart()
+    }
+
+    Timer {
+        id: moodClear
+        interval: 8000
+        onTriggered: root.moodOverride = ""
+    }
+
+    readonly property var moodNames: ["neutral", "happy", "sad", "curious", "ouch", "thinking", "talking", "startle", "sleepy"]
+
+    // A tiny word read of the reply: sorry-stuff hurts it, exclamations and
+    // good news cheer it up, questions make it curious.
+    function moodFromText(t) {
+        if (!t || t === "") return "neutral"
+        const s = t.toLowerCase()
+        const has = words => words.some(w => s.indexOf(w) !== -1)
+        const sad = has(["error", "no pude", "lo siento", "perdón", "falló", "fallo",
+            "no encontré", "no se pudo", "lamentablemente", "problema", "⚠"])
+        const happy = has(["genial", "perfecto", "excelente", "listo", "hecho", "claro",
+            "disfruta", "❤", "😊", "🎉", "✅", "😄", "😀", "👍", "🚀", "💪", "great", "amazing"])
+        const exclaims = (t.match(/[!¡]/g) || []).length
+        const asks = (t.match(/[?¿]/g) || []).length
+        if (sad) return "sad"
+        if (happy || exclaims >= 2) return "happy"
+        if (asks >= 2) return "curious"
+        return "neutral"
+    }
+
+    readonly property string faceMood: moodOverride !== "" ? moodOverride
+        : (error !== "" ? "ouch"
+        : (streamingText !== "" ? "talking"
+        : (busy ? "thinking"
+        : moodFromText(lastAssistant ? lastAssistant.content : ""))))
 
     // ===== surfaces =====
     function toggle() { root.drawerOpen = !root.drawerOpen }

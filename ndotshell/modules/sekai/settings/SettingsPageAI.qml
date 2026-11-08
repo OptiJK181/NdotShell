@@ -45,16 +45,16 @@ SettingsPage {
             sublabel: "Con quién habla el widget"
             current: AiService.provider
             options: [
-                { id: "opencode", label: "OpenCode", icon: "terminal" },
-                { id: "nvidia", label: "NVIDIA NIM", icon: "developer_board" },
+                { id: "opencode", label: "OpenCode", icon: "code" },
+                { id: "nvidia", label: "NVIDIA NIM", icon: "cpu-bolt" },
                 { id: "openai", label: "OpenAI", icon: "cloud" },
-                { id: "anthropic", label: "Anthropic", icon: "auto_awesome" },
-                { id: "openrouter", label: "OpenRouter", icon: "alt_route" },
+                { id: "anthropic", label: "Anthropic", icon: "magic-stick" },
+                { id: "openrouter", label: "OpenRouter", icon: "route" },
                 { id: "groq", label: "Groq", icon: "bolt" },
-                { id: "deepseek", label: "DeepSeek", icon: "waves" },
-                { id: "mistral", label: "Mistral", icon: "air" },
+                { id: "deepseek", label: "DeepSeek", icon: "soundwave" },
+                { id: "mistral", label: "Mistral", icon: "wind" },
                 { id: "ollama", label: "Ollama", icon: "monitor" },
-                { id: "lmstudio", label: "LM Studio", icon: "computer" }
+                { id: "lmstudio", label: "LM Studio", icon: "window-frame" }
             ]
             onPicked: id => AiService.setProvider(id)
         }
@@ -260,9 +260,9 @@ SettingsPage {
         }
 
         SettingToggle {
-            icon: "blur_on"
-            label: "Orbe en el escritorio"
-            detail: AiService.orbVisible ? "Visible" : "Oculto"
+            icon: "smile-circle"
+            label: "Carita en el escritorio"
+            detail: "Ojitos que reaccionan a lo que dice la IA · tócala para el chat"
             checked: AiService.orbVisible
             onToggled: AiService.toggleOrbVisible()
         }

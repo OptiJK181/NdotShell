@@ -749,7 +749,8 @@ ShellRoot {
     //                                  | ask "explícame esto"   (opens + sends)
     //                                  | clear | stop | retry | regenerate
     //                                  | orb                    (show/hide the desktop orb)
-    //                                  | status                 (one line: busy/model/key)
+    //                                  | face <mood>             (pin the pet's mood: happy, sad, curious…)
+    //                                  | status                 (one line: busy/model/mood)
     IpcHandler {
         target: "ai"
 
@@ -793,11 +794,16 @@ ShellRoot {
             AiService.toggleOrbVisible()
         }
 
+        function face(mood: string): void {
+            AiService.setMood(mood)
+        }
+
         function status(): string {
             if (AiService.busy)
-                return "generando · " + AiService.providerLabel
+                return "generando · " + AiService.providerLabel + " · " + AiService.faceMood
             return (AiService.configured ? "listo" : "sin configurar")
                 + " · " + AiService.providerLabel + " · " + AiService.model
+                + " · cara " + AiService.faceMood
         }
     }
 
