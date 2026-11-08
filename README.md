@@ -37,11 +37,20 @@ Un Quickshell desktop que se siente como un **teléfono Nothing**: la barra es u
 
 ---
 
-## 📸 Capturas
+## 📸 Demo
+
+![NdotShell demo](docs/screenshots/demo.gif)
+
+*Doble toque → drawers gelatinosos (Gaming / Focus), Dynamic Island y dock de Música — rebote OutElastic conectado a la esquina.*
+
+<details>
+<summary><b>Más capturas</b></summary>
 
 | Panel Gaming | Panel Focus | Dock de Música |
 |:---:|:---:|:---:|
 | ![Gaming](docs/screenshots/quickpanel.png) | ![Settings](docs/screenshots/settings.png) | ![Dock](docs/screenshots/dock.png) |
+
+</details>
 
 ---
 
