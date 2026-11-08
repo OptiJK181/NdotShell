@@ -105,7 +105,7 @@ PanelWindow {
 
     // ===== the card's own size, in design pixels (AiFace.qml draws it) =====
     readonly property int cardWidth: 320
-    readonly property int cardHeight: 198
+    readonly property int cardHeight: 212
     readonly property int pad: 18
 
     // ===== on / off =====
@@ -420,6 +420,9 @@ PanelWindow {
                         id: faceItem
                         anchors.fill: parent
                         mt: win.mt
+                        // A hidden kitten costs nothing: Focus Mode suspended,
+                        // or the card swallowed, stops every timer inside.
+                        active: (win.live || EditMode.active) && !gate.suspended
                         hasPointer: petArea.enabled && petArea.containsMouse && !dragArea.drag.active
                         pointerX: petArea.mouseX
                         pointerY: petArea.mouseY

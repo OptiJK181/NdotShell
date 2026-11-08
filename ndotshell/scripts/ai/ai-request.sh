@@ -101,6 +101,7 @@ opencode)
     # The opencode CLI already knows how to reach its own providers: no key,
     # no URL. Each message is a one-shot archived session and the whole
     # conversation rides inside the prompt.
+    agent="$7"
     command -v opencode >/dev/null 2>&1 \
         || fail "opencode no está instalado (o no está en el PATH del shell)"
     [ -n "$model" ] || fail "Falta el modelo: elige uno con opencode models, p. ej. opencode/big-pickle"
@@ -114,11 +115,18 @@ opencode)
 ---
 
 $prompt"
+    # Agent mode: --auto lets the CLI approve its own tool permissions, so
+    # the assistant can open apps and run what it proposes. Opt-in only.
+    if [ "$agent" = "1" ]; then
+        auto="--auto"
+    else
+        auto=""
+    fi
     errf=$(mktemp)
     # stdin from /dev/null: opencode reads stdin when it is a pipe (that is
     # how it takes piped messages), and Quickshell never closes the pipe it
     # hands this script — opencode would wait for EOF forever.
-    timeout 240 opencode run --format json --model "$model" \
+    timeout 240 opencode run --format json $auto --model "$model" \
         --title "NdotShell AI widget" --archived "$prompt" </dev/null 2>"$errf"
     code=$?
     if [ "$code" -ne 0 ]; then

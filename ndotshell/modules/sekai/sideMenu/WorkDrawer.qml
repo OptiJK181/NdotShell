@@ -344,8 +344,97 @@ PanelWindow {
                 color: mt.nbInkSub
                 font.pixelSize: 11 * win.uiScale
             }
+
+            // ===== ahora suena: un pie de música para que el panel no se
+            // sienta solo; un toque abre el dock completo =====
+            Rectangle {
+                visible: media.present
+                width: parent.width
+                height: 46 * win.uiScale
+                radius: 14 * win.uiScale
+                color: mt.nbRaised
+                border.width: 1
+                border.color: mt.nbBorder
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: SideMenuService.musicOpen = true
+                }
+
+                Row {
+                    anchors.fill: parent
+                    anchors.leftMargin: 12 * win.uiScale
+                    anchors.rightMargin: 10 * win.uiScale
+                    spacing: 10 * win.uiScale
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 8 * win.uiScale
+                        height: width
+                        radius: width / 2
+                        color: media.playing ? mt.nbAccent : mt.nbInkSub
+
+                        SequentialAnimation on opacity {
+                            running: media.playing
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.35; duration: 720; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 1.0; duration: 720; easing.type: Easing.InOutQuad }
+                        }
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 46 * win.uiScale - 44 * win.uiScale
+                        spacing: 1 * win.uiScale
+
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            text: media.title
+                            color: mt.nbInk
+                            font.family: mt.fontDisplay
+                            font.pixelSize: 12 * win.uiScale
+                        }
+                        Text {
+                            width: parent.width
+                            elide: Text.ElideRight
+                            visible: media.artist !== ""
+                            text: media.artist
+                            color: mt.nbInkSub
+                            font.pixelSize: 10 * win.uiScale
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 30 * win.uiScale
+                        height: width
+                        radius: width / 2
+                        color: playMa.pressed ? mt.nbBorder : mt.nbSurface
+                        border.width: 1
+                        border.color: mt.nbBorder
+
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            name: media.playing ? "pause" : "play"
+                            size: 13 * win.uiScale
+                            color: mt.nbInk
+                        }
+
+                        MouseArea {
+                            id: playMa
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: media.togglePlaying()
+                        }
+                    }
+                }
+            }
         }
     }
+
+    MediaSource { id: media }
 
     // pulpo typer
     property string octoFull: ""

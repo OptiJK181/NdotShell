@@ -227,6 +227,19 @@ SettingsPage {
             }
         }
 
+        SettingToggle {
+            icon: "cpu-bolt"
+            label: "Modo agente"
+            detail: AiService.agentMode
+                ? "opencode ejecuta sus propios comandos (--auto): puede abrir apps de verdad"
+                : "Las acciones llegan como bloque Ejecutar y tú las confirmas (solo agente con opencode)"
+            checked: AiService.agentMode
+            onToggled: {
+                AiService.agentMode = !AiService.agentMode
+                AiService.scheduleSave()
+            }
+        }
+
         SettingAction {
             icon: "delete"
             label: "Borrar la conversación"

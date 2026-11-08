@@ -101,9 +101,26 @@ Singleton {
     property string apiKey: ""
     property string model: presets.openai.model
     property string systemPrompt: "Eres Ndot, el asistente del escritorio NdotShell (Nothing OS sobre Hyprland). Responde claro, breve y en el idioma de la persona. Si no sabes algo, dilo."
+    // The prompt the widget shipped with before the ```run``` convention.
+    readonly property string oldDefaultPrompt: "Eres Ndot, el asistente del escritorio NdotShell (Nothing OS sobre Hyprland). Responde claro, breve y en el idioma de la persona. Si no sabes algo, dilo."
+
+    // The ```run``` convention always rides along (appended at request time,
+    // never written into the saved prompt): however the person edits their
+    // prompt, the assistant knows how to propose computer actions.
+    readonly property string runConvention: "Cuando te pidan actuar en la computadora (abrir apps, ejecutar algo), explica en una o dos líneas y añade al final UN bloque ```run``` con el comando exacto de shell, listo para que la persona lo confirme con el botón Ejecutar. Los comandos corren con el entorno del usuario y sin terminal visible. Ejemplo — abrir Chrome y Vesktop para trabajar:\n```run\ngoogle-chrome-stable & vesktop &\n```\nNunca más de un bloque por respuesta. Nada destructivo (rm -rf, mkfs, dd, shutdown) ni siquiera en un bloque."
+
+    function wirePrompt() {
+        const p = root.systemPrompt.trim() !== "" ? root.systemPrompt : root.oldDefaultPrompt
+        return p.indexOf("```run") !== -1 ? p : p + "\n\n" + root.runConvention
+    }
     property real temperature: 0.7
     property int maxTokens: 1024
     property bool loaded: false
+    // Agent mode: with the opencode provider, `--auto` approves the CLI's
+    // tool permissions, so the assistant can actually DO things (open apps,
+    // run its commands) instead of only proposing them. Off by default; it
+    // is the provider's own permission system doing the work.
+    property bool agentMode: false
 
     // ===== conversation =====
     property var messages: []          // [{ role: "user"|"assistant", content: "..." }]
@@ -150,6 +167,27 @@ Singleton {
     readonly property string storeScript: Directories.script("ai/ai-store.sh")
     readonly property string testScript: Directories.script("ai/ai-test.sh")
     readonly property string modelsScript: Directories.script("ai/ai-models.sh")
+    readonly property string runScript: Directories.script("ai/ai-run.sh")
+
+    // ===== the assistant helping with the computer =====
+    // A reply may carry one ```run``` block: a shell command it proposes.
+    // Nothing executes on its own — the Ejecutar key (chat, card) is the only
+    // trigger, and scripts/ai/ai-run.sh logs every run.
+    readonly property var lastRunBlocks: {
+        const t = lastAssistant ? lastAssistant.content : ""
+        const out = []
+        const re = /```run\s*\n?([\s\S]*?)```/g
+        let m
+        while ((m = re.exec(t)) !== null)
+            out.push(m[1].trim())
+        return out
+    }
+
+    function runCommand(cmd) {
+        const c = (cmd || "").trim()
+        if (c === "") return
+        Quickshell.execDetached(["sh", root.runScript, c])
+    }
 
     // ===== config plumbing =====
     property bool saveDirty: false
@@ -165,6 +203,7 @@ Singleton {
             systemPrompt: root.systemPrompt,
             temperature: root.temperature,
             maxTokens: root.maxTokens,
+            agentMode: root.agentMode,
             orbVisible: root.orbVisible,
             orbX: root.orbX,
             orbY: root.orbY,
@@ -184,6 +223,7 @@ Singleton {
             if (typeof j.apiKey === "string") root.apiKey = j.apiKey
             if (typeof j.model === "string" && j.model !== "") root.model = j.model
             if (typeof j.systemPrompt === "string") root.systemPrompt = j.systemPrompt
+            if (typeof j.agentMode === "boolean") root.agentMode = j.agentMode
             if (typeof j.temperature === "number") root.temperature = j.temperature
             if (typeof j.maxTokens === "number") root.maxTokens = j.maxTokens
             if (typeof j.orbVisible === "boolean") root.orbVisible = j.orbVisible
@@ -283,8 +323,11 @@ Singleton {
 
     function startRequest() {
         if (root.busy) return
+        // The 7th argument turns on the opencode agent flag (--auto): the
+        // CLI's own permission system, only when agent mode is on.
         request.command = ["sh", root.requestScript, root.provider, root.model,
-            root.baseUrl, String(root.temperature), String(root.maxTokens), root.systemPrompt]
+            root.baseUrl, String(root.temperature), String(root.maxTokens), root.wirePrompt(),
+            (root.agentMode && root.provider === "opencode") ? "1" : "0"]
         request.running = true
     }
 

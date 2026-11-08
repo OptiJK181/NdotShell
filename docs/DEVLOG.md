@@ -4,6 +4,17 @@ The detailed notes written while NdotShell was built: what each change touched, 
 and what was only read through, and how to check it. The short release notes are in
 `ndotshell/CHANGELOG.md`.
 
+## Unreleased — Aniversario: the kitten, the Ejecutar key, the singing dock
+
+**Checked on the live shell** (opencode → `nvidia/deepseek-ai/deepseek-v4.1-flash`): "Ábreme chrome y vesktop para trabajar" came back with exactly one ```run``` block proposing `google-chrome-stable & vesktop &`; the block parser extracts it (node check on the real reply), the chat draws it as an accent-bordered card with the Ejecutar key, and the pet card swaps its model line for the same key. `ai-run.sh` executes detached (setsid, no stdin) and logs to `~/.local/state/ndotshell/ai-runs.log`. Boot with no QML errors, no binding loops; qmllint clean.
+
+- **The kitten, second try**: the ring-and-pupil eyes read weird, so the face is a cat now — dot-matrix ear pyramids that perk ±8° on a happy reply, round ink eyes with a paper highlight (the whole eye shifts ±2.5 px to track the pointer, blinking squashes the ball to a line), three whiskers a side, an accent nose, and a ω mouth of five dots that widens when happy and inverts to a frown when sad (with a falling tear, looped). Card grows to 320×212; the old 5×5 Repeater grids (25 rects per eye) are gone — the whole face is ~24 items now.
+- **Cheaper by design**: `AiFace.active` gates every timer and the equalizer's FrameAnimation; AiWidget feeds it `(win.live || EditMode.active) && !gate.suspended`, so Focus Mode with "Suspend hidden widget workloads" stops the kitten's clocks entirely.
+- **The Ejecutar key**: `AiService.lastRunBlocks` (regex over the last reply) + `runCommand()` → `execDetached(["sh", "ai-run.sh", cmd])`. The card strips run fences from its headline (a run-only reply reads "Te preparé un comando") and shows the key in the model line's slot — no layout jump. The ```run``` convention is appended to whatever the user's saved prompt is at request time (`wirePrompt()`), so a prompt like "Eres Ndot." still produces runnable proposals; destructive commands are forbidden in the convention itself.
+- **Modo agente**: persisted `agentMode`; `startRequest` passes a 7th argv ("1") and `ai-request.sh`'s opencode branch adds `--auto` — the CLI's own permission system approves its tools, so with opencode the assistant can act instead of only proposing. Off by default; other providers keep the confirm-first key.
+- **The singing dock**: MusicDock gains a 500 ms position poll (NowPlaying's recipe), a thin seek lane with the red playhead, both times, click-to-seek where the player allows, and the lyric line of the moment with the next one underneath (`LyricsService.lines` + `LyricsMath.lineIndexAt` over `elapsed + syncTotal`). Spacing tightened 14→10 so it all fits the 46 % card.
+- **The drawers got a footer**: Gaming and Work end with a now-playing strip (breathing dot, title/artist, play/pause) whose body opens the music dock — MediaSource rides in each drawer, same as the dock uses.
+
 ## Unreleased — The pet becomes a widget: it asks from the card, Edit Desktop moves it
 
 **Checked on the live shell**: boot with no QML errors and no binding loops; `ipc call ai orb` flips `~/.local/state/ndotshell/aiwidget.json` between `shown: false` / `true` (the same file the service restores on the next start); `ipc call ai ask "Di solo: hola bro"` streamed the reply and the mood settled neutral; `qmllint` passes the widget and the face.

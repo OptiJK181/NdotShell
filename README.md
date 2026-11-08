@@ -27,13 +27,13 @@ Un Quickshell desktop que se siente como un **teléfono Nothing**: la barra es u
 | ● **TELÉFONO HOLOGRAMA** | Quick Panel 2.5D con filamento de acento, pared translúcida, halo |
 | ● **DRAWERS LATERALES** | doble toque en las esquinas → Gaming y Focus se despliegan |
 | ● **DYNAMIC ISLAND** | agujero negro girando con acceso a REC, Pomodoro, música |
-| ● **DOCK DE MÚSICA** | vinilo girando con arte real, transporte y volumen |
 | ● **MODO PRIVADO** | clipboard que nunca guarda secretos (Super + P) |
 | ● **POMODORO** | ciclos 25/5 con stats persistentes y notificaciones |
 | ● **SCREEN RECORDER** | pantalla, ventana o región, con/sin audio |
 | ● **6 CANALES** | red · mono · amber · lime · blue · violet |
 | ● **WALLPAPER DINÁMICO** | cambia por hora del día con transición suave |
-| ● **CARITA IA** | widget de escritorio: ojitos que reaccionan a la IA, respóndele desde la card, edítala en Edit Desktop |
+| ● **CARITA IA** | gatito-widget: pregunta desde la card, te ayuda en la compu (Ejecutar), reacciona a la IA |
+| ● **DOCK DE MÚSICA** | vinilo girando, progreso con seek y la letra en vivo |
 | ● **WIDGET IA** | opencode (y tus modelos NVIDIA del CLI), NIM, OpenAI, Claude, Ollama · streaming en drawer, barra y orbe |
 | ● **RYOKU SERVICES** | Hub, Ryotunes y temas desde Ajustes — sin duplicar barras |
 | ● **ACTUALIZACIONES** | stable / dev desde tu propio repo, sin reinstalar |

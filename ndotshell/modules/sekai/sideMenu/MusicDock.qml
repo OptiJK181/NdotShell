@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import "../../common/functions/LyricsMath.js" as LM
 
 // Music dock — full height en el lado derecho (patrón Bar), card abajo.
 // Doble toque en la esquina inferior derecha lo abre.
@@ -37,6 +38,69 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
 
     mask: Region { item: card }
+
+    // ===== posición y letra =====
+    // Players announce position unevenly; it is read twice a second (same
+    // recipe as NowPlayingWidget) and the lane smooths the steps. The lyric
+    // line rides the same clock with the service's sync offset.
+    property real elapsed: 0
+    property real trackLength: 0
+    readonly property bool seekable: media.player !== null && media.player.canSeek
+        && media.player.positionSupported === true && win.trackLength > 0
+
+    function readPosition(): void {
+        const p = media.player
+        if (!p) {
+            win.elapsed = 0
+            win.trackLength = 0
+            return
+        }
+        win.trackLength = p.lengthSupported ? Math.max(0, Number(p.length) || 0) : 0
+        if (!p.positionSupported) {
+            win.elapsed = 0
+            return
+        }
+        p.positionChanged()
+        win.elapsed = Math.max(0, Number(p.position) || 0)
+    }
+
+    function seekTo(fraction): void {
+        if (!win.seekable)
+            return
+        const f = Math.max(0, Math.min(1, Number(fraction) || 0))
+        const target = f * win.trackLength
+        media.player.positionChanged()
+        media.player.position = target
+        win.elapsed = target
+    }
+
+    Timer {
+        interval: 500
+        repeat: true
+        triggeredOnStart: true
+        running: win.visible && media.present
+        onTriggered: win.readPosition()
+    }
+
+    readonly property var lyLines: LyricsService.lines
+    readonly property int lyIndex: LM.lineIndexAt(win.lyLines, win.elapsed + LyricsService.syncTotal)
+    readonly property string lyLine: {
+        if (!media.playing || win.lyLines.length === 0) return ""
+        const l = win.lyLines[win.lyIndex]
+        return l && l.text ? l.text : ""
+    }
+    readonly property string lyNext: {
+        if (!media.playing || win.lyLines.length === 0) return ""
+        const l = win.lyLines[win.lyIndex + 1]
+        return l && l.text ? l.text : ""
+    }
+
+    function fmtTime(sec) {
+        sec = Math.max(0, Math.floor(Number(sec) || 0))
+        const m = Math.floor(sec / 60)
+        const s = sec % 60
+        return m + ":" + ("0" + s).slice(-2)
+    }
 
     Item {
         id: card
@@ -73,7 +137,7 @@ PanelWindow {
             anchors.fill: parent
             anchors.margins: 20 * win.uiScale
             anchors.rightMargin: 22 * win.uiScale
-            spacing: 14 * win.uiScale
+            spacing: 10 * win.uiScale
 
             // header
             Item {
@@ -243,6 +307,86 @@ PanelWindow {
 
             Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
 
+            // ===== la pista: barra fina, punto rojo y los dos tiempos =====
+            Item {
+                width: parent.width
+                height: 26 * win.uiScale
+                visible: media.present
+
+                Item {
+                    id: laneTrack
+                    x: 0
+                    y: 4 * win.uiScale
+                    width: parent.width
+                    height: 4 * win.uiScale
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 2 * win.uiScale
+                        color: mt.nbBorder
+                    }
+
+                    Rectangle {
+                        width: parent.width * (win.trackLength > 0 ? Math.min(1, win.elapsed / win.trackLength) : 0)
+                        height: parent.height
+                        radius: 2 * win.uiScale
+                        color: mt.nbAccent
+
+                        Behavior on width { NumberAnimation { duration: 460; easing.type: Easing.Linear } }
+                    }
+
+                    Rectangle {
+                        visible: win.seekable
+                        width: 8 * win.uiScale
+                        height: 8 * win.uiScale
+                        radius: 4 * win.uiScale
+                        y: -2 * win.uiScale
+                        color: mt.nbAccent
+                        x: Math.max(0, Math.min(laneTrack.width - width,
+                            laneTrack.width * (win.trackLength > 0 ? Math.min(1, win.elapsed / win.trackLength) : 0) - width / 2))
+
+                        Behavior on x { NumberAnimation { duration: 460; easing.type: Easing.Linear } }
+                    }
+                }
+
+                Text {
+                    anchors.top: laneTrack.bottom
+                    anchors.topMargin: 3 * win.uiScale
+                    text: win.fmtTime(win.elapsed / 1000)
+                    color: mt.nbInkSub
+                    font.family: mt.fontDisplay
+                    font.pixelSize: 10 * win.uiScale
+                }
+
+                Text {
+                    anchors.top: laneTrack.bottom
+                    anchors.topMargin: 3 * win.uiScale
+                    anchors.right: parent.right
+                    text: win.fmtTime(win.trackLength / 1000)
+                    visible: win.trackLength > 0
+                    color: mt.nbInkSub
+                    font.family: mt.fontDisplay
+                    font.pixelSize: 10 * win.uiScale
+                }
+
+                MouseArea {
+                    enabled: win.seekable
+                    anchors.fill: parent
+                    anchors.topMargin: -4 * win.uiScale
+                    hoverEnabled: true
+                    cursorShape: win.seekable ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    preventStealing: true
+
+                    function fracAt(mx) {
+                        return Math.max(0, Math.min(1, mx / Math.max(1, laneTrack.width)))
+                    }
+
+                    onClicked: mouse => win.seekTo(fracAt(mouse.x))
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
+
             // transporte
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -292,6 +436,45 @@ PanelWindow {
                     size: 32
                     icon: "volume-loud"
                     onClicked: media.changeVolume(1)
+                }
+            }
+
+            Rectangle { width: parent.width; height: 1; color: mt.nbBorder }
+
+            // ===== la letra: la línea que suena, y la que viene =====
+            Column {
+                width: parent.width
+                visible: win.lyLine !== ""
+                spacing: 3 * win.uiScale
+
+                Text {
+                    text: qsTr("LETRA")
+                    color: mt.nbInkSub
+                    font.family: mt.fontDisplay
+                    font.pixelSize: 9 * win.uiScale
+                    font.letterSpacing: 3 * win.uiScale
+                }
+
+                Text {
+                    width: parent.width
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 2
+                    elide: Text.ElideRight
+                    text: win.lyLine
+                    color: mt.nbInk
+                    font.family: mt.fontDisplay
+                    font.pixelSize: 14 * win.uiScale
+                    font.weight: Font.DemiBold
+                }
+
+                Text {
+                    width: parent.width
+                    visible: win.lyNext !== ""
+                    elide: Text.ElideRight
+                    text: win.lyNext
+                    color: mt.nbInkSub
+                    opacity: 0.7
+                    font.pixelSize: 11 * win.uiScale
                 }
             }
         }
